@@ -61,41 +61,182 @@
 		} );
 	}
 
+
+	/* ---------- Shared UI helpers ---------- */
+	var fa = function ( n ) { return Number( n ).toLocaleString( 'fa-IR' ); };
+
+	function toast( msg, type ) {
+		var box = $( '.sbpi-toasts' );
+		if ( ! box ) { return; }
+		var el = document.createElement( 'div' );
+		el.className = 'sbpi-toast ' + ( type || '' );
+		el.textContent = msg;
+		box.appendChild( el );
+		setTimeout( function () { el.classList.add( 'out' ); }, 4500 );
+		setTimeout( function () { el.remove(); }, 5000 );
+	}
+
+	function setStep( n ) {
+		$$( '#sbpi-steps li' ).forEach( function ( li ) {
+			var s = Number( li.dataset.step );
+			li.className = s < n ? 'done' : ( s === n ? 'current' : '' );
+		} );
+	}
+
+	/* ---------- Upload: drag & drop ---------- */
+	var upload = $( '#sbpi-upload' );
+	if ( upload ) {
+		var drop = $( '.sbpi-drop', upload );
+		var input = $( '#sbpi-file' );
+		var submit = $( 'button[type=submit]', upload );
+		var showFile = function () {
+			var f = input.files && input.files[0];
+			var label = $( '.sbpi-drop-file', drop );
+			label.hidden = ! f;
+			if ( f ) {
+				var ok = /\.(xlsx|csv)$/i.test( f.name );
+				label.textContent = ( ok ? '✓ ' : '✕ ' ) + f.name + ' — ' + fa( Math.round( f.size / 1024 ) ) + ' KB' + ( ok ? '' : ' (فقط XLSX یا CSV)' );
+				label.className = 'sbpi-drop-file ' + ( ok ? 'ok' : 'bad' );
+				submit.disabled = ! ok;
+			}
+		};
+		input.addEventListener( 'change', showFile );
+		[ 'dragenter', 'dragover' ].forEach( function ( ev ) {
+			drop.addEventListener( ev, function ( e ) { e.preventDefault(); drop.classList.add( 'over' ); } );
+		} );
+		[ 'dragleave', 'drop' ].forEach( function ( ev ) {
+			drop.addEventListener( ev, function ( e ) { e.preventDefault(); drop.classList.remove( 'over' ); } );
+		} );
+		drop.addEventListener( 'drop', function ( e ) {
+			if ( e.dataTransfer.files.length ) { input.files = e.dataTransfer.files; showFile(); }
+		} );
+		upload.addEventListener( 'submit', function () {
+			submit.disabled = true;
+			submit.textContent = 'در حال خواندن فایل…';
+		} );
+	}
+
 	var form = $( '#sbpi-form' );
 	if ( ! form ) { return; }
 	var job = form.dataset.job;
 	var runBtn = $( '#sbpi-run' );
 	var stopBtn = $( '#sbpi-stop' );
+	var previewBtn = $( '#sbpi-preview' );
+	var status = $( '#sbpi-status' );
+	var output = $( '#sbpi-output' );
 	var stopped = false;
 
-	/* Role-dependent fields: name/slug only matter for attributes. */
+	/* ---------- Mapping table ---------- */
 	function syncRow( tr ) {
 		var role = $( '[data-c="role"]', tr ).value;
 		var isAttr = role === 'var_attr' || role === 'info_attr' || role === 'split_attr';
-		$( '[data-c="name"]', tr ).disabled = ! isAttr;
 		var pick = $( '[data-c="pick"]', tr );
+		var slug = $( '[data-c="slug"]', tr );
+		$( '[data-c="name"]', tr ).disabled = ! isAttr;
 		pick.disabled = ! isAttr;
-		$( '[data-c="slug"]', tr ).disabled = ! isAttr || pick.value !== '';
-		$( '[data-c="slug"]', tr ).hidden = pick.value !== '';
-		tr.classList.toggle( 'sbpi-off', role === 'ignore' );
+		slug.disabled = ! isAttr || pick.value !== '';
+		slug.hidden = pick.value !== '';
+		tr.dataset.role = role;
 	}
 	$$( '.sbpi-cols tbody tr' ).forEach( function ( tr ) {
 		syncRow( tr );
 		$( '[data-c="role"]', tr ).addEventListener( 'change', function () { syncRow( tr ); } );
 		$( '[data-c="pick"]', tr ).addEventListener( 'change', function () {
 			var opt = this.options[ this.selectedIndex ];
-			if ( this.value ) {
-				$( '[data-c="slug"]', tr ).value = this.value;
-				$( '[data-c="name"]', tr ).value = opt.dataset.label;
-			} else {
-				$( '[data-c="slug"]', tr ).value = '';
-			}
+			$( '[data-c="slug"]', tr ).value = this.value || '';
+			if ( this.value ) { $( '[data-c="name"]', tr ).value = opt.dataset.label; }
 			syncRow( tr );
 		} );
 	} );
+
+	/* Unused virtual columns (section parts) stay folded until asked for. */
+	$$( '.sbpi-virtual-toggle' ).forEach( function ( b ) {
+		var rows = $$( 'tr.sbpi-virtual', b.closest( '.sbpi-sheet-body' ) );
+		if ( ! rows.length ) { b.hidden = true; return; }
+		b.textContent += ' — ' + fa( rows.length );
+		b.addEventListener( 'click', function () {
+			var show = rows[0].hidden;
+			rows.forEach( function ( r ) { r.hidden = ! show; } );
+			b.classList.toggle( 'open', show );
+		} );
+	} );
+
+	/* Sheet switches: enabling opens the card, disabling dims it. */
+	function syncSheet( box ) {
+		var on = $( '[data-f="enabled"]', box ).checked;
+		box.classList.toggle( 'off', ! on );
+	}
+	$$( '.sbpi-sheet[data-sheet]' ).forEach( function ( box ) {
+		syncSheet( box );
+		$( '[data-f="enabled"]', box ).addEventListener( 'change', function () {
+			syncSheet( box );
+			box.open = this.checked;
+		} );
+	} );
+	$$( '[data-sheets]' ).forEach( function ( btn ) {
+		btn.addEventListener( 'click', function () {
+			var on = btn.dataset.sheets === 'all';
+			$$( '.sbpi-sheet[data-sheet]' ).forEach( function ( box ) {
+				$( '[data-f="enabled"]', box ).checked = on;
+				box.open = on;
+				syncSheet( box );
+			} );
+			invalidate();
+		} );
+	} );
+
+	/* Token buttons insert {token} at the cursor of the related input. */
+	$$( '.sbpi-tokens' ).forEach( function ( wrap ) {
+		var target = $( '[data-f="' + wrap.dataset.target + '"]', wrap.closest( '.sbpi-sheet' ) );
+		$$( '.sbpi-token', wrap ).forEach( function ( b ) {
+			b.addEventListener( 'click', function () {
+				var pos = target.selectionStart != null ? target.selectionStart : target.value.length;
+				var v = target.value;
+				var tok = b.textContent.trim();
+				var pre = v.slice( 0, pos ).replace( /\s*$/, '' );
+				target.value = ( pre ? pre + ' ' : '' ) + tok + ( v.slice( pos ) ? ' ' + v.slice( pos ).replace( /^\s*/, '' ) : '' );
+				target.focus();
+				invalidate();
+			} );
+		} );
+	} );
+
+	/* Live Google preview for the SEO title template. */
+	var serp = $( '.sbpi-serp-live' );
+	function renderSerp() {
+		if ( ! serp ) { return; }
+		var tpl = $( '[data-g="seo_title_tpl"]' ).value || '{title}';
+		var site = $( '[data-g="store_name"]' ).value;
+		var title = serp.dataset.sample;
+		var out = tpl.replace( /\{title\}|\{model\}/g, title ).replace( /\{site\}/g, site ).replace( /\{[^}]+\}/g, '' ).replace( /\s{2,}/g, ' ' ).replace( /[\s|\-–—]+$/, '' ).trim();
+		if ( out.length > 65 ) {
+			out = tpl.replace( /\{title\}|\{model\}/g, title ).replace( /\{[^}]+\}/g, '' ).replace( /[\s|\-–—]+$/, '' ).trim();
+		}
+		$( '.t', serp ).textContent = out;
+		var l = $( '.sbpi-len', serp );
+		l.textContent = fa( out.length ) + ' / ۶۵ کاراکتر';
+		l.className = 'sbpi-len ' + ( out.length > 65 ? 'bad' : 'ok' );
+	}
+	[ 'seo_title_tpl', 'store_name' ].forEach( function ( k ) {
+		var el = $( '[data-g="' + k + '"]' );
+		if ( el ) { el.addEventListener( 'input', renderSerp ); }
+	} );
+	renderSerp();
+
 	/* Any change invalidates the last preview. */
-	form.addEventListener( 'input', function () { runBtn.disabled = true; } );
-	form.addEventListener( 'change', function () { runBtn.disabled = true; } );
+	function invalidate() {
+		if ( ! runBtn.disabled ) {
+			runBtn.disabled = true;
+			status.textContent = 'تنظیمات تغییر کرد؛ دوباره «پیش‌نمایش» بگیرید.';
+			setStep( 2 );
+		}
+	}
+	/* Search/filters inside the preview are not settings. */
+	[ 'input', 'change' ].forEach( function ( ev ) {
+		form.addEventListener( ev, function ( e ) {
+			if ( ! e.target.closest( '#sbpi-output' ) ) { invalidate(); }
+		} );
+	} );
 
 	function collect() {
 		var settings = { global: {}, sheets: {} };
@@ -122,95 +263,178 @@
 
 	function len( s, max ) {
 		var n = ( s || '' ).length;
-		return '<span class="sbpi-len ' + ( n > max ? 'bad' : 'ok' ) + '">' + n + '/' + max + '</span>';
+		return '<span class="sbpi-len ' + ( n > max ? 'bad' : 'ok' ) + '">' + fa( n ) + '/' + fa( max ) + '</span>';
 	}
 
-	$( '#sbpi-preview' ).addEventListener( 'click', function () {
-		var btn = this;
+	function kpi( label, value, cls ) {
+		return '<div class="sbpi-kpi ' + ( cls || '' ) + '"><strong>' + fa( value ) + '</strong><span>' + esc( label ) + '</span></div>';
+	}
+
+	/* ---------- Preview ---------- */
+	var lastPreview = null;
+	var STATUS = { 'new': 'جدید', update: 'به‌روزرسانی', skip: 'رد می‌شود' };
+
+	function productRow( p, i ) {
+		return '<tr data-status="' + p.status + '" data-priced="' + ( p.priced ? 1 : 0 ) + '" data-q="' + esc( ( p.title + ' ' + p.category + ' ' + p.slug ).toLowerCase() ) + '">' +
+			'<td><span class="sbpi-st sbpi-st-' + p.status + '">' + STATUS[ p.status ] + '</span>' +
+			( p.new_vars && p.status === 'update' ? ' <small>+' + fa( p.new_vars ) + ' تنوع جدید</small>' : '' ) +
+			'<div class="sbpi-ptitle">' + esc( p.title ) + '</div><code dir="ltr">' + esc( decodeURIComponent( p.slug ) ) + '</code>' +
+			'<div class="sbpi-muted-sm">سطرها: ' + esc( p.lines ) + '</div></td>' +
+			'<td>' + ( p.type === 'variable' ? 'متغیر · <strong>' + fa( p.variations ) + '</strong> تنوع' : 'ساده' ) + ( p.priced ? '' : '<br><span class="sbpi-len bad">بدون قیمت</span>' ) +
+			'<div class="sbpi-muted-sm">' + esc( p.category ) + ' · ' + esc( p.brand ) + '</div>' +
+			'<div class="sbpi-muted-sm">' + esc( p.attributes ) + '</div></td>' +
+			'<td class="sbpi-serp"><div class="t">' + esc( p.seo_title ) + '</div>' +
+			'<div class="d">' + esc( p.seo_desc ) + '</div>' +
+			'<div class="k">' + len( p.seo_title, 65 ) + ' ' + len( p.seo_desc, 158 ) + ' 🔑 ' + esc( p.focus ) + '</div>' +
+			( p.content ? '<details><summary>توضیحات تولیدشده</summary><div class="sbpi-content" data-i="' + i + '"></div></details>' : '' ) +
+			'</td></tr>';
+	}
+
+	function applyFilter() {
+		var q = ( $( '#sbpi-q' ) || {} ).value || '';
+		var f = ( $( '.sbpi-filter.on' ) || { dataset: { f: '' } } ).dataset.f;
+		q = q.toLowerCase().trim();
+		var shown = 0;
+		$$( '.sbpi-preview > tbody > tr' ).forEach( function ( tr ) {
+			var ok = ( ! q || tr.dataset.q.indexOf( q ) !== -1 ) &&
+				( ! f || ( f === 'noprice' ? tr.dataset.priced === '0' : tr.dataset.status === f ) );
+			tr.hidden = ! ok;
+			if ( ok ) { shown++; }
+		} );
+		var c = $( '#sbpi-shown' );
+		if ( c ) { c.textContent = fa( shown ) + ' مورد'; }
+	}
+
+	previewBtn.addEventListener( 'click', function () {
 		var out = $( '#sbpi-result' );
-		btn.disabled = true;
-		out.innerHTML = '<p>در حال تحلیل…</p>';
+		if ( ! $$( '[data-f="enabled"]' ).some( function ( c ) { return c.checked; } ) ) {
+			toast( 'هیچ شیتی انتخاب نشده است.', 'bad' );
+			return;
+		}
+		previewBtn.disabled = true;
+		previewBtn.classList.add( 'busy' );
+		status.textContent = 'در حال تحلیل فایل…';
+		output.hidden = false;
+		out.innerHTML = '<div class="sbpi-skeleton"></div><div class="sbpi-skeleton"></div><div class="sbpi-skeleton"></div>';
 		post( 'sbpi_preview', { job: job, settings: JSON.stringify( collect() ) } ).then( function ( d ) {
-			var html = '<div class="sbpi-summary"><strong>' + d.count + '</strong> محصول، <strong>' + d.variations + '</strong> تنوع' +
-				( d.seo_plugin ? ' — متای سئو در <strong>' + esc( d.seo_plugin ) + '</strong> ذخیره می‌شود.' : '' ) + '</div>';
+			lastPreview = d;
 			var df = d.diff;
-			html += '<div class="sbpi-diff"><span class="sbpi-len ok">جدید: ' + df.new + '</span> ' +
-				'<span class="sbpi-len ' + ( df.mode === 'skip' ? 'bad' : 'ok' ) + '">' + ( df.mode === 'skip' ? 'موجود (رد می‌شود): ' : 'موجود (به‌روزرسانی): ' ) + df.update + '</span> ' +
-				'<span class="sbpi-len ' + ( df.pcount ? 'bad' : 'ok' ) + '">تغییر قیمت: ' + df.pcount + '</span></div>';
+			var noPrice = d.products.filter( function ( p ) { return ! p.priced; } ).length;
+			var html = '<div class="sbpi-kpis">' +
+				kpi( 'محصول', d.count ) +
+				kpi( 'تنوع', d.variations ) +
+				kpi( 'جدید', df.new, 'good' ) +
+				kpi( df.mode === 'skip' ? 'موجود (رد می‌شود)' : 'به‌روزرسانی', df.update, df.mode === 'skip' ? 'warn' : 'info' ) +
+				kpi( 'تغییر قیمت', df.pcount, df.pcount ? 'warn' : '' ) +
+				kpi( 'بدون قیمت', noPrice, noPrice ? 'bad' : '' ) +
+				'</div>';
+			if ( d.warnings.length ) {
+				html += '<div class="sbpi-alerts">' + d.warnings.map( function ( w ) { return '<div class="sbpi-alert"><span class="dashicons dashicons-warning"></span>' + esc( w ) + '</div>'; } ).join( '' ) + '</div>';
+			}
 			if ( df.pcount && df.mode !== 'skip' ) {
-				html += '<details open><summary>تغییرات قیمت (قبلی ← جدید)' + ( df.pcount > df.prices.length ? ' — ' + df.prices.length + ' مورد اول' : '' ) + '</summary><table class="widefat striped"><tbody>' +
+				html += '<details class="sbpi-box"><summary>تغییرات قیمت — قبلی ← جدید (' + fa( df.pcount ) + ( df.pcount > df.prices.length ? '، ' + fa( df.prices.length ) + ' مورد اول' : '' ) + ')</summary><table class="widefat striped"><tbody>' +
 					df.prices.map( function ( p ) {
-						var up = Number( p[3] ) > Number( p[2] ) ? '▲' : '▼';
-						return '<tr><td>' + esc( p[0] ) + '</td><td>' + esc( p[1] ) + '</td><td>' + esc( p[2] || '—' ) + '</td><td><strong>' + esc( p[3] ) + '</strong> ' + up + '</td></tr>';
+						var up = Number( p[3] ) > Number( p[2] );
+						return '<tr><td>' + esc( p[0] ) + '</td><td>' + esc( p[1] ) + '</td><td>' + esc( p[2] ? fa( p[2] ) : '—' ) + '</td><td><strong class="' + ( up ? 'sbpi-up' : 'sbpi-down' ) + '">' + fa( p[3] ) + ( up ? ' ▲' : ' ▼' ) + '</strong></td></tr>';
 					} ).join( '' ) + '</tbody></table></details>';
 			}
-			if ( d.warnings.length ) {
-				html += '<div class="notice notice-warning inline"><ul>' + d.warnings.map( function ( w ) { return '<li>' + esc( w ) + '</li>'; } ).join( '' ) + '</ul></div>';
-			}
-			html += '<table class="widefat striped sbpi-preview"><thead><tr><th>محصول</th><th>نوع</th><th>دسته / برند</th><th>ویژگی‌ها (★ = متغیر)</th><th>سئو</th></tr></thead><tbody>';
-			d.products.forEach( function ( p, i ) {
-				html += '<tr>' +
-					'<td><span class="sbpi-st sbpi-st-' + p.status + '">' + { 'new': 'جدید', update: 'به‌روزرسانی', skip: 'رد می‌شود' }[ p.status ] + '</span>' +
-					( p.new_vars && p.status === 'update' ? ' <small>+' + p.new_vars + ' تنوع جدید</small>' : '' ) +
-					'<br><strong>' + esc( p.title ) + '</strong><br><code dir="ltr">' + esc( decodeURIComponent( p.slug ) ) + '</code><br><small>سطرها: ' + esc( p.lines ) + '</small></td>' +
-					'<td>' + ( p.type === 'variable' ? 'متغیر<br><strong>' + p.variations + '</strong> تنوع' : 'ساده' ) + ( p.priced ? '' : '<br><span class="sbpi-len bad">بدون قیمت</span>' ) + '</td>' +
-					'<td>' + esc( p.category ) + '<br><small>' + esc( p.brand ) + '</small></td>' +
-					'<td><small>' + esc( p.attributes ) + '</small></td>' +
-					'<td class="sbpi-serp"><div class="t">' + esc( p.seo_title ) + ' ' + len( p.seo_title, 65 ) + '</div>' +
-					'<div class="d">' + esc( p.seo_desc ) + ' ' + len( p.seo_desc, 158 ) + '</div>' +
-					'<div class="k">🔑 ' + esc( p.focus ) + '</div>' +
-					( p.content ? '<details><summary>توضیحات تولیدشده</summary><div class="sbpi-content" data-i="' + i + '"></div></details>' : '' ) +
-					'</td></tr>';
-			} );
-			html += '</tbody></table>';
-			out.innerHTML = html;
+			html += '<div class="sbpi-toolbar"><input type="search" id="sbpi-q" placeholder="جست‌وجو در نام، دسته یا نامک…" />' +
+				'<button type="button" class="sbpi-filter on" data-f="">همه</button>' +
+				'<button type="button" class="sbpi-filter" data-f="new">جدید</button>' +
+				'<button type="button" class="sbpi-filter" data-f="update">به‌روزرسانی</button>' +
+				( noPrice ? '<button type="button" class="sbpi-filter" data-f="noprice">بدون قیمت</button>' : '' ) +
+				'<span id="sbpi-shown" class="sbpi-muted-sm"></span></div>';
+			html += '<div class="sbpi-table-wrap"><table class="widefat sbpi-preview"><thead><tr><th>محصول</th><th>ساختار</th><th>نمایش در گوگل</th></tr></thead><tbody>' +
+				d.products.map( productRow ).join( '' ) + '</tbody></table></div>';
+			$( '#sbpi-result' ).innerHTML = html;
 			/* Server already ran wp_kses_post on content. */
-			$$( '.sbpi-content', out ).forEach( function ( el ) { el.innerHTML = d.products[ el.dataset.i ].content; } );
+			$$( '.sbpi-content' ).forEach( function ( el ) { el.innerHTML = d.products[ el.dataset.i ].content; } );
+			$( '#sbpi-q' ).addEventListener( 'input', applyFilter );
+			$$( '.sbpi-filter' ).forEach( function ( b ) {
+				b.addEventListener( 'click', function () {
+					$$( '.sbpi-filter' ).forEach( function ( x ) { x.classList.remove( 'on' ); } );
+					b.classList.add( 'on' );
+					applyFilter();
+				} );
+			} );
+			applyFilter();
 			runBtn.disabled = d.count === 0;
+			status.innerHTML = d.count
+				? 'آماده: <strong>' + fa( d.count ) + '</strong> محصول، <strong>' + fa( d.variations ) + '</strong> تنوع.'
+				: 'هیچ محصولی پیدا نشد؛ نقش ستون «نام / مدل» را بررسی کنید.';
+			setStep( 3 );
+			output.scrollIntoView( { behavior: 'smooth', block: 'start' } );
 		} ).catch( function ( e ) {
-			out.innerHTML = '<div class="notice notice-error inline"><p>' + esc( e.message ) + '</p></div>';
-		} ).then( function () { btn.disabled = false; } );
+			out.innerHTML = '<div class="sbpi-alert bad"><span class="dashicons dashicons-dismiss"></span>' + esc( e.message ) + '</div>';
+			status.textContent = 'خطا در پیش‌نمایش.';
+			toast( e.message, 'bad' );
+		} ).then( function () {
+			previewBtn.disabled = false;
+			previewBtn.classList.remove( 'busy' );
+		} );
 	} );
 
-	stopBtn.addEventListener( 'click', function () { stopped = true; stopBtn.disabled = true; } );
+	stopBtn.addEventListener( 'click', function () { stopped = true; stopBtn.disabled = true; status.textContent = 'در حال توقف پس از مرحله جاری…'; } );
 
+	/* ---------- Run ---------- */
 	runBtn.addEventListener( 'click', function () {
-		if ( ! window.confirm( 'درون‌ریزی شروع شود؟ (پیشنهاد: قبل از اولین اجرا روی سایت اصلی، نسخه پشتیبان بگیرید یا روی Staging تست کنید.)' ) ) { return; }
+		var count = lastPreview ? lastPreview.count : 0;
+		if ( ! window.confirm( 'درون‌ریزی ' + fa( count ) + ' محصول شروع شود؟\n\nپیشنهاد: قبل از اولین اجرا روی سایت اصلی، نسخه پشتیبان بگیرید یا روی Staging تست کنید.' ) ) { return; }
 		var log = $( '#sbpi-log' );
 		var bar = $( '#sbpi-progress' );
 		var retries = 0;
+		var started = Date.now();
+		var startCursor = null;
 		stopped = false;
 		runBtn.disabled = true;
-		$( '#sbpi-preview' ).disabled = true;
+		previewBtn.disabled = true;
 		stopBtn.hidden = false;
 		stopBtn.disabled = false;
-		log.hidden = false;
 		bar.hidden = false;
-		log.textContent = '';
+		$( '#sbpi-log-wrap' ).hidden = false;
+		form.classList.add( 'running' );
+		setStep( 4 );
+		output.scrollIntoView( { behavior: 'smooth', block: 'start' } );
 
-		function finish( msg ) {
+		function finish( msg, ok ) {
 			$( '.sbpi-progress-text', bar ).innerHTML = msg;
+			$( '.sbpi-eta', bar ).textContent = '';
 			stopBtn.hidden = true;
-			$( '#sbpi-preview' ).disabled = false;
+			previewBtn.disabled = false;
+			form.classList.remove( 'running' );
+			bar.classList.toggle( 'complete', !! ok );
 		}
 
 		( function step() {
 			if ( stopped ) {
 				runBtn.disabled = false;
-				runBtn.textContent = '▶ ادامه درون‌ریزی';
-				return finish( 'متوقف شد. با «ادامه» از همان نقطه ادامه می‌یابد.' );
+				runBtn.innerHTML = '<span class="dashicons dashicons-controls-play"></span> ادامه درون‌ریزی';
+				status.textContent = 'متوقف شد؛ با «ادامه» از همان نقطه ادامه می‌یابد.';
+				return finish( 'متوقف شد.' );
 			}
 			post( 'sbpi_run', { job: job } ).then( function ( d ) {
 				retries = 0;
+				if ( startCursor === null ) { startCursor = Math.max( 0, d.cursor - 1 ); }
 				if ( d.log.length ) { log.textContent += d.log.join( '\n' ) + '\n'; log.scrollTop = log.scrollHeight; }
 				var pct = d.total ? Math.round( d.cursor / d.total * 100 ) : 100;
 				$( '.sbpi-bar span', bar ).style.width = pct + '%';
+				$( '.sbpi-pct', bar ).textContent = fa( pct ) + '٪';
 				var s = d.stats;
-				var text = d.cursor + ' / ' + d.total + ' — ساخته: ' + s.created + ' · به‌روز: ' + s.updated + ' · رد: ' + s.skipped + ' · خطا: ' + s.errors;
+				var text = fa( d.cursor ) + ' از ' + fa( d.total ) + ' — ساخته: ' + fa( s.created ) + ' · به‌روز: ' + fa( s.updated ) + ' · رد: ' + fa( s.skipped ) + ( s.errors ? ' · خطا: ' + fa( s.errors ) : '' );
+				var doneN = d.cursor - startCursor;
+				if ( doneN > 0 && ! d.done ) {
+					var sec = Math.round( ( Date.now() - started ) / 1000 / doneN * ( d.total - d.cursor ) );
+					$( '.sbpi-eta', bar ).textContent = '≈ ' + ( sec > 90 ? fa( Math.round( sec / 60 ) ) + ' دقیقه' : fa( sec ) + ' ثانیه' ) + ' مانده';
+				}
+				document.title = fa( pct ) + '٪ — درون‌ریزی';
 				if ( d.done ) {
-					finish( '✅ پایان. ' + text + ' — <a href="' + esc( d.list ) + '">مشاهده محصولات</a>' );
+					finish( '✅ ' + text + ' — <a href="' + esc( d.list ) + '">مشاهده محصولات</a>', true );
+					status.innerHTML = s.errors ? 'پایان با ' + fa( s.errors ) + ' خطا؛ گزارش را ببینید.' : 'درون‌ریزی با موفقیت تمام شد.';
+					toast( s.errors ? 'پایان با خطا — گزارش را بررسی کنید.' : 'درون‌ریزی تمام شد.', s.errors ? 'bad' : 'good' );
+					if ( s.errors ) { $( '#sbpi-log-wrap' ).open = true; }
 				} else {
 					$( '.sbpi-progress-text', bar ).textContent = text;
+					status.textContent = 'در حال درون‌ریزی… صفحه را نبندید.';
 					step();
 				}
 			} ).catch( function ( e ) {
@@ -220,9 +444,15 @@
 					return setTimeout( step, 3000 );
 				}
 				runBtn.disabled = false;
-				runBtn.textContent = '▶ ادامه درون‌ریزی';
+				runBtn.innerHTML = '<span class="dashicons dashicons-controls-play"></span> ادامه درون‌ریزی';
 				finish( '<span class="sbpi-len bad">' + esc( e.message ) + '</span>' );
+				toast( e.message, 'bad' );
 			} );
 		} )();
+	} );
+
+	/* Warn before leaving mid-run. */
+	window.addEventListener( 'beforeunload', function ( e ) {
+		if ( form.classList.contains( 'running' ) ) { e.preventDefault(); e.returnValue = ''; }
 	} );
 } )();
