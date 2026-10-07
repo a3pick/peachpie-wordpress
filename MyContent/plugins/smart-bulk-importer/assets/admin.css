@@ -1,0 +1,28 @@
+.sbpi .sbpi-card { background: #fff; border: 1px solid #dcdcde; border-radius: 8px; padding: 16px 20px; margin: 16px 0; }
+.sbpi .sbpi-card h2 small { font-weight: 400; color: #646970; }
+.sbpi .sbpi-sheet { border-top: 1px solid #f0f0f1; padding-top: 12px; margin-top: 12px; }
+.sbpi .sbpi-sheet h3 small { font-weight: 400; color: #646970; margin-inline-start: 8px; }
+.sbpi .sbpi-muted { opacity: .8; }
+.sbpi .sbpi-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; margin: 8px 0; }
+.sbpi .sbpi-grid label { display: flex; flex-direction: column; gap: 4px; font-weight: 600; }
+.sbpi .sbpi-grid input, .sbpi .sbpi-grid select { font-weight: 400; max-width: 100%; }
+.sbpi .sbpi-checks label { display: block; margin: 6px 0; }
+.sbpi .sbpi-cols td { vertical-align: middle; }
+.sbpi .sbpi-cols input[type=text] { width: 100%; }
+.sbpi .sbpi-cols .sbpi-sample { color: #50575e; font-size: 12px; max-width: 280px; }
+.sbpi .sbpi-cols tr.sbpi-off td { opacity: .55; }
+.sbpi .sbpi-summary { font-size: 14px; margin: 8px 0; }
+.sbpi .sbpi-preview td { vertical-align: top; }
+.sbpi .sbpi-serp { max-width: 420px; }
+.sbpi .sbpi-serp .t { color: #1a0dab; font-size: 15px; }
+.sbpi .sbpi-serp .d { color: #4d5156; font-size: 12px; margin: 2px 0; }
+.sbpi .sbpi-serp .k { color: #646970; font-size: 12px; }
+.sbpi .sbpi-len { font-size: 11px; padding: 0 4px; border-radius: 3px; white-space: nowrap; }
+.sbpi .sbpi-len.ok { background: #edfaef; color: #00a32a; }
+.sbpi .sbpi-len.bad { background: #fcf0f1; color: #d63638; }
+.sbpi .sbpi-content { border: 1px dashed #c3c4c7; padding: 8px; margin-top: 6px; max-height: 360px; overflow: auto; font-size: 12px; }
+.sbpi .sbpi-content table { border-collapse: collapse; }
+.sbpi .sbpi-content th, .sbpi .sbpi-content td { border: 1px solid #dcdcde; padding: 2px 6px; }
+.sbpi .sbpi-bar { height: 10px; background: #f0f0f1; border-radius: 5px; overflow: hidden; }
+.sbpi .sbpi-bar span { display: block; height: 100%; width: 0; background: #2271b1; transition: width .3s; }
+.sbpi #sbpi-log { background: #1d2327; color: #f0f0f1; padding: 10px; max-height: 300px; overflow: auto; direction: rtl; white-space: pre-wrap; }
