@@ -56,6 +56,68 @@ final class SBPI_Admin {
 	}
 
 	/**
+	 * Attributes already defined on the site: slug => label.
+	 *
+	 * @return array
+	 */
+	public static function existing_attributes() {
+		$out = array();
+		foreach ( wc_get_attribute_taxonomies() as $tax ) {
+			$out[ $tax->attribute_name ] = $tax->attribute_label;
+		}
+		return $out;
+	}
+
+	/** Synonyms used to recognise an existing attribute under another name. */
+	const SYNONYMS = array(
+		'color'     => array( 'رنگ', 'رنگبندی', 'رنگ بندی', 'رنگ‌بندی', 'colour', 'color', 'رنگ های موجود' ),
+		'storage'   => array( 'حافظه', 'حافظه داخلی', 'ظرفیت', 'ظرفیت حافظه', 'storage', 'capacity', 'internal storage' ),
+		'ram'       => array( 'رم', 'حافظه رم', 'ram', 'memory', 'مقدار رم' ),
+		'condition' => array( 'وضعیت', 'وضعیت کالا', 'وضعیت محصول', 'گرید', 'grade', 'condition', 'کیفیت' ),
+		'region'    => array( 'ریجن', 'منطقه', 'سری منطقه‌ای', 'پارت نامبر', 'region', 'part number' ),
+		'brand'     => array( 'برند', 'سازنده', 'brand', 'manufacturer' ),
+		'warranty'  => array( 'گارانتی', 'warranty' ),
+	);
+
+	/**
+	 * Find the site's attribute matching a column: slug, label, then synonyms.
+	 *
+	 * @param string $name     Suggested label.
+	 * @param string $slug     Suggested slug.
+	 * @param array  $existing slug => label.
+	 * @return string Existing slug or ''.
+	 */
+	public static function match_existing( $name, $slug, array $existing ) {
+		if ( '' !== $slug && isset( $existing[ $slug ] ) ) {
+			return $slug;
+		}
+		$norm = static function ( $t ) {
+			return str_replace( array( "\xE2\x80\x8C", ' ', '-', '_' ), '', SBPI_Util::key( SBPI_Util::header_label( $t ) ) );
+		};
+		$key = $norm( $name );
+		foreach ( $existing as $es => $label ) {
+			if ( $norm( $label ) === $key || $norm( $es ) === $key ) {
+				return $es;
+			}
+		}
+		$group = isset( self::SYNONYMS[ $slug ] ) ? self::SYNONYMS[ $slug ] : array();
+		foreach ( self::SYNONYMS as $words ) {
+			foreach ( $words as $w ) {
+				if ( $norm( $w ) === $key ) {
+					$group = array_merge( $group, $words );
+				}
+			}
+		}
+		$group = array_map( $norm, $group );
+		foreach ( $existing as $es => $label ) {
+			if ( in_array( $norm( $label ), $group, true ) || in_array( $norm( $es ), $group, true ) ) {
+				return $es;
+			}
+		}
+		return '';
+	}
+
+	/**
 	 * Global defaults.
 	 *
 	 * @return array
@@ -307,6 +369,7 @@ final class SBPI_Admin {
 		$global  = self::default_global();
 		$roles   = SBPI_Planner::roles();
 		$glossary_count = 0;
+		$existing       = self::existing_attributes();
 		?>
 		<form id="sbpi-form" data-job="<?php echo esc_attr( $job['id'] ); ?>">
 		<div class="sbpi-card">
@@ -329,6 +392,16 @@ final class SBPI_Admin {
 				continue;
 			}
 			$conf = SBPI_Planner::default_settings( $sheet );
+			// Reuse the site's own attributes (e.g. laptop "رنگ‌بندی" / pa_rang) when they match.
+			foreach ( $conf['columns'] as $ck => $col ) {
+				if ( in_array( $col['role'], array( 'var_attr', 'info_attr', 'split_attr' ), true ) ) {
+					$hit = self::match_existing( $col['name'], $col['slug'], $existing );
+					if ( '' !== $hit ) {
+						$conf['columns'][ $ck ]['slug'] = $hit;
+						$conf['columns'][ $ck ]['name'] = $existing[ $hit ];
+					}
+				}
+			}
 			$sig  = self::signature( $sheet );
 			if ( isset( $presets[ $sig ] ) && is_array( $presets[ $sig ] ) ) {
 				// "+" (not array_merge) keeps numeric column keys intact.
@@ -351,7 +424,7 @@ final class SBPI_Admin {
 				</div>
 				<p class="description">متغیرها: <code>{model}</code> <code>{split}</code> (مقادیر ستون‌های «محصول جدا») یا نامک هر ستون مثل <code>{storage}</code> <code>{condition}</code>، <code>{sheet}</code> <code>{s1}</code> <code>{s2}</code> <code>{s3}</code> (بخش‌های سطر عنوان؛ مثلاً در «PLAY STATION 5 — ACCENT — استوک»، s1=PLAY STATION 5). مثال: <code>گوشی موبایل اپل {model} ظرفیت {storage} {condition}</code>.</p>
 				<table class="widefat striped sbpi-cols">
-					<thead><tr><th>ستون</th><th>نمونه داده</th><th>نقش</th><th>نام ویژگی</th><th>نامک لاتین</th><th>چندمقداری</th></tr></thead>
+					<thead><tr><th>ستون</th><th>نمونه داده</th><th>نقش</th><th>نام ویژگی</th><th>ویژگی سایت / نامک</th><th>چندمقداری</th></tr></thead>
 					<tbody>
 					<?php
 					$all = array();
@@ -386,7 +459,15 @@ final class SBPI_Admin {
 								<?php endforeach; ?>
 							</select></td>
 							<td><input type="text" data-c="name" value="<?php echo esc_attr( $col['name'] ); ?>" /></td>
-							<td><input type="text" data-c="slug" value="<?php echo esc_attr( $col['slug'] ); ?>" dir="ltr" placeholder="storage" maxlength="27" /></td>
+							<td>
+								<select data-c="pick">
+									<option value="">➕ ساخت ویژگی جدید</option>
+									<?php foreach ( $existing as $es => $el ) : ?>
+										<option value="<?php echo esc_attr( $es ); ?>" data-label="<?php echo esc_attr( $el ); ?>" <?php selected( $col['slug'], $es ); ?>>✓ <?php echo esc_html( $el . ' (' . $es . ')' ); ?></option>
+									<?php endforeach; ?>
+								</select>
+								<input type="text" data-c="slug" value="<?php echo esc_attr( $col['slug'] ); ?>" dir="ltr" placeholder="نامک جدید، مثلاً storage" maxlength="27" />
+							</td>
 							<td><input type="checkbox" data-c="split" <?php checked( ! empty( $col['split'] ) ); ?> /></td>
 						</tr>
 						<?php
@@ -565,6 +646,22 @@ final class SBPI_Admin {
 			);
 		}
 		$warnings = $plan['warnings'];
+		$existing = self::existing_attributes();
+		$new      = array();
+		foreach ( $plan['products'] as $p ) {
+			foreach ( $p['attributes'] as $a ) {
+				$found = isset( $existing[ $a['slug'] ] );
+				foreach ( $existing as $el ) {
+					$found = $found || SBPI_Util::key( $el ) === SBPI_Util::key( $a['name'] );
+				}
+				if ( ! $found ) {
+					$new[ $a['name'] . ( $a['slug'] ? ' (' . $a['slug'] . ')' : '' ) ] = true;
+				}
+			}
+		}
+		if ( $new ) {
+			$warnings[] = 'این ویژگی‌ها در سایت وجود ندارند و جدید ساخته می‌شوند: ' . implode( '، ', array_keys( $new ) ) . '. اگر معادلشان را از قبل دارید (مثلاً برای لپ‌تاپ)، در ستون «ویژگی سایت» همان را انتخاب کنید تا ویژگی تکراری ساخته نشود.';
+		}
 		if ( $no_price ) {
 			$warnings[] = sprintf( '%d محصول قیمت ندارند. ووکامرس تنوع‌های بدون قیمت را در صفحه محصول قابل انتخاب نمی‌کند؛ بعداً قیمت را با همین افزونه (ستون قیمت + حالت به‌روزرسانی) یا ویرایش گروهی وارد کنید.', $no_price );
 		}

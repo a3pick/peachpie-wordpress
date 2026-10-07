@@ -54,14 +54,27 @@
 	/* Role-dependent fields: name/slug only matter for attributes. */
 	function syncRow( tr ) {
 		var role = $( '[data-c="role"]', tr ).value;
-		var isAttr = role === 'var_attr' || role === 'info_attr';
+		var isAttr = role === 'var_attr' || role === 'info_attr' || role === 'split_attr';
 		$( '[data-c="name"]', tr ).disabled = ! isAttr;
-		$( '[data-c="slug"]', tr ).disabled = ! isAttr;
+		var pick = $( '[data-c="pick"]', tr );
+		pick.disabled = ! isAttr;
+		$( '[data-c="slug"]', tr ).disabled = ! isAttr || pick.value !== '';
+		$( '[data-c="slug"]', tr ).hidden = pick.value !== '';
 		tr.classList.toggle( 'sbpi-off', role === 'ignore' );
 	}
 	$$( '.sbpi-cols tbody tr' ).forEach( function ( tr ) {
 		syncRow( tr );
 		$( '[data-c="role"]', tr ).addEventListener( 'change', function () { syncRow( tr ); } );
+		$( '[data-c="pick"]', tr ).addEventListener( 'change', function () {
+			var opt = this.options[ this.selectedIndex ];
+			if ( this.value ) {
+				$( '[data-c="slug"]', tr ).value = this.value;
+				$( '[data-c="name"]', tr ).value = opt.dataset.label;
+			} else {
+				$( '[data-c="slug"]', tr ).value = '';
+			}
+			syncRow( tr );
+		} );
 	} );
 	/* Any change invalidates the last preview. */
 	form.addEventListener( 'input', function () { runBtn.disabled = true; } );

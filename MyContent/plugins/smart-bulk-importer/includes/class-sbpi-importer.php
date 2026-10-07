@@ -380,8 +380,11 @@ final class SBPI_Importer {
 			return self::$attr_cache[ $cache_key ];
 		}
 		$slug = wc_sanitize_taxonomy_name( $slug );
+
 		foreach ( wc_get_attribute_taxonomies() as $tax ) {
-			if ( ( '' !== $slug && $tax->attribute_name === $slug ) || SBPI_Util::key( $tax->attribute_label ) === SBPI_Util::key( $label ) ) {
+			// A slug chosen on the mapping screen is authoritative; label matching only
+			// applies when no slug was given, so "create new" is never overridden.
+			if ( '' !== $slug ? $tax->attribute_name === $slug : SBPI_Util::key( $tax->attribute_label ) === SBPI_Util::key( $label ) ) {
 				return self::$attr_cache[ $cache_key ] = wc_attribute_taxonomy_name( $tax->attribute_name ); // phpcs:ignore Squiz.PHP.DisallowMultipleAssignments
 			}
 		}
