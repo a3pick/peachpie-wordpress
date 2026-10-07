@@ -29,6 +29,8 @@ final class SBPI_Admin {
 		add_action( 'admin_post_sbpi_template', array( __CLASS__, 'handle_template' ) );
 		add_action( 'admin_post_sbpi_save_content', array( __CLASS__, 'handle_save_content' ) );
 		add_action( 'wp_ajax_sbpi_price_apply', array( __CLASS__, 'ajax_price_apply' ) );
+		add_action( 'wp_ajax_sbpi_selftest', array( __CLASS__, 'ajax_selftest' ) );
+		add_action( 'admin_post_sbpi_log', array( __CLASS__, 'handle_log' ) );
 	}
 
 	/**
@@ -321,7 +323,7 @@ final class SBPI_Admin {
 		// phpcs:enable
 		$base = admin_url( 'edit.php?post_type=product&page=' . self::SLUG );
 
-		$step = 'history' === $tab || 'prices' === $tab || 'content' === $tab || 'health' === $tab ? 0 : ( $job ? 2 : 1 );
+		$step = in_array( $tab, array( 'history', 'prices', 'content', 'health', 'system' ), true ) ? 0 : ( $job ? 2 : 1 );
 		echo '<div class="wrap sbpi" dir="rtl">';
 		echo '<div class="sbpi-head"><h1><span class="dashicons dashicons-database-import"></span> درون‌ریز هوشمند محصولات <span class="sbpi-ver">v' . esc_html( SBPI_VERSION ) . '</span></h1>';
 		$seo = SBPI_SEO::seo_plugin();
@@ -333,6 +335,7 @@ final class SBPI_Admin {
 			'prices'  => array( 'قیمت‌ها', 'money-alt' ),
 			'content' => array( 'متن وضعیت‌ها', 'edit-page' ),
 			'health'  => array( 'سلامت سئو', 'heart' ),
+			'system'  => array( 'بررسی سیستم', 'shield' ),
 			'history' => array( 'تاریخچه', 'backup' ),
 		);
 		echo '<nav class="nav-tab-wrapper sbpi-tabs">';
@@ -364,6 +367,8 @@ final class SBPI_Admin {
 			self::render_content();
 		} elseif ( 'health' === $tab ) {
 			self::render_health();
+		} elseif ( 'system' === $tab ) {
+			self::render_system();
 		} elseif ( $job ) {
 			self::render_mapping( $job );
 		} else {
@@ -414,6 +419,27 @@ final class SBPI_Admin {
 						<li>شیت راهنما ← سؤالات متداول</li>
 						<li>ویژگی‌های موجود سایت</li>
 					</ul>
+				</div>
+				<?php
+				$bad = array_filter(
+					SBPI_Selftest::environment(),
+					static function ( $c ) {
+						return 'ok' !== $c[0];
+					}
+				);
+				?>
+				<div class="sbpi-card">
+					<h3><span class="dashicons dashicons-shield"></span> وضعیت سیستم</h3>
+					<?php if ( $bad ) : ?>
+						<ul class="sbpi-env-mini">
+							<?php foreach ( $bad as $c ) : ?>
+								<li class="<?php echo esc_attr( $c[0] ); ?>"><strong><?php echo esc_html( $c[1] ); ?>:</strong> <?php echo esc_html( $c[2] ); ?></li>
+							<?php endforeach; ?>
+						</ul>
+					<?php else : ?>
+						<p class="sbpi-ok-text">✓ همه پیش‌نیازها برقرار است.</p>
+					<?php endif; ?>
+					<a href="<?php echo esc_url( admin_url( 'edit.php?post_type=product&page=' . self::SLUG . '&tab=system' ) ); ?>">بررسی کامل و خودآزمایی ←</a>
 				</div>
 				<?php if ( $last ) : ?>
 				<div class="sbpi-card">
@@ -694,19 +720,23 @@ final class SBPI_Admin {
 			echo '<p>هنوز درون‌ریزی انجام نشده است.</p></div>';
 			return;
 		}
-		echo '<p class="description">«بازگردانی» فقط محصولاتی را که در آن نوبت <strong>ساخته</strong> شده‌اند (همراه تنوع‌ها) حذف کامل می‌کند؛ محصولات به‌روزرسانی‌شده و تصاویر کتابخانه دست نمی‌خورند. قبل از آن نسخه پشتیبان بگیرید.</p>';
-		echo '<table class="widefat striped"><thead><tr><th>تاریخ</th><th>فایل</th><th>ساخته‌شده</th><th>به‌روزشده</th><th>ردشده</th><th>خطا</th><th>وضعیت</th><th></th></tr></thead><tbody>';
+		echo '<p class="description">«بازگردانی» کل یک نوبت را برمی‌گرداند: محصولات <strong>ساخته‌شده</strong> (همراه تنوع‌ها) حذف می‌شوند و محصولات <strong>به‌روزشده</strong> به وضعیت دقیق قبل از آن نوبت (نام، توضیحات، قیمت، موجودی، ویژگی‌ها، دسته، تصویر، متای سئو و تنوع‌ها) برمی‌گردند؛ تنوع‌هایی که آن نوبت اضافه کرده حذف می‌شوند. برای به‌روزرسانی قیمت، قیمت‌ها و موجودی‌های قبلی برمی‌گردند. تصاویر کتابخانه، ویژگی‌ها و دسته‌های ساخته‌شده حذف نمی‌شوند. نوبت‌های جدیدتر را اول بازگردانی کنید.</p>';
+		echo '<table class="widefat striped"><thead><tr><th>تاریخ</th><th>نوع</th><th>فایل</th><th>ساخته‌شده</th><th>به‌روزشده</th><th>ردشده</th><th>خطا</th><th>وضعیت</th><th></th></tr></thead><tbody>';
+		$labels = array( 'running' => 'نیمه‌کاره', 'done' => 'انجام شد', 'rolled_back' => 'بازگردانی شد' );
 		foreach ( array_reverse( $batches, true ) as $id => $b ) {
+			$log_url = wp_nonce_url( admin_url( 'admin-post.php?action=sbpi_log&batch=' . rawurlencode( $id ) ), 'sbpi_log' );
 			printf(
-				'<tr><td>%s</td><td>%s</td><td>%d</td><td>%d</td><td>%d</td><td>%d</td><td>%s</td><td>%s</td></tr>',
+				'<tr><td>%s</td><td>%s</td><td>%s</td><td>%d</td><td>%d</td><td>%d</td><td>%d</td><td>%s</td><td>%s %s</td></tr>',
 				esc_html( wp_date( 'Y/m/d H:i', $b['time'] ) ),
+				esc_html( isset( $b['type'] ) && 'prices' === $b['type'] ? 'قیمت' : 'درون‌ریزی' ),
 				esc_html( $b['file'] ),
 				(int) $b['created'],
 				(int) $b['updated'],
 				(int) $b['skipped'],
 				(int) $b['errors'],
-				esc_html( $b['status'] ),
-				'rolled_back' === $b['status'] ? '' : '<button type="button" class="button sbpi-rollback" data-batch="' . esc_attr( $id ) . '">بازگردانی</button>'
+				esc_html( isset( $labels[ $b['status'] ] ) ? $labels[ $b['status'] ] : $b['status'] ),
+				get_option( 'sbpi_log_' . $id ) ? '<a class="button button-small" href="' . esc_url( $log_url ) . '">گزارش</a>' : '',
+				'rolled_back' === $b['status'] ? '' : '<button type="button" class="button button-small sbpi-rollback" data-batch="' . esc_attr( $id ) . '">بازگردانی</button>'
 			);
 		}
 		echo '</tbody></table></div>';
@@ -720,6 +750,83 @@ final class SBPI_Admin {
 		if ( ! current_user_can( self::CAP ) ) {
 			wp_send_json_error( array( 'message' => 'دسترسی غیرمجاز.' ), 403 );
 		}
+	}
+
+	/**
+	 * Append lines to a batch's persistent log (capped).
+	 *
+	 * @param string   $batch Batch ID.
+	 * @param string[] $lines Lines.
+	 */
+	public static function log( $batch, array $lines ) {
+		if ( ! $lines ) {
+			return;
+		}
+		$log   = get_option( 'sbpi_log_' . $batch, array() );
+		$stamp = wp_date( 'H:i:s' );
+		foreach ( $lines as $l ) {
+			$log[] = $stamp . '  ' . $l;
+		}
+		update_option( 'sbpi_log_' . $batch, array_slice( $log, -5000 ), false );
+	}
+
+	/**
+	 * Single-run lock: only one import / price update / undo at a time.
+	 * Expires on its own (2 min without activity) if a browser tab is closed.
+	 *
+	 * @param string $owner Job or batch ID.
+	 */
+	private static function lock( $owner ) {
+		$lock = get_transient( 'sbpi_lock' );
+		if ( is_array( $lock ) && $lock['owner'] !== $owner && time() - $lock['time'] < 120 ) {
+			$user = get_userdata( $lock['user'] );
+			wp_send_json_error(
+				array(
+					'message' => sprintf(
+						'عملیات دیگری توسط %s در حال اجراست (%s). صبر کنید تا تمام شود؛ اگر صفحه آن بسته شده، حداکثر ۲ دقیقه بعد دوباره تلاش کنید.',
+						$user ? $user->display_name : 'کاربر دیگر',
+						$lock['what']
+					),
+				)
+			);
+		}
+		$names = array(
+			'wp_ajax_sbpi_run'         => 'درون‌ریزی',
+			'wp_ajax_sbpi_price_apply' => 'به‌روزرسانی قیمت',
+			'wp_ajax_sbpi_rollback'    => 'بازگردانی',
+			'wp_ajax_sbpi_selftest'    => 'خودآزمایی',
+		);
+		$what = isset( $names[ current_action() ] ) ? $names[ current_action() ] : 'عملیات';
+		set_transient( 'sbpi_lock', array( 'owner' => $owner, 'user' => get_current_user_id(), 'time' => time(), 'what' => $what ), 300 );
+	}
+
+	/**
+	 * Release the lock if we own it.
+	 *
+	 * @param string $owner Owner.
+	 */
+	private static function unlock( $owner ) {
+		$lock = get_transient( 'sbpi_lock' );
+		if ( is_array( $lock ) && $lock['owner'] === $owner ) {
+			delete_transient( 'sbpi_lock' );
+		}
+	}
+
+	/**
+	 * Download a batch log as text.
+	 */
+	public static function handle_log() {
+		if ( ! current_user_can( self::CAP ) ) {
+			wp_die( 'دسترسی غیرمجاز.', 403 );
+		}
+		check_admin_referer( 'sbpi_log' );
+		$batch = isset( $_GET['batch'] ) ? preg_replace( '/[^A-Za-z0-9-]/', '', wp_unslash( $_GET['batch'] ) ) : ''; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput
+		$log   = get_option( 'sbpi_log_' . $batch, array() );
+		nocache_headers();
+		header( 'Content-Type: text/plain; charset=utf-8' );
+		header( 'Content-Disposition: attachment; filename="sbpi-log-' . $batch . '.txt"' );
+		echo "\xEF\xBB\xBF" . implode( "\r\n", array_map( 'wp_strip_all_tags', (array) $log ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- plain-text download.
+		exit;
 	}
 
 	/**
@@ -859,6 +966,7 @@ final class SBPI_Admin {
 		if ( ! $job || ! is_array( $stored ) ) {
 			wp_send_json_error( array( 'message' => 'ابتدا پیش‌نمایش بگیرید.' ) );
 		}
+		self::lock( $id );
 		$products = $stored['plan']['products'];
 		$global   = $stored['global'];
 		$state    = get_option( 'sbpi_state_' . $id );
@@ -869,10 +977,18 @@ final class SBPI_Admin {
 				'product' => array(),
 				'stats'   => array( 'created' => 0, 'updated' => 0, 'skipped' => 0, 'errors' => 0 ),
 			);
-			$batches                    = get_option( 'sbpi_batches', array() );
+			$batches = get_option( 'sbpi_batches', array() );
+			while ( count( $batches ) >= 50 ) {
+				// Keep 50 batches; drop the oldest and its log (its products stay untouched).
+				$old = key( $batches );
+				unset( $batches[ $old ] );
+				delete_option( 'sbpi_log_' . $old );
+				delete_option( 'sbpi_pundo_' . $old );
+			}
 			$batches[ $state['batch'] ] = array(
 				'time'   => time(),
 				'file'   => $job['file'],
+				'type'   => 'import',
 				'status' => 'running',
 			) + $state['stats'];
 			update_option( 'sbpi_batches', $batches, false );
@@ -908,6 +1024,7 @@ final class SBPI_Admin {
 
 		$done = $state['cursor'] >= $total;
 		update_option( 'sbpi_state_' . $id, $state, false );
+		self::log( $state['batch'], $log );
 
 		$batches = get_option( 'sbpi_batches', array() );
 		if ( isset( $batches[ $state['batch'] ] ) ) {
@@ -916,6 +1033,7 @@ final class SBPI_Admin {
 		}
 		if ( $done ) {
 			delete_option( 'sbpi_state_' . $id );
+			self::unlock( $id );
 		}
 
 		wp_send_json_success(
@@ -940,11 +1058,23 @@ final class SBPI_Admin {
 		if ( ! isset( $batches[ $batch ] ) ) {
 			wp_send_json_error( array( 'message' => 'نوبت یافت نشد.' ) );
 		}
-		$left = SBPI_Importer::rollback( $batch, self::deadline() );
+		self::lock( 'undo-' . $batch );
+		if ( isset( $batches[ $batch ]['type'] ) && 'prices' === $batches[ $batch ]['type'] ) {
+			$changes = get_option( 'sbpi_pundo_' . $batch, array() );
+			$offset  = isset( $batches[ $batch ]['undo_offset'] ) ? (int) $batches[ $batch ]['undo_offset'] : 0;
+			$next    = SBPI_Prices::undo( $changes, $offset, self::deadline() );
+			$left    = max( 0, count( $changes ) - $next );
+			$batches[ $batch ]['undo_offset'] = $next;
+		} else {
+			$left = SBPI_Importer::rollback( $batch, self::deadline() );
+		}
 		if ( 0 === $left ) {
 			$batches[ $batch ]['status'] = 'rolled_back';
-			update_option( 'sbpi_batches', $batches, false );
+			delete_option( 'sbpi_pundo_' . $batch );
+			self::log( $batch, array( '↩ بازگردانی کامل شد.' ) );
+			self::unlock( 'undo-' . $batch );
 		}
+		update_option( 'sbpi_batches', $batches, false );
 		wp_send_json_success( array( 'remaining' => $left ) );
 	}
 
@@ -1219,13 +1349,84 @@ final class SBPI_Admin {
 		if ( ! is_array( $changes ) ) {
 			wp_send_json_error( array( 'message' => 'تغییری برای اعمال پیدا نشد؛ فایل را دوباره آپلود کنید.' ) );
 		}
+		self::lock( $job['id'] );
 		$offset = isset( $_POST['offset'] ) ? absint( $_POST['offset'] ) : 0;
-		$next   = SBPI_Prices::apply( $changes, $offset, self::deadline() );
-		$done   = $next >= count( $changes );
+		$batch  = 'p' . gmdate( 'Ymd-His', (int) $job['time'] ) . '-' . $job['id'];
+		if ( 0 === $offset ) {
+			// Register the batch first so the change can be undone from History.
+			$batches           = get_option( 'sbpi_batches', array() );
+			$batches[ $batch ] = array(
+				'time'    => time(),
+				'file'    => $job['file'],
+				'type'    => 'prices',
+				'status'  => 'running',
+				'created' => 0,
+				'updated' => count( $changes ),
+				'skipped' => 0,
+				'errors'  => 0,
+			);
+			update_option( 'sbpi_batches', $batches, false );
+			update_option( 'sbpi_pundo_' . $batch, $changes, false );
+		}
+		$next = SBPI_Prices::apply( $changes, $offset, self::deadline() );
+		$done = $next >= count( $changes );
 		if ( $done ) {
 			delete_option( 'sbpi_pchanges_' . $job['id'] );
+			$batches = get_option( 'sbpi_batches', array() );
+			if ( isset( $batches[ $batch ] ) ) {
+				$batches[ $batch ]['status'] = 'done';
+				update_option( 'sbpi_batches', $batches, false );
+			}
+			$lines = array();
+			foreach ( $changes as $ch ) {
+				foreach ( $ch['set'] as $f => $pair ) {
+					$lines[] = sprintf( '#%d %s — %s: %s → %s', $ch['id'], $ch['name'], $f, '' === (string) $pair[0] ? '—' : $pair[0], '' === (string) $pair[1] ? '(حذف)' : $pair[1] );
+				}
+			}
+			self::log( $batch, $lines );
+			self::unlock( $job['id'] );
 		}
 		wp_send_json_success( array( 'offset' => $next, 'total' => count( $changes ), 'done' => $done ) );
+	}
+
+	/**
+	 * Tab: environment + self-test.
+	 */
+	private static function render_system() {
+		$labels = array( 'ok' => '✓', 'warn' => '!', 'bad' => '✕' );
+		?>
+		<div class="sbpi-layout">
+			<div class="sbpi-card sbpi-main">
+				<h2><span class="dashicons dashicons-yes-alt"></span> خودآزمایی روی همین سایت</h2>
+				<p>یک فایل نمونه کوچک داخلی (۱ محصول متغیر + ۱ ساده) درون‌ریزی می‌شود و همه چیز بررسی می‌شود: ویژگی‌ها، تنوع‌ها، قیمت، SKU، دسته، متای سئو، توضیحات، FAQ، Schema، اجرای دوباره بدون تکرار، بازگردانی به‌روزرسانی و بازگردانی ساخت. در پایان <strong>همه داده‌های آزمایشی پاک می‌شوند</strong> (حتی اگر بررسی‌ای شکست بخورد).</p>
+				<p class="description">محصولات آزمایشی «پیش‌نویس» و با نام «SBPI Selftest» ساخته می‌شوند و در سایت دیده نمی‌شوند. بهتر است ابتدا روی Staging اجرا شود.</p>
+				<p><button type="button" class="button button-primary button-large" id="sbpi-selftest"><span class="dashicons dashicons-controls-play"></span> اجرای خودآزمایی</button></p>
+				<div id="sbpi-selftest-out"></div>
+			</div>
+			<aside class="sbpi-side">
+				<div class="sbpi-card">
+					<h3><span class="dashicons dashicons-admin-tools"></span> پیش‌نیازهای سرور</h3>
+					<table class="sbpi-env"><tbody>
+					<?php foreach ( SBPI_Selftest::environment() as $c ) : ?>
+						<tr class="<?php echo esc_attr( $c[0] ); ?>"><td class="i"><?php echo esc_html( $labels[ $c[0] ] ); ?></td><th><?php echo esc_html( $c[1] ); ?></th><td><?php echo esc_html( $c[2] ); ?></td></tr>
+					<?php endforeach; ?>
+					</tbody></table>
+				</div>
+			</aside>
+		</div>
+		<?php
+	}
+
+	/**
+	 * Run the self-test.
+	 */
+	public static function ajax_selftest() {
+		self::guard();
+		self::lock( 'selftest' );
+		wc_set_time_limit( 0 );
+		$results = SBPI_Selftest::run();
+		self::unlock( 'selftest' );
+		wp_send_json_success( array( 'results' => $results ) );
 	}
 
 	/**

@@ -35,7 +35,10 @@ final class SBPI_Importer {
 			if ( $existing && 'skip' === $global['update_mode'] ) {
 				return array( 'done' => true, 'action' => 'skipped', 'id' => $existing, 'message' => 'از قبل وجود داشت؛ رد شد' );
 			}
-			$state['created']    = ! $existing;
+			$state['created'] = ! $existing;
+			if ( $existing ) {
+				SBPI_Snapshot::take( $existing, $state['batch'] ); // Enables a full undo.
+			}
 			$state['product_id'] = self::save_parent( $spec, $global, $existing, $state['batch'] );
 			$state['var_offset'] = 0;
 		}
@@ -350,7 +353,11 @@ final class SBPI_Importer {
 				}
 			}
 			$variation->update_meta_data( '_sbpi_combo', $v['key'] );
+			$is_new = ! $variation->get_id();
 			$variation->save();
+			if ( $is_new && empty( $state['created'] ) ) {
+				SBPI_Snapshot::note_new_variation( $parent_id, $variation->get_id(), $state['batch'] );
+			}
 		}
 		$state['var_offset'] = $total;
 		return true;
@@ -580,7 +587,8 @@ final class SBPI_Importer {
 	}
 
 	/**
-	 * Delete products created by a batch (a few per call). Updated products are untouched.
+	 * Undo a batch a few products per call: delete the products it created, then restore
+	 * the products it updated from their snapshots.
 	 *
 	 * @param string $batch    Batch ID.
 	 * @param float  $deadline Deadline.
@@ -604,7 +612,22 @@ final class SBPI_Importer {
 				$product->delete( true ); // Also deletes variations.
 			}
 		}
+		while ( microtime( true ) < $deadline ) {
+			$ids = SBPI_Snapshot::pending( $batch, 10 );
+			if ( ! $ids ) {
+				break;
+			}
+			foreach ( $ids as $id ) {
+				try {
+					SBPI_Snapshot::restore( $id, $batch );
+				} catch ( Throwable $e ) {
+					// Never loop forever on one broken product; record and move on.
+					SBPI_Admin::log( $batch, array( sprintf( '❌ بازگردانی #%d ناموفق: %s', $id, $e->getMessage() ) ) );
+					delete_post_meta( $id, SBPI_Snapshot::key( $batch ) );
+				}
+			}
+		}
 		$query['posts_per_page'] = -1;
-		return count( get_posts( $query ) );
+		return count( get_posts( $query ) ) + count( SBPI_Snapshot::pending( $batch, -1 ) );
 	}
 }

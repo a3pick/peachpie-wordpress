@@ -296,6 +296,59 @@ final class SBPI_Prices {
 	}
 
 	/**
+	 * Revert applied price changes (old values from the diff).
+	 *
+	 * @param array $changes  Changes that were applied.
+	 * @param int   $offset   Start.
+	 * @param float $deadline Deadline.
+	 * @return int New offset.
+	 */
+	public static function undo( array $changes, $offset, $deadline ) {
+		$reverse = array();
+		foreach ( $changes as $ch ) {
+			$set = array();
+			foreach ( $ch['set'] as $field => $pair ) {
+				$set[ $field ] = array( $pair[1], $pair[0] );
+			}
+			$reverse[] = array( 'id' => $ch['id'], 'name' => $ch['name'], 'set' => $set );
+		}
+		$labels  = array_flip( self::STOCK );
+		$parents = array();
+		$total   = count( $reverse );
+		for ( $i = $offset; $i < $total && microtime( true ) < $deadline; $i++ ) {
+			$product = wc_get_product( $reverse[ $i ]['id'] );
+			if ( ! $product ) {
+				continue;
+			}
+			foreach ( $reverse[ $i ]['set'] as $field => $pair ) {
+				$old = $pair[1];
+				if ( 'regular_price' === $field ) {
+					$product->set_regular_price( $old );
+				} elseif ( 'sale_price' === $field ) {
+					$product->set_sale_price( $old );
+				} elseif ( 'stock' === $field ) {
+					if ( '—' === $old ) {
+						$product->set_manage_stock( false );
+					} else {
+						$product->set_stock_quantity( (int) $old );
+					}
+				} elseif ( 'stock_status' === $field && isset( $labels[ $old ] ) ) {
+					$product->set_stock_status( $labels[ $old ] );
+				}
+			}
+			$product->save();
+			if ( $product->get_parent_id() ) {
+				$parents[ $product->get_parent_id() ] = true;
+			}
+		}
+		foreach ( array_keys( $parents ) as $pid ) {
+			WC_Product_Variable::sync( $pid );
+			wc_delete_product_transients( $pid );
+		}
+		return $i;
+	}
+
+	/**
 	 * Numeric string without trailing zeros ("45000000.00" → "45000000").
 	 *
 	 * @param string $v Value.

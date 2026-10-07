@@ -33,7 +33,7 @@
 	/* ---------- History: rollback ---------- */
 	$$( '.sbpi-rollback' ).forEach( function ( btn ) {
 		btn.addEventListener( 'click', function () {
-			if ( ! window.confirm( 'همه محصولاتی که در این نوبت ساخته شده‌اند برای همیشه حذف می‌شوند. ادامه می‌دهید؟' ) ) { return; }
+			if ( ! window.confirm( 'این نوبت کامل بازگردانی شود؟\n\nمحصولات ساخته‌شده حذف و محصولات به‌روزشده به وضعیت قبل برمی‌گردند. اگر نوبت‌های جدیدتری روی همین محصولات اجرا شده، اول آن‌ها را بازگردانی کنید.' ) ) { return; }
 			btn.disabled = true;
 			( function step() {
 				post( 'sbpi_rollback', { batch: btn.dataset.batch } ).then( function ( d ) {
@@ -113,6 +113,28 @@
 		upload.addEventListener( 'submit', function () {
 			submit.disabled = true;
 			submit.textContent = 'در حال خواندن فایل…';
+		} );
+	}
+
+	/* ---------- Self-test ---------- */
+	var stBtn = $( '#sbpi-selftest' );
+	if ( stBtn ) {
+		stBtn.addEventListener( 'click', function () {
+			var out = $( '#sbpi-selftest-out' );
+			stBtn.disabled = true;
+			stBtn.classList.add( 'busy' );
+			out.innerHTML = '<div class="sbpi-skeleton"></div><div class="sbpi-skeleton"></div>';
+			post( 'sbpi_selftest', {} ).then( function ( d ) {
+				var bad = d.results.filter( function ( r ) { return r[0] !== 'ok'; } ).length;
+				out.innerHTML = '<div class="sbpi-alert ' + ( bad ? 'bad' : 'good' ) + '"><span class="dashicons dashicons-' + ( bad ? 'dismiss' : 'yes-alt' ) + '"></span>' +
+					( bad ? fa( bad ) + ' بررسی ناموفق از ' + fa( d.results.length ) + ' — جزئیات را برای پشتیبانی بفرستید.' : 'همه ' + fa( d.results.length ) + ' بررسی موفق بود. افزونه روی این سایت درست کار می‌کند.' ) + '</div>' +
+					'<table class="sbpi-env"><tbody>' + d.results.map( function ( r ) {
+						return '<tr class="' + r[0] + '"><td class="i">' + ( r[0] === 'ok' ? '✓' : '✕' ) + '</td><th>' + esc( r[1] ) + '</th><td>' + esc( r[2] ) + '</td></tr>';
+					} ).join( '' ) + '</tbody></table>';
+				toast( bad ? 'خودآزمایی: ' + fa( bad ) + ' مورد ناموفق' : 'خودآزمایی موفق بود', bad ? 'bad' : 'good' );
+			} ).catch( function ( e ) {
+				out.innerHTML = '<div class="sbpi-alert bad"><span class="dashicons dashicons-dismiss"></span>' + esc( e.message ) + '</div>';
+			} ).then( function () { stBtn.disabled = false; stBtn.classList.remove( 'busy' ); } );
 		} );
 	}
 

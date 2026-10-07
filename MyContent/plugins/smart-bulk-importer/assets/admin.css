@@ -249,3 +249,19 @@
 .sbpi-virtual-toggle.open::before { content: "－ "; }
 #sbpi-result .sbpi-table-wrap { max-height: 70vh; overflow: auto; }
 #sbpi-result .sbpi-preview thead th { position: sticky; top: 0; z-index: 1; }
+
+/* System tab */
+.sbpi-env { width: 100%; border-collapse: collapse; }
+.sbpi-env th, .sbpi-env td { text-align: right; padding: 6px 8px; border-bottom: 1px solid #f0f0f1; vertical-align: top; }
+.sbpi-env th { white-space: nowrap; font-weight: 600; }
+.sbpi-env td.i { width: 20px; font-weight: 700; text-align: center; }
+.sbpi-env tr.ok td.i { color: var(--sb-good); }
+.sbpi-env tr.warn td.i { color: var(--sb-warn); }
+.sbpi-env tr.bad td.i, .sbpi-env tr.bad th { color: var(--sb-bad); }
+.sbpi-alert.good { background: var(--sb-good-soft); color: #00450c; border-color: var(--sb-good); }
+.sbpi-alert.good .dashicons { color: var(--sb-good); }
+#sbpi-selftest-out .sbpi-alert { margin-bottom: 12px; }
+.sbpi-env-mini { margin: 0 0 8px; padding-inline-start: 16px; list-style: disc; }
+.sbpi-env-mini li.bad { color: var(--sb-bad); }
+.sbpi-env-mini li.warn { color: var(--sb-warn); }
+.sbpi-ok-text { color: var(--sb-good); }

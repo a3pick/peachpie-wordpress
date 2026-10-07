@@ -558,16 +558,12 @@ final class SBPI_Planner {
 	 * @return string[]
 	 */
 	private static function conditions( array $spec ) {
+		// By slug or name, so a reused site attribute (e.g. pa_vaziat) still counts.
 		$out = array();
-		foreach ( $spec['attributes'] as $attr ) {
-			if ( 'condition' !== $attr['slug'] ) {
-				continue;
-			}
-			foreach ( $attr['values'] as $v ) {
-				$c = self::condition_of( $v );
-				if ( $c && ! in_array( $c, $out, true ) ) {
-					$out[] = $c;
-				}
+		foreach ( SBPI_SEO::condition_values( $spec ) as $v ) {
+			$c = self::condition_of( $v );
+			if ( $c && ! in_array( $c, $out, true ) ) {
+				$out[] = $c;
 			}
 		}
 		return $out;
