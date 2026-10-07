@@ -25,6 +25,10 @@ final class SBPI_Admin {
 		add_action( 'wp_ajax_sbpi_run', array( __CLASS__, 'ajax_run' ) );
 		add_action( 'wp_ajax_sbpi_rollback', array( __CLASS__, 'ajax_rollback' ) );
 		add_action( 'admin_enqueue_scripts', array( __CLASS__, 'assets' ) );
+		add_action( 'admin_post_sbpi_export', array( __CLASS__, 'handle_export' ) );
+		add_action( 'admin_post_sbpi_template', array( __CLASS__, 'handle_template' ) );
+		add_action( 'admin_post_sbpi_save_content', array( __CLASS__, 'handle_save_content' ) );
+		add_action( 'wp_ajax_sbpi_price_apply', array( __CLASS__, 'ajax_price_apply' ) );
 	}
 
 	/**
@@ -143,6 +147,8 @@ final class SBPI_Admin {
 				'seo_title_tpl'     => 'قیمت و خرید {title} | {site}',
 				'seo_desc_tpl'      => '',
 				'focus_tpl'         => 'خرید {title}',
+				'auto_images'       => 1,
+				'faq'               => 1,
 			)
 		);
 	}
@@ -252,7 +258,8 @@ final class SBPI_Admin {
 		}
 
 		self::cleanup_jobs();
-		$job = strtolower( wp_generate_password( 12, false ) );
+		$job    = strtolower( wp_generate_password( 12, false ) );
+		$prices = SBPI_Prices::detect( $parsed );
 		update_option(
 			'sbpi_job_' . $job,
 			array(
@@ -263,7 +270,7 @@ final class SBPI_Admin {
 			),
 			false
 		);
-		wp_safe_redirect( add_query_arg( 'job', $job, $back ) );
+		wp_safe_redirect( add_query_arg( $prices ? array( 'job' => $job, 'tab' => 'prices' ) : array( 'job' => $job ), $back ) );
 		exit;
 	}
 
@@ -280,6 +287,7 @@ final class SBPI_Admin {
 				delete_option( $option );
 				delete_option( 'sbpi_plan_' . $id );
 				delete_option( 'sbpi_state_' . $id );
+				delete_option( 'sbpi_pchanges_' . $id );
 			}
 		}
 	}
@@ -315,16 +323,34 @@ final class SBPI_Admin {
 
 		echo '<div class="wrap sbpi" dir="rtl">';
 		echo '<h1>درون‌ریز هوشمند محصولات</h1>';
+		$tabs = array(
+			''        => 'درون‌ریزی',
+			'prices'  => 'قیمت‌ها (خروجی / به‌روزرسانی)',
+			'content' => 'متن وضعیت‌ها',
+			'health'  => 'سلامت سئو',
+			'history' => 'تاریخچه و بازگردانی',
+		);
 		echo '<nav class="nav-tab-wrapper">';
-		printf( '<a class="nav-tab %s" href="%s">درون‌ریزی</a>', 'history' !== $tab ? 'nav-tab-active' : '', esc_url( $base ) );
-		printf( '<a class="nav-tab %s" href="%s">تاریخچه و بازگردانی</a>', 'history' === $tab ? 'nav-tab-active' : '', esc_url( add_query_arg( 'tab', 'history', $base ) ) );
+		foreach ( $tabs as $tk => $tl ) {
+			printf( '<a class="nav-tab %s" href="%s">%s</a>', $tk === $tab ? 'nav-tab-active' : '', esc_url( $tk ? add_query_arg( 'tab', $tk, $base ) : $base ), esc_html( $tl ) );
+		}
 		echo '</nav>';
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		if ( isset( $_GET['saved'] ) ) {
+			echo '<div class="notice notice-success is-dismissible"><p>ذخیره شد.</p></div>';
+		}
 		if ( $err ) {
 			echo '<div class="notice notice-error"><p>' . esc_html( $err ) . '</p></div>';
 		}
 
 		if ( 'history' === $tab ) {
 			self::render_history();
+		} elseif ( 'prices' === $tab ) {
+			self::render_prices( $job );
+		} elseif ( 'content' === $tab ) {
+			self::render_content();
+		} elseif ( 'health' === $tab ) {
+			self::render_health();
 		} elseif ( $job ) {
 			self::render_mapping( $job );
 		} else {
@@ -348,6 +374,10 @@ final class SBPI_Admin {
 				<input type="file" name="sbpi_file" accept=".xlsx,.csv" required />
 				<?php submit_button( 'خواندن فایل و ادامه', 'primary', 'submit', false ); ?>
 			</form>
+			<p>
+				<a class="button" href="<?php echo esc_url( wp_nonce_url( admin_url( 'admin-post.php?action=sbpi_template' ), 'sbpi_template' ) ); ?>">📥 دانلود فایل نمونه استاندارد (برای کارفرما)</a>
+				<span class="description">ستون‌هایش خودکار شناخته می‌شوند و شیت راهنما دارد.</span>
+			</p>
 			<p class="description">
 				افزونه سئوی شناسایی‌شده:
 				<strong><?php echo esc_html( $seo ? $seo : 'هیچ‌کدام (عنوان و توضیحات متا توسط همین افزونه چاپ می‌شود)' ); ?></strong>
@@ -382,6 +412,10 @@ final class SBPI_Admin {
 			</p>
 		<?php
 		foreach ( $job['parsed'] as $si => $sheet ) {
+			if ( 'ignored' === $sheet['kind'] ) {
+				printf( '<div class="sbpi-sheet sbpi-muted"><h3>%s</h3><p>شیت راهنما — درون‌ریزی نمی‌شود.</p></div>', esc_html( $sheet['name'] ) );
+				continue;
+			}
 			if ( 'glossary' === $sheet['kind'] ) {
 				$glossary_count += count( $sheet['glossary'] );
 				printf( '<div class="sbpi-sheet sbpi-muted"><h3>📘 %s</h3><p>شیت راهنما — %d مورد به‌عنوان «نکات پیش از خرید» در توضیحات محصولات مرتبط استفاده می‌شود.</p></div>', esc_html( $sheet['name'] ), count( $sheet['glossary'] ) );
@@ -514,6 +548,8 @@ final class SBPI_Admin {
 			<div class="sbpi-checks">
 				<label><input type="checkbox" data-g="gen_description" <?php checked( $global['gen_description'] ); ?> /> تولید توضیحات کامل (معرفی، جدول مشخصات، تفاوت نسخه‌ها، نکات خرید از شیت راهنما<?php echo $glossary_count ? ' — ' . (int) $glossary_count . ' مورد' : ''; ?>)</label>
 				<label><input type="checkbox" data-g="auto_sku" <?php checked( $global['auto_sku'] ); ?> /> ساخت خودکار SKU یکتا برای محصول و تنوع‌ها</label>
+				<label><input type="checkbox" data-g="auto_images" <?php checked( $global['auto_images'] ); ?> /> اتصال خودکار تصاویر از کتابخانه رسانه بر اساس نام فایل (<code dir="ltr">iphone-13-blue.jpg</code>، <code dir="ltr">iphone-13-128-gb-used.jpg</code>، گالری: <code dir="ltr">…_2.jpg</code>)</label>
+				<label><input type="checkbox" data-g="faq" <?php checked( $global['faq'] ); ?> /> نمایش واژه‌نامه به‌صورت «سؤالات متداول» + Schema FAQPage</label>
 				<label><input type="checkbox" data-g="attr_archives" <?php checked( $global['attr_archives'] ); ?> /> فعال‌سازی آرشیو برای ویژگی‌های جدید (صفحه مستقل برای هر رنگ/حافظه — فقط اگر برای آن‌ها محتوا دارید)</label>
 				<label><input type="checkbox" data-g="update_title" <?php checked( $global['update_title'] ); ?> /> در به‌روزرسانی، نام محصول هم بازنویسی شود</label>
 				<label><input type="checkbox" data-g="overwrite_content" <?php checked( $global['overwrite_content'] ); ?> /> توضیحاتی که دستی ویرایش شده‌اند هم بازنویسی شوند (توصیه نمی‌شود)</label>
@@ -602,10 +638,12 @@ final class SBPI_Admin {
 			'sheets' => self::sanitize_sheets( isset( $raw['sheets'] ) && is_array( $raw['sheets'] ) ? $raw['sheets'] : array(), $job['parsed'] ),
 		);
 
+		update_option( 'sbpi_global', $settings['global'], false );
+		$settings['global']['cond_texts'] = self::cond_texts();
 		$plan = SBPI_Planner::build( $job['parsed'], $settings );
 		update_option( 'sbpi_plan_' . $job['id'], array( 'plan' => $plan, 'global' => $settings['global'] ), false );
 		delete_option( 'sbpi_state_' . $job['id'] );
-		update_option( 'sbpi_global', $settings['global'], false );
+		$diff = self::import_diff( $plan['products'] );
 
 		$presets = get_option( 'sbpi_presets', array() );
 		foreach ( $settings['sheets'] as $si => $conf ) {
@@ -620,6 +658,7 @@ final class SBPI_Admin {
 		$total_var = 0;
 		$no_price  = 0;
 		foreach ( $plan['products'] as $p ) {
+			$d          = $diff['products'][ $p['key'] ];
 			$total_var += count( $p['variations'] );
 			$priced     = 'simple' === $p['type'] ? '' !== $p['price'] : (bool) array_filter( wp_list_pluck( $p['variations'], 'price' ), 'strlen' );
 			if ( ! $priced ) {
@@ -642,6 +681,8 @@ final class SBPI_Admin {
 				'focus'      => $p['seo']['focus'],
 				'priced'     => $priced,
 				'content'    => wp_kses_post( $p['content'] ),
+				'status'     => $d['exists'] ? ( 'skip' === $settings['global']['update_mode'] ? 'skip' : 'update' ) : 'new',
+				'new_vars'   => $d['new_vars'],
 				'lines'      => implode( '، ', array_slice( $p['lines'], 0, 6 ) ) . ( count( $p['lines'] ) > 6 ? ' …' : '' ),
 			);
 		}
@@ -662,12 +703,30 @@ final class SBPI_Admin {
 		if ( $new ) {
 			$warnings[] = 'این ویژگی‌ها در سایت وجود ندارند و جدید ساخته می‌شوند: ' . implode( '، ', array_keys( $new ) ) . '. اگر معادلشان را از قبل دارید (مثلاً برای لپ‌تاپ)، در ستون «ویژگی سایت» همان را انتخاب کنید تا ویژگی تکراری ساخته نشود.';
 		}
+		$drafts = array();
+		foreach ( $settings['global']['cond_texts'] as $c => $t ) {
+			if ( preg_match( '/\[[^\]]{3,}\]/u', $t ) ) {
+				$drafts[] = $c;
+			}
+		}
+		if ( $drafts ) {
+			$warnings[] = 'متن وضعیت‌های ' . implode( '، ', $drafts ) . ' هنوز بخش [داخل کروشه] دارد و تا تکمیل نشود در توضیحات درج نمی‌شود (تب «متن وضعیت‌ها»).';
+		} elseif ( ! $settings['global']['cond_texts'] ) {
+			$warnings[] = 'متن اختصاصی وضعیت‌ها (نو/اکتیو/استوک) هنوز تنظیم نشده؛ از تب «متن وضعیت‌ها» تکمیل کنید تا صفحه‌ها کمتر شبیه هم باشند.';
+		}
 		if ( $no_price ) {
 			$warnings[] = sprintf( '%d محصول قیمت ندارند. ووکامرس تنوع‌های بدون قیمت را در صفحه محصول قابل انتخاب نمی‌کند؛ بعداً قیمت را با همین افزونه (ستون قیمت + حالت به‌روزرسانی) یا ویرایش گروهی وارد کنید.', $no_price );
 		}
 		wp_send_json_success(
 			array(
 				'products'   => $rows,
+				'diff'       => array(
+					'new'     => $diff['new'],
+					'update'  => $diff['existing'],
+					'prices'  => array_slice( $diff['prices'], 0, 200 ),
+					'pcount'  => count( $diff['prices'] ),
+					'mode'    => $settings['global']['update_mode'],
+				),
 				'count'      => count( $rows ),
 				'variations' => $total_var,
 				'warnings'   => $warnings,
@@ -774,5 +833,342 @@ final class SBPI_Admin {
 			update_option( 'sbpi_batches', $batches, false );
 		}
 		wp_send_json_success( array( 'remaining' => $left ) );
+	}
+
+	/**
+	 * Compare a plan with what is already on the site (one query per 500 products).
+	 *
+	 * @param array $products Plan products.
+	 * @return array
+	 */
+	private static function import_diff( array $products ) {
+		global $wpdb;
+		$keys = wp_list_pluck( $products, 'key' );
+		$map  = array();
+		foreach ( array_chunk( $keys, 500 ) as $chunk ) {
+			$in   = implode( ',', array_fill( 0, count( $chunk ), '%s' ) );
+			$rows = $wpdb->get_results( // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+				$wpdb->prepare( // phpcs:ignore WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare
+					"SELECT m.post_id, m.meta_value FROM {$wpdb->postmeta} m INNER JOIN {$wpdb->posts} p ON p.ID = m.post_id AND p.post_type = 'product' AND p.post_status <> 'trash' WHERE m.meta_key = '_sbpi_key' AND m.meta_value IN ($in)", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+					$chunk
+				)
+			);
+			foreach ( $rows as $r ) {
+				$map[ $r->meta_value ] = (int) $r->post_id;
+			}
+		}
+
+		// Existing prices: simple products and variations (by combo key).
+		$prices = array();
+		$combos = array();
+		foreach ( array_chunk( array_values( $map ), 500 ) as $chunk ) {
+			$in   = implode( ',', array_map( 'intval', $chunk ) );
+			$rows = $wpdb->get_results( // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+				"SELECT p.ID, p.post_parent, c.meta_value AS combo, r.meta_value AS reg
+				 FROM {$wpdb->posts} p
+				 LEFT JOIN {$wpdb->postmeta} c ON c.post_id = p.ID AND c.meta_key = '_sbpi_combo'
+				 LEFT JOIN {$wpdb->postmeta} r ON r.post_id = p.ID AND r.meta_key = '_regular_price'
+				 WHERE p.ID IN ($in) OR (p.post_parent IN ($in) AND p.post_type = 'product_variation')" // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+			);
+			foreach ( $rows as $r ) {
+				if ( $r->post_parent && $r->combo ) {
+					$combos[ $r->post_parent ][ $r->combo ] = (string) $r->reg;
+				} elseif ( ! $r->post_parent ) {
+					$prices[ $r->ID ] = (string) $r->reg;
+				}
+			}
+		}
+
+		$out = array(
+			'products' => array(),
+			'new'      => 0,
+			'existing' => 0,
+			'prices'   => array(),
+		);
+		foreach ( $products as $p ) {
+			$id   = isset( $map[ $p['key'] ] ) ? $map[ $p['key'] ] : 0;
+			$item = array( 'exists' => (bool) $id, 'new_vars' => 0 );
+			$id ? $out['existing']++ : $out['new']++;
+			if ( $id ) {
+				if ( 'simple' === $p['type'] ) {
+					$old = isset( $prices[ $id ] ) ? $prices[ $id ] : '';
+					if ( '' !== $p['price'] && (float) $old !== (float) $p['price'] ) {
+						$out['prices'][] = array( $p['title'], '', $old, $p['price'] );
+					}
+				} else {
+					foreach ( $p['variations'] as $v ) {
+						if ( ! isset( $combos[ $id ][ $v['key'] ] ) ) {
+							$item['new_vars']++;
+							continue;
+						}
+						$old = $combos[ $id ][ $v['key'] ];
+						if ( '' !== $v['price'] && (float) $old !== (float) $v['price'] ) {
+							$out['prices'][] = array( $p['title'], implode( ' / ', array_filter( $v['attrs'], 'strlen' ) ), $old, $v['price'] );
+						}
+					}
+				}
+			}
+			$out['products'][ $p['key'] ] = $item;
+		}
+		return $out;
+	}
+
+	/**
+	 * Saved per-condition texts (falls back to editable drafts).
+	 *
+	 * @return array
+	 */
+	public static function cond_texts() {
+		$saved = get_option( 'sbpi_cond_texts', null );
+		return is_array( $saved ) ? $saved : array();
+	}
+
+	/**
+	 * Tab: per-condition content.
+	 */
+	private static function render_content() {
+		$texts = self::cond_texts();
+		if ( ! $texts ) {
+			$texts = SBPI_SEO::default_cond_texts(); // First visit: editable drafts.
+		}
+		// Always offer the standard conditions plus any custom ones already saved.
+		$texts = $texts + array_fill_keys( array_keys( SBPI_SEO::default_cond_texts() ), '' );
+		?>
+		<div class="sbpi-card">
+			<h2>متن اختصاصی هر وضعیت</h2>
+			<p class="description">این متن زیر عنوان «شرایط و وضعیت …» در توضیحات هر محصولی با همان وضعیت درج می‌شود و باعث می‌شود صفحه‌های نو/اکتیو/استوک محتوای متفاوت و واقعاً مفیدی داشته باشند. متغیرها: <code>{title}</code> <code>{model}</code>. متن پیش‌فرض فقط پیش‌نویس است — بخش‌های [داخل کروشه] را با سیاست واقعی فروشگاه جایگزین کنید (اطلاعات ساختگی درباره گارانتی منتشر نکنید). خالی = این بخش درج نمی‌شود. روی محصولات قبلی با درون‌ریزی دوباره اعمال می‌شود (اگر توضیحاتشان دستی ویرایش نشده باشد).</p>
+			<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
+				<?php wp_nonce_field( 'sbpi_save_content' ); ?>
+				<input type="hidden" name="action" value="sbpi_save_content" />
+				<?php foreach ( $texts as $cond => $html ) : ?>
+					<div class="sbpi-cond">
+						<label><strong>وضعیت:</strong> <input type="text" name="cond[]" value="<?php echo esc_attr( $cond ); ?>" /></label>
+						<textarea name="text[]" rows="4" class="large-text"><?php echo esc_textarea( $html ); ?></textarea>
+					</div>
+				<?php endforeach; ?>
+				<div class="sbpi-cond">
+					<label><strong>وضعیت جدید:</strong> <input type="text" name="cond[]" value="" placeholder="مثلاً ریفربیش" /></label>
+					<textarea name="text[]" rows="3" class="large-text"></textarea>
+				</div>
+				<?php submit_button( 'ذخیره متن‌ها' ); ?>
+			</form>
+		</div>
+		<?php
+	}
+
+	/**
+	 * Save per-condition texts.
+	 */
+	public static function handle_save_content() {
+		if ( ! current_user_can( self::CAP ) ) {
+			wp_die( 'دسترسی غیرمجاز.', 403 );
+		}
+		check_admin_referer( 'sbpi_save_content' );
+		$conds = isset( $_POST['cond'] ) ? (array) wp_unslash( $_POST['cond'] ) : array(); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput
+		$texts = isset( $_POST['text'] ) ? (array) wp_unslash( $_POST['text'] ) : array(); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput
+		$out   = array();
+		foreach ( $conds as $i => $c ) {
+			$c = sanitize_text_field( $c );
+			if ( '' !== $c ) {
+				$out[ $c ] = wp_kses_post( isset( $texts[ $i ] ) ? $texts[ $i ] : '' );
+			}
+		}
+		update_option( 'sbpi_cond_texts', $out, false );
+		wp_safe_redirect( admin_url( 'edit.php?post_type=product&page=' . self::SLUG . '&tab=content&saved=1' ) );
+		exit;
+	}
+
+	/**
+	 * Tab: export / price update.
+	 *
+	 * @param array|null $job Uploaded price job.
+	 */
+	private static function render_prices( $job ) {
+		if ( $job && ( $sheet = SBPI_Prices::detect( $job['parsed'] ) ) ) { // phpcs:ignore Generic.CodeAnalysis.AssignmentInCondition, WordPress.CodeAnalysis.AssignmentInCondition
+			$diff = SBPI_Prices::diff( $sheet );
+			update_option( 'sbpi_pchanges_' . $job['id'], $diff['changes'], false );
+			$labels = array( 'regular_price' => 'قیمت عادی', 'sale_price' => 'قیمت ویژه', 'stock' => 'موجودی', 'stock_status' => 'وضعیت موجودی' );
+			?>
+			<div class="sbpi-card" id="sbpi-prices" data-job="<?php echo esc_attr( $job['id'] ); ?>">
+				<h2>پیش‌نمایش تغییرات — <?php echo esc_html( $job['file'] ); ?></h2>
+				<p class="sbpi-summary"><strong><?php echo count( $diff['changes'] ); ?></strong> ردیف تغییر می‌کند، <strong><?php echo (int) $diff['unchanged']; ?></strong> بدون تغییر<?php echo $diff['missing'] ? '، <strong>' . count( $diff['missing'] ) . '</strong> پیدا نشد' : ''; ?>.</p>
+				<?php if ( $diff['missing'] ) : ?>
+					<div class="notice notice-warning inline"><p>پیدا نشد (حذف شده یا شناسه/SKU عوض شده): <?php echo esc_html( implode( '، ', array_slice( $diff['missing'], 0, 30 ) ) ); ?></p></div>
+				<?php endif; ?>
+				<?php if ( $diff['changes'] ) : ?>
+					<table class="widefat striped"><thead><tr><th>محصول</th><th>فیلد</th><th>قبلی</th><th>جدید</th></tr></thead><tbody>
+					<?php
+					$shown = 0;
+					foreach ( $diff['changes'] as $ch ) {
+						foreach ( $ch['set'] as $f => $pair ) {
+							if ( ++$shown > 500 ) {
+								break 2;
+							}
+							$up = is_numeric( $pair[0] ) && is_numeric( $pair[1] ) ? ( (float) $pair[1] > (float) $pair[0] ? ' ▲' : ' ▼' ) : '';
+							printf( '<tr><td>%s</td><td>%s</td><td>%s</td><td><strong>%s</strong>%s</td></tr>', esc_html( $ch['name'] ), esc_html( $labels[ $f ] ), esc_html( '' === (string) $pair[0] ? '—' : self::fmt( $pair[0] ) ), esc_html( '' === (string) $pair[1] ? '(حذف)' : self::fmt( $pair[1] ) ), esc_html( $up ) );
+						}
+					}
+					?>
+					</tbody></table>
+					<p>
+						<button type="button" class="button button-primary" id="sbpi-price-apply">✅ اعمال <?php echo count( $diff['changes'] ); ?> تغییر</button>
+						<span class="sbpi-progress-text"></span>
+					</p>
+				<?php endif; ?>
+			</div>
+			<?php
+			return;
+		}
+		$cats = get_terms( array( 'taxonomy' => 'product_cat', 'hide_empty' => false ) );
+		?>
+		<div class="sbpi-card">
+			<h2>۱. خروجی Excel از محصولات</h2>
+			<form method="get" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
+				<input type="hidden" name="action" value="sbpi_export" />
+				<?php wp_nonce_field( 'sbpi_export', '_wpnonce', false ); ?>
+				<select name="scope">
+					<option value="sbpi">فقط محصولات ساخته‌شده با این افزونه</option>
+					<option value="all">همه محصولات ساده و متغیر</option>
+				</select>
+				<select name="cat">
+					<option value="0">همه دسته‌ها</option>
+					<?php foreach ( is_array( $cats ) ? $cats : array() as $c ) : ?>
+						<option value="<?php echo (int) $c->term_id; ?>"><?php echo esc_html( $c->name ); ?></option>
+					<?php endforeach; ?>
+				</select>
+				<?php submit_button( '📤 دانلود فایل قیمت‌ها', 'primary', 'submit', false ); ?>
+			</form>
+			<p class="description">فایل شامل هر محصول و همه تنوع‌هایش با SKU، قیمت عادی، قیمت ویژه و موجودی است. فقط همین ستون‌ها را در Excel ویرایش کنید.</p>
+		</div>
+		<div class="sbpi-card">
+			<h2>۲. آپلود فایل ویرایش‌شده</h2>
+			<form method="post" enctype="multipart/form-data" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
+				<?php wp_nonce_field( 'sbpi_upload' ); ?>
+				<input type="hidden" name="action" value="sbpi_upload" />
+				<input type="file" name="sbpi_file" accept=".xlsx,.csv" required />
+				<?php submit_button( 'نمایش تغییرات', 'primary', 'submit', false ); ?>
+			</form>
+			<p class="description">قبل از اعمال، فهرست دقیق «قبلی ← جدید» را می‌بینید. فقط قیمت و موجودی تغییر می‌کند؛ نام، محتوا و سئو دست نمی‌خورد.</p>
+		</div>
+		<?php
+	}
+
+	/**
+	 * "45000000" → "45,000,000".
+	 *
+	 * @param mixed $v Value.
+	 * @return string
+	 */
+	private static function fmt( $v ) {
+		return is_numeric( $v ) ? number_format( (float) $v, ( floor( (float) $v ) == $v ) ? 0 : 2 ) : (string) $v; // phpcs:ignore Universal.Operators.StrictComparisons
+	}
+
+	/**
+	 * Export download.
+	 */
+	public static function handle_export() {
+		if ( ! current_user_can( self::CAP ) ) {
+			wp_die( 'دسترسی غیرمجاز.', 403 );
+		}
+		check_admin_referer( 'sbpi_export' );
+		wc_set_time_limit( 0 );
+		$scope = isset( $_GET['scope'] ) && 'all' === $_GET['scope'] ? 'all' : 'sbpi';
+		$cat   = isset( $_GET['cat'] ) ? absint( $_GET['cat'] ) : 0;
+		try {
+			SBPI_Prices::export( $scope, $cat );
+		} catch ( Exception $e ) {
+			wp_die( esc_html( $e->getMessage() ) );
+		}
+	}
+
+	/**
+	 * Template download.
+	 */
+	public static function handle_template() {
+		if ( ! current_user_can( self::CAP ) ) {
+			wp_die( 'دسترسی غیرمجاز.', 403 );
+		}
+		check_admin_referer( 'sbpi_template' );
+		try {
+			SBPI_Prices::template();
+		} catch ( Exception $e ) {
+			wp_die( esc_html( $e->getMessage() ) );
+		}
+	}
+
+	/**
+	 * Apply price changes in chunks.
+	 */
+	public static function ajax_price_apply() {
+		self::guard();
+		$job     = self::job( isset( $_POST['job'] ) ? sanitize_key( $_POST['job'] ) : '' );
+		$changes = $job ? get_option( 'sbpi_pchanges_' . $job['id'] ) : null;
+		if ( ! is_array( $changes ) ) {
+			wp_send_json_error( array( 'message' => 'تغییری برای اعمال پیدا نشد؛ فایل را دوباره آپلود کنید.' ) );
+		}
+		$offset = isset( $_POST['offset'] ) ? absint( $_POST['offset'] ) : 0;
+		$next   = SBPI_Prices::apply( $changes, $offset, self::deadline() );
+		$done   = $next >= count( $changes );
+		if ( $done ) {
+			delete_option( 'sbpi_pchanges_' . $job['id'] );
+		}
+		wp_send_json_success( array( 'offset' => $next, 'total' => count( $changes ), 'done' => $done ) );
+	}
+
+	/**
+	 * Tab: SEO health.
+	 */
+	private static function render_health() {
+		// phpcs:disable WordPress.Security.NonceVerification.Recommended -- read-only filters.
+		$ours  = ! isset( $_GET['all'] );
+		$issue = isset( $_GET['issue'] ) ? sanitize_key( $_GET['issue'] ) : '';
+		// phpcs:enable
+		$report = SBPI_Health::run( $ours );
+		$base   = admin_url( 'edit.php?post_type=product&page=' . self::SLUG . '&tab=health' . ( $ours ? '' : '&all=1' ) );
+		?>
+		<div class="sbpi-card">
+			<h2>سلامت سئو محصولات</h2>
+			<p>
+				<?php echo $ours ? 'محصولات ساخته‌شده با این افزونه' : 'همه محصولات'; ?> — <?php echo (int) $report['total']; ?> محصول بررسی شد.
+				<a href="<?php echo esc_url( admin_url( 'edit.php?post_type=product&page=' . self::SLUG . '&tab=health' . ( $ours ? '&all=1' : '' ) ) ); ?>"><?php echo $ours ? 'نمایش همه محصولات' : 'فقط محصولات این افزونه'; ?></a>
+			</p>
+			<div class="sbpi-badges">
+				<a class="sbpi-badge <?php echo '' === $issue ? 'on' : ''; ?>" href="<?php echo esc_url( $base ); ?>">همه مشکلات</a>
+				<?php foreach ( SBPI_Health::ISSUES as $k => $l ) : ?>
+					<a class="sbpi-badge <?php echo $issue === $k ? 'on' : ''; ?> <?php echo $report['counts'][ $k ] ? 'bad' : 'ok'; ?>" href="<?php echo esc_url( add_query_arg( 'issue', $k, $base ) ); ?>"><?php echo esc_html( $l ); ?>: <?php echo (int) $report['counts'][ $k ]; ?></a>
+				<?php endforeach; ?>
+			</div>
+			<table class="widefat striped"><thead><tr><th>محصول</th><th>عنوان سئو</th><th>کلمات</th><th>مشکلات</th></tr></thead><tbody>
+			<?php
+			$n = 0;
+			foreach ( $report['rows'] as $row ) {
+				if ( $issue && ! in_array( $issue, $row['issues'], true ) ) {
+					continue;
+				}
+				if ( ++$n > 500 ) {
+					echo '<tr><td colspan="4">… فقط ۵۰۰ مورد اول نمایش داده شد؛ با فیلتر بالا محدود کنید.</td></tr>';
+					break;
+				}
+				$labels = array();
+				foreach ( $row['issues'] as $i ) {
+					$labels[] = '<span class="sbpi-len bad">' . esc_html( SBPI_Health::ISSUES[ $i ] ) . '</span>';
+				}
+				printf(
+					'<tr><td><a href="%s">%s</a></td><td>%s</td><td>%d</td><td>%s</td></tr>',
+					esc_url( get_edit_post_link( $row['id'] ) ),
+					esc_html( $row['title'] ),
+					esc_html( $row['seo'] ),
+					(int) $row['words'],
+					implode( ' ', $labels ) // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped above.
+				);
+			}
+			if ( 0 === $n ) {
+				echo '<tr><td colspan="4">مشکلی پیدا نشد 🎉</td></tr>';
+			}
+			?>
+			</tbody></table>
+			<p class="description">«توضیحات کوتاه» تقریبی است (شمارش کلمات متن بدون HTML). «عنوان سئوی تکراری» با عنوان ذخیره‌شده در افزونه سئو یا نام محصول مقایسه می‌شود.</p>
+		</div>
+		<?php
 	}
 }

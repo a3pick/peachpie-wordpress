@@ -22,6 +22,7 @@ final class SBPI_SEO {
 	public static function init() {
 		add_filter( 'woocommerce_structured_data_product', array( __CLASS__, 'schema' ), 20, 2 );
 		add_filter( 'the_content', array( __CLASS__, 'sibling_links' ), 20 );
+		add_action( 'wp_head', array( __CLASS__, 'faq_schema' ), 20 );
 		if ( ! self::seo_plugin() ) {
 			add_filter( 'pre_get_document_title', array( __CLASS__, 'document_title' ), 20 );
 			add_action( 'wp_head', array( __CLASS__, 'meta_description' ), 1 );
@@ -174,6 +175,8 @@ final class SBPI_SEO {
 			$html .= '</tbody></table>';
 		}
 
+		$html .= self::condition_text( $spec, $global );
+
 		// Per-version differences (e.g. firmware / package per account type & grade).
 		$rows = array();
 		foreach ( $spec['variations'] as $v ) {
@@ -202,7 +205,14 @@ final class SBPI_SEO {
 			$html .= '</tbody></table>';
 		}
 
-		if ( $spec['glossary'] ) {
+		$faq = self::faq_pairs( $spec, $global );
+		if ( $faq ) {
+			// Visible Q&A (required for FAQPage markup to be valid).
+			$html .= sprintf( '<h2>سؤالات متداول درباره %s</h2>', $t );
+			foreach ( $faq as $qa ) {
+				$html .= '<h3>' . esc_html( $qa[0] ) . '</h3><p>' . esc_html( $qa[1] ) . '</p>';
+			}
+		} elseif ( $spec['glossary'] ) {
 			$html .= sprintf( '<h2>نکات مهم پیش از خرید %s</h2><ul>', $t );
 			foreach ( $spec['glossary'] as $g ) {
 				$html .= '<li><strong>' . esc_html( $g[0] ) . ':</strong> ' . esc_html( $g[1] ) . '</li>';
@@ -210,6 +220,126 @@ final class SBPI_SEO {
 			$html .= '</ul>';
 		}
 		return $html;
+	}
+
+	/**
+	 * Condition values of a spec ("نو", "استوک", …).
+	 *
+	 * @param array $spec Spec.
+	 * @return string[]
+	 */
+	public static function condition_values( array $spec ) {
+		foreach ( $spec['attributes'] as $a ) {
+			if ( 'condition' === $a['slug'] || preg_match( '/وضعیت|grade|condition|گرید/iu', $a['name'] ) ) {
+				return $a['values'];
+			}
+		}
+		return array();
+	}
+
+	/**
+	 * Default per-condition texts (drafts: replace the [bracketed] parts with your real policy).
+	 *
+	 * @return array condition => html
+	 */
+	public static function default_cond_texts() {
+		return array(
+			'نو'        => '<p>{title} با وضعیت «نو» کارنکرده است و در جعبه اصلی عرضه می‌شود. [نوع و مدت گارانتی، و شرایط بازگشت کالا را اینجا بنویسید.]</p>',
+			'آکبند'     => '<p>{title} آکبند است؛ یعنی پلمب جعبه باز نشده است. [نوع و مدت گارانتی را اینجا بنویسید.]</p>',
+			'نات اکتیو' => '<p>{title} «نات‌اکتیو» است؛ یعنی دستگاه تاکنون فعال‌سازی نشده است. [توضیح دهید جعبه باز شده یا نه، و گارانتی چیست.]</p>',
+			'اکتیو'     => '<p>{title} «اکتیو» است؛ یعنی یک بار فعال‌سازی شده ولی [میزان استفاده، وضعیت ظاهری، سلامت باتری و گارانتی را دقیق بنویسید].</p>',
+			'استوک'     => '<p>{title} «استوک» (کارکرده) است. ظاهر و سلامت باتری هر دستگاه ممکن است متفاوت باشد. [روش درجه‌بندی ظاهری، حداقل سلامت باتری، تست‌هایی که انجام می‌دهید و مدت ضمانت را بنویسید.]</p>',
+		);
+	}
+
+	/**
+	 * Text for the product's condition, when it has exactly one.
+	 *
+	 * @param array $spec   Spec.
+	 * @param array $global Settings (cond_texts).
+	 * @return string HTML.
+	 */
+	public static function condition_text( array $spec, array $global ) {
+		$values = self::condition_values( $spec );
+		$texts  = isset( $global['cond_texts'] ) && is_array( $global['cond_texts'] ) ? $global['cond_texts'] : array();
+		if ( 1 !== count( $values ) || ! $texts ) {
+			return '';
+		}
+		$norm = static function ( $t ) {
+			return str_replace( array( "\xE2\x80\x8C", ' ', '-' ), '', SBPI_Util::key( $t ) );
+		};
+		$map = array();
+		foreach ( $texts as $k => $v ) {
+			// Unfinished drafts ("[write your warranty here]") are never published.
+			if ( '' !== trim( wp_strip_all_tags( $v ) ) && ! preg_match( '/\[[^\]]{3,}\]/u', $v ) ) {
+				$map[ $norm( $k ) ] = $v;
+			}
+		}
+		$candidates = array_merge( array( $values[0] ), explode( '/', $values[0] ) );
+		foreach ( $candidates as $c ) {
+			$k = $norm( $c );
+			if ( isset( $map[ $k ] ) ) {
+				$body = str_replace( array( '{title}', '{model}' ), array( esc_html( $spec['title'] ), esc_html( $spec['model'] ) ), $map[ $k ] );
+				return sprintf( '<h2>شرایط و وضعیت %s</h2>', esc_html( $spec['title'] ) ) . wp_kses_post( $body );
+			}
+		}
+		return '';
+	}
+
+	/**
+	 * FAQ pairs from matched glossary entries.
+	 *
+	 * @param array $spec   Spec.
+	 * @param array $global Settings.
+	 * @return array [[question, answer]]
+	 */
+	public static function faq_pairs( array $spec, array $global ) {
+		if ( empty( $global['faq'] ) ) {
+			return array();
+		}
+		$out = array();
+		foreach ( $spec['glossary'] as $g ) {
+			$term = 'نکته' === $g[0] ? '' : SBPI_Util::header_label( $g[0] );
+			$q    = '' === $term
+				? sprintf( 'هنگام خرید %s به چه نکته‌ای توجه کنم؟', $spec['title'] )
+				: sprintf( 'منظور از «%s» چیست؟', $term );
+			$out[] = array( $q, $g[1] );
+		}
+		return $out;
+	}
+
+	/**
+	 * FAQPage JSON-LD for products imported with FAQ enabled.
+	 * Note: Google shows FAQ rich results only for well-known government/health sites
+	 * (since Aug 2023); the markup still describes the visible Q&A for other consumers.
+	 */
+	public static function faq_schema() {
+		if ( ! is_singular( 'product' ) ) {
+			return;
+		}
+		$faq = get_post_meta( get_queried_object_id(), '_sbpi_faq', true );
+		if ( ! is_array( $faq ) || ! $faq ) {
+			return;
+		}
+		$items = array();
+		foreach ( $faq as $qa ) {
+			$items[] = array(
+				'@type'          => 'Question',
+				'name'           => $qa[0],
+				'acceptedAnswer' => array(
+					'@type' => 'Answer',
+					'text'  => $qa[1],
+				),
+			);
+		}
+		echo '<script type="application/ld+json">' . wp_json_encode(
+			array(
+				'@context'   => 'https://schema.org',
+				'@type'      => 'FAQPage',
+				'mainEntity' => $items,
+			),
+			JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG
+		) . '</script>' . "\n";
 	}
 
 	/**

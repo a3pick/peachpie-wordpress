@@ -26,3 +26,16 @@
 .sbpi .sbpi-bar { height: 10px; background: #f0f0f1; border-radius: 5px; overflow: hidden; }
 .sbpi .sbpi-bar span { display: block; height: 100%; width: 0; background: #2271b1; transition: width .3s; }
 .sbpi #sbpi-log { background: #1d2327; color: #f0f0f1; padding: 10px; max-height: 300px; overflow: auto; direction: rtl; white-space: pre-wrap; }
+.sbpi .sbpi-diff { margin: 8px 0; font-size: 13px; }
+.sbpi .sbpi-diff .sbpi-len { font-size: 13px; padding: 2px 8px; }
+.sbpi .sbpi-st { font-size: 11px; padding: 1px 6px; border-radius: 3px; background: #f0f0f1; }
+.sbpi .sbpi-st-new { background: #edfaef; color: #00a32a; }
+.sbpi .sbpi-st-update { background: #f0f6fc; color: #2271b1; }
+.sbpi .sbpi-st-skip { background: #fcf0f1; color: #d63638; }
+.sbpi .sbpi-badges { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0; }
+.sbpi .sbpi-badge { padding: 4px 10px; border-radius: 14px; border: 1px solid #dcdcde; text-decoration: none; font-size: 12px; }
+.sbpi .sbpi-badge.bad { color: #d63638; }
+.sbpi .sbpi-badge.ok { color: #00a32a; }
+.sbpi .sbpi-badge.on { background: #2271b1; color: #fff; border-color: #2271b1; }
+.sbpi .sbpi-cond { margin: 12px 0; }
+.sbpi .sbpi-cond input[type=text] { width: 200px; }

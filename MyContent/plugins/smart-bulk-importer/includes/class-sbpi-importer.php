@@ -220,6 +220,12 @@ final class SBPI_Importer {
 		$product->update_meta_data( '_sbpi_batch', $batch );
 		$product->update_meta_data( '_sbpi_brand', $spec['brand'] ? $spec['brand'][2] : '' );
 		$product->update_meta_data( '_sbpi_conditions', $spec['conditions'] );
+		$faq = SBPI_SEO::faq_pairs( $spec, $global );
+		if ( $faq ) {
+			$product->update_meta_data( '_sbpi_faq', $faq );
+		} else {
+			$product->delete_meta_data( '_sbpi_faq' );
+		}
 
 		$id = $product->save();
 		if ( ! $id ) {
@@ -230,6 +236,26 @@ final class SBPI_Importer {
 			$bid = self::term( 'product_brand', $spec['brand'][0], null, $spec['brand'][1] );
 			if ( $bid ) {
 				wp_set_object_terms( $id, array( $bid ), 'product_brand', true );
+			}
+		}
+
+		if ( ! empty( $global['auto_images'] ) ) {
+			$imgs    = SBPI_Images::match( $spec );
+			$changed = false;
+			if ( $imgs['main'] && ! $product->get_image_id() ) {
+				SBPI_Images::ensure_alt( $imgs['main'], $spec['title'] );
+				$product->set_image_id( $imgs['main'] );
+				$changed = true;
+			}
+			if ( $imgs['gallery'] && ! $product->get_gallery_image_ids() ) {
+				foreach ( $imgs['gallery'] as $gid ) {
+					SBPI_Images::ensure_alt( $gid, $spec['model'] );
+				}
+				$product->set_gallery_image_ids( $imgs['gallery'] );
+				$changed = true;
+			}
+			if ( $changed ) {
+				$product->save();
 			}
 		}
 
@@ -272,7 +298,9 @@ final class SBPI_Importer {
 			}
 		}
 
-		$total = count( $spec['variations'] );
+		$total  = count( $spec['variations'] );
+		$caid   = SBPI_Images::color_attr( $spec );
+		$colors = ! empty( $global['auto_images'] ) && null !== $caid ? SBPI_Images::match( $spec )['colors'] : array();
 		$taxes = array();
 		foreach ( $spec['attributes'] as $aid => $attr ) {
 			if ( $attr['variation'] ) {
@@ -309,6 +337,11 @@ final class SBPI_Importer {
 						unset( $e );
 					}
 				}
+			}
+			if ( $colors && ! $variation->get_image_id() && isset( $v['attrs'][ $caid ], $colors[ $v['attrs'][ $caid ] ] ) ) {
+				$cid = $colors[ $v['attrs'][ $caid ] ];
+				SBPI_Images::ensure_alt( $cid, $spec['model'] . ' رنگ ' . $v['attrs'][ $caid ] );
+				$variation->set_image_id( $cid );
 			}
 			if ( '' !== $v['image'] && ! $variation->get_image_id() ) {
 				$img = self::image( $v['image'], $parent_id, $spec['title'] );

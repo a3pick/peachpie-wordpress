@@ -44,6 +44,23 @@
 		} );
 	} );
 
+	/* ---------- Price update: apply ---------- */
+	var priceBox = $( '#sbpi-prices' );
+	var applyBtn = $( '#sbpi-price-apply' );
+	if ( priceBox && applyBtn ) {
+		applyBtn.addEventListener( 'click', function () {
+			if ( ! window.confirm( 'تغییرات قیمت و موجودی اعمال شود؟' ) ) { return; }
+			var text = $( '.sbpi-progress-text', priceBox );
+			applyBtn.disabled = true;
+			( function step( offset ) {
+				post( 'sbpi_price_apply', { job: priceBox.dataset.job, offset: offset } ).then( function ( d ) {
+					text.textContent = d.offset + ' / ' + d.total;
+					if ( d.done ) { text.textContent = '✅ ' + d.total + ' تغییر اعمال شد.'; } else { step( d.offset ); }
+				} ).catch( function ( e ) { text.textContent = e.message; applyBtn.disabled = false; } );
+			} )( 0 );
+		} );
+	}
+
 	var form = $( '#sbpi-form' );
 	if ( ! form ) { return; }
 	var job = form.dataset.job;
@@ -116,13 +133,26 @@
 		post( 'sbpi_preview', { job: job, settings: JSON.stringify( collect() ) } ).then( function ( d ) {
 			var html = '<div class="sbpi-summary"><strong>' + d.count + '</strong> محصول، <strong>' + d.variations + '</strong> تنوع' +
 				( d.seo_plugin ? ' — متای سئو در <strong>' + esc( d.seo_plugin ) + '</strong> ذخیره می‌شود.' : '' ) + '</div>';
+			var df = d.diff;
+			html += '<div class="sbpi-diff"><span class="sbpi-len ok">جدید: ' + df.new + '</span> ' +
+				'<span class="sbpi-len ' + ( df.mode === 'skip' ? 'bad' : 'ok' ) + '">' + ( df.mode === 'skip' ? 'موجود (رد می‌شود): ' : 'موجود (به‌روزرسانی): ' ) + df.update + '</span> ' +
+				'<span class="sbpi-len ' + ( df.pcount ? 'bad' : 'ok' ) + '">تغییر قیمت: ' + df.pcount + '</span></div>';
+			if ( df.pcount && df.mode !== 'skip' ) {
+				html += '<details open><summary>تغییرات قیمت (قبلی ← جدید)' + ( df.pcount > df.prices.length ? ' — ' + df.prices.length + ' مورد اول' : '' ) + '</summary><table class="widefat striped"><tbody>' +
+					df.prices.map( function ( p ) {
+						var up = Number( p[3] ) > Number( p[2] ) ? '▲' : '▼';
+						return '<tr><td>' + esc( p[0] ) + '</td><td>' + esc( p[1] ) + '</td><td>' + esc( p[2] || '—' ) + '</td><td><strong>' + esc( p[3] ) + '</strong> ' + up + '</td></tr>';
+					} ).join( '' ) + '</tbody></table></details>';
+			}
 			if ( d.warnings.length ) {
 				html += '<div class="notice notice-warning inline"><ul>' + d.warnings.map( function ( w ) { return '<li>' + esc( w ) + '</li>'; } ).join( '' ) + '</ul></div>';
 			}
 			html += '<table class="widefat striped sbpi-preview"><thead><tr><th>محصول</th><th>نوع</th><th>دسته / برند</th><th>ویژگی‌ها (★ = متغیر)</th><th>سئو</th></tr></thead><tbody>';
 			d.products.forEach( function ( p, i ) {
 				html += '<tr>' +
-					'<td><strong>' + esc( p.title ) + '</strong><br><code dir="ltr">' + esc( decodeURIComponent( p.slug ) ) + '</code><br><small>سطرها: ' + esc( p.lines ) + '</small></td>' +
+					'<td><span class="sbpi-st sbpi-st-' + p.status + '">' + { 'new': 'جدید', update: 'به‌روزرسانی', skip: 'رد می‌شود' }[ p.status ] + '</span>' +
+					( p.new_vars && p.status === 'update' ? ' <small>+' + p.new_vars + ' تنوع جدید</small>' : '' ) +
+					'<br><strong>' + esc( p.title ) + '</strong><br><code dir="ltr">' + esc( decodeURIComponent( p.slug ) ) + '</code><br><small>سطرها: ' + esc( p.lines ) + '</small></td>' +
 					'<td>' + ( p.type === 'variable' ? 'متغیر<br><strong>' + p.variations + '</strong> تنوع' : 'ساده' ) + ( p.priced ? '' : '<br><span class="sbpi-len bad">بدون قیمت</span>' ) + '</td>' +
 					'<td>' + esc( p.category ) + '<br><small>' + esc( p.brand ) + '</small></td>' +
 					'<td><small>' + esc( p.attributes ) + '</small></td>' +

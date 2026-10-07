@@ -70,6 +70,12 @@ final class SBPI_Parser {
 			'samples' => array(),
 		);
 
+		// Instruction sheets (e.g. in our template) are never imported.
+		if ( false !== mb_strpos( $result['name'], 'نادیده' ) || 0 === strpos( $result['name'], '!' ) ) {
+			$result['kind'] = 'ignored';
+			return $result;
+		}
+
 		$widths = array_map( array( __CLASS__, 'filled' ), $rows );
 		if ( ! $widths || max( $widths ) === 0 ) {
 			return $result;
