@@ -60,7 +60,7 @@ final class SBPI_SEO {
 			'model'      => $spec['model'],
 			'brand'      => $spec['brand'] ? $spec['brand'][0] : '',
 			'brand_en'   => $spec['brand'] ? $spec['brand'][2] : '',
-			'category'   => $spec['category'] ? end( $spec['category'] ) : '',
+			'category'   => $spec['category'] ? SBPI_Category::name( end( $spec['category'] ) ) : '',
 			'site'       => $global['store_name'],
 			'options'    => self::options_summary( $spec, 3 ),
 			'conditions' => '',

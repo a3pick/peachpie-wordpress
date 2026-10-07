@@ -539,8 +539,11 @@ final class SBPI_Importer {
 			return self::$cat_cache[ $ck ];
 		}
 		$parent = 0;
-		foreach ( $path as $name ) {
-			$parent = self::term( 'product_cat', $name, null, null, $parent );
+		foreach ( $path as $segment ) {
+			// "پلی‌استیشن 5|playstation-5" → name + latin slug (slug is used only when creating).
+			$parts  = array_map( 'trim', explode( '|', $segment, 2 ) );
+			$slug   = isset( $parts[1] ) && '' !== $parts[1] ? sanitize_title( $parts[1] ) : null;
+			$parent = self::term( 'product_cat', $parts[0], null, $slug, $parent );
 			if ( ! $parent ) {
 				break;
 			}

@@ -212,6 +212,7 @@ final class SBPI_Admin {
 			$out[ $si ] = array(
 				'enabled'   => ! empty( $raw['enabled'] ),
 				'category'  => sanitize_text_field( wp_unslash( isset( $raw['category'] ) ? (string) $raw['category'] : '' ) ),
+				'acc_category' => sanitize_text_field( wp_unslash( isset( $raw['acc_category'] ) ? (string) $raw['acc_category'] : '' ) ),
 				'brand'     => sanitize_text_field( wp_unslash( isset( $raw['brand'] ) ? (string) $raw['brand'] : '' ) ),
 				'title_tpl' => sanitize_text_field( wp_unslash( isset( $raw['title_tpl'] ) ? (string) $raw['title_tpl'] : '{model}' ) ),
 				'columns'   => $columns,
@@ -547,7 +548,11 @@ final class SBPI_Admin {
 					<div class="sbpi-grid">
 						<label>دسته‌بندی
 							<input type="text" data-f="category" value="<?php echo esc_attr( $conf['category'] ); ?>" placeholder="موبایل > گوشی اپل" />
-							<small>زیردسته با <code>&gt;</code></small>
+							<small>زیردسته با <code>&gt;</code>، نامک لاتین با <code>|</code> — مثل <code dir="ltr">موبایل|mobile &gt; {model}</code>. <code>{model}</code> = یک صفحه دسته برای هر مدل</small>
+						</label>
+						<label>دسته لوازم جانبی
+							<input type="text" data-f="acc_category" value="<?php echo esc_attr( isset( $conf['acc_category'] ) ? $conf['acc_category'] : '' ); ?>" placeholder="خالی = همان دسته اصلی" />
+							<small>برای سطرهای بخش ACCESSORIES یا مدل‌هایی مثل کیف، کابل، دسته</small>
 						</label>
 						<label>برند
 							<input type="text" data-f="brand" value="" placeholder="خودکار (اپل، سونی، …)" />
@@ -893,7 +898,7 @@ final class SBPI_Admin {
 				'slug'       => $p['slug'],
 				'type'       => $p['type'],
 				'variations' => count( $p['variations'] ),
-				'category'   => implode( ' › ', $p['category'] ),
+				'category'   => implode( ' › ', array_map( array( 'SBPI_Category', 'name' ), $p['category'] ) ),
 				'brand'      => $p['brand'] ? $p['brand'][0] : '—',
 				'attributes' => implode( '، ', $axes ),
 				'seo_title'  => $p['seo']['title'],
@@ -1032,6 +1037,15 @@ final class SBPI_Admin {
 			update_option( 'sbpi_batches', $batches, false );
 		}
 		if ( $done ) {
+			// Model-family hub pages (only categories with an empty description).
+			$cats = SBPI_Category::describe( $products );
+			if ( $cats ) {
+				$batches = get_option( 'sbpi_batches', array() );
+				$batches[ $state['batch'] ]['cats'] = $cats;
+				update_option( 'sbpi_batches', $batches, false );
+				self::log( $state['batch'], array( sprintf( '🗂 توضیح و جدول مقایسه برای %d صفحه دسته نوشته شد.', count( $cats ) ) ) );
+				$log[] = sprintf( '🗂 صفحه دسته (هاب مدل) برای %d دسته ساخته شد.', count( $cats ) );
+			}
 			delete_option( 'sbpi_state_' . $id );
 			self::unlock( $id );
 		}
@@ -1069,6 +1083,9 @@ final class SBPI_Admin {
 			$left = SBPI_Importer::rollback( $batch, self::deadline() );
 		}
 		if ( 0 === $left ) {
+			if ( ! empty( $batches[ $batch ]['cats'] ) ) {
+				SBPI_Category::undo( $batches[ $batch ]['cats'] );
+			}
 			$batches[ $batch ]['status'] = 'rolled_back';
 			delete_option( 'sbpi_pundo_' . $batch );
 			self::log( $batch, array( '↩ بازگردانی کامل شد.' ) );

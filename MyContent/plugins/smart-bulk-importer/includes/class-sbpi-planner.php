@@ -152,14 +152,59 @@ final class SBPI_Planner {
 		}
 
 		$category = trim( preg_replace( '/\s*(کامل|لیست|list)\s*/iu', ' ', $sheet['name'] ) );
+		$cats     = self::guess_categories( $sheet );
 
 		return array(
 			'enabled'   => 'products' === $sheet['kind'] && ! empty( $sheet['rows'] ),
-			'category'  => '' === $category ? $sheet['name'] : $category,
+			'category'  => $cats ? $cats[0] : ( '' === $category ? $sheet['name'] : $category ),
+			'acc_category' => $cats ? $cats[1] : '',
 			'brand'     => '',
 			'title_tpl' => '{model} {split}',
 			'columns'   => $columns,
 		);
+	}
+
+	/** Category families: pattern => [main path, accessory path]. "name|slug" sets a latin slug. */
+	const CATEGORY_GUESS = array(
+		// Consoles first: "Xbox Series X Galaxy Black" must not look like a Samsung phone.
+		'/xbox|ایکس ?باکس/iu'              => array( 'کنسول بازی|game-console > ایکس باکس|xbox', 'لوازم جانبی کنسول|console-accessories > لوازم جانبی ایکس باکس|xbox-accessories' ),
+		'/\bps ?5\b|play ?station ?5/iu'  => array( 'کنسول بازی|game-console > پلی‌استیشن 5|playstation-5', 'لوازم جانبی کنسول|console-accessories > لوازم جانبی پلی‌استیشن 5|ps5-accessories' ),
+		'/\bps ?4\b|play ?station ?4/iu'  => array( 'کنسول بازی|game-console > پلی‌استیشن 4|playstation-4', 'لوازم جانبی کنسول|console-accessories > لوازم جانبی پلی‌استیشن 4|ps4-accessories' ),
+		'/nintendo|switch|نینتندو/iu'      => array( 'کنسول بازی|game-console > نینتندو|nintendo', 'لوازم جانبی کنسول|console-accessories > لوازم جانبی نینتندو|nintendo-accessories' ),
+		'/iphone|آیفون/iu'                 => array( 'موبایل|mobile > گوشی اپل|apple-iphone > {model}', 'لوازم جانبی موبایل|mobile-accessories > لوازم جانبی آیفون|iphone-accessories' ),
+		'/ipad|آیپد/iu'                    => array( 'تبلت|tablet > تبلت اپل|apple-ipad > {model}', 'لوازم جانبی تبلت|tablet-accessories' ),
+		'/samsung|سامسونگ|galaxy (s|a|z|m|note)/iu' => array( 'موبایل|mobile > گوشی سامسونگ|samsung-galaxy > {model}', 'لوازم جانبی موبایل|mobile-accessories' ),
+	);
+
+	/**
+	 * Suggest [main, accessory] category templates from a sheet's name and first models.
+	 *
+	 * @param array $sheet Parsed sheet.
+	 * @return array|null
+	 */
+	private static function guess_categories( array $sheet ) {
+		$text = $sheet['name'] . ' ' . $sheet['title'];
+		foreach ( array_slice( $sheet['rows'], 0, 5 ) as $r ) {
+			$text .= ' ' . implode( ' ', $r['cells'] );
+		}
+		foreach ( self::CATEGORY_GUESS as $re => $paths ) {
+			if ( preg_match( $re, $text ) ) {
+				return $paths;
+			}
+		}
+		return null;
+	}
+
+	/**
+	 * Is this row an accessory (by section title or model wording)?
+	 *
+	 * @param array  $tokens Row tokens (s1…).
+	 * @param string $model  Model.
+	 * @return bool
+	 */
+	public static function is_accessory( array $tokens, $model ) {
+		return (bool) preg_match( '/accessor|لوازم ?جانبی/iu', $tokens['s1'] . ' ' . $tokens['s2'] )
+			|| (bool) preg_match( '/^(کیف|کابل|پایه|قاب|گلس|شارژر|هندزفری|دسته|کارت حافظه|درایو)|controller|dual ?sense|dual ?shock|charger|cable|case\b/iu', $model );
 	}
 
 	/**
@@ -304,7 +349,7 @@ final class SBPI_Planner {
 						'title'     => $title,
 						'slug'      => $key,
 						'brand'     => $brand,
-						'category'  => SBPI_Util::render( $conf['category'], $tokens ),
+						'category'  => SBPI_Util::render( self::is_accessory( $tokens, $model ) && ! empty( $conf['acc_category'] ) ? $conf['acc_category'] : $conf['category'], $tokens ),
 						'tags'      => array(),
 						'attr_defs' => array(),
 						'rows'      => array(),
