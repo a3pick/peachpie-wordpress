@@ -312,7 +312,8 @@ final class SBPI_Admin {
 		<div class="sbpi-card">
 			<h2>۲. تنظیمات شیت‌ها و ستون‌ها <small>— فایل: <?php echo esc_html( $job['file'] ); ?></small></h2>
 			<p class="description">
-				<strong>ویژگی متغیر</strong> = کاربر هنگام خرید انتخاب می‌کند (حافظه، رنگ، ریجن، وضعیت) و از ترکیب آن‌ها «تنوع» ساخته می‌شود.
+				<strong>محصول جدا</strong> = هر مقدار (مثلاً 128 GB / نو / استوک / اکتیو / نات‌اکتیو) یک محصول مستقل با نام و نامک جدا می‌سازد؛ نسخه‌های یک مدل خودکار به هم لینک داخلی می‌دهند.
+								<strong>ویژگی متغیر</strong> = کاربر هنگام خرید انتخاب می‌کند (حافظه، رنگ، ریجن، وضعیت) و از ترکیب آن‌ها «تنوع» ساخته می‌شود.
 				<strong>ویژگی نمایشی</strong> = فقط در جدول مشخصات و فیلترها می‌آید. همه ویژگی‌ها «سراسری» (pa_) ساخته می‌شوند تا در فیلتر و Schema قابل استفاده باشند.
 				سطرهایی که «نام/مدل» یکسان دارند یک محصول متغیر می‌شوند. مقادیر چندتایی با <code>|</code> جدا می‌شوند.
 			</p>
@@ -348,7 +349,7 @@ final class SBPI_Admin {
 					<label>برند <input type="text" data-f="brand" value="" placeholder="خالی = تشخیص خودکار (اپل، سونی، …)" /></label>
 					<label>الگوی نام محصول <input type="text" data-f="title_tpl" value="<?php echo esc_attr( $conf['title_tpl'] ); ?>" placeholder="{model}" /></label>
 				</div>
-				<p class="description">متغیرها: <code>{model}</code> <code>{sheet}</code> <code>{s1}</code> <code>{s2}</code> <code>{s3}</code> (بخش‌های سطر عنوان؛ مثلاً در «PLAY STATION 5 — ACCENT — استوک»، s1=PLAY STATION 5). مثال نام فارسی‌تر: <code>کنسول بازی {model}</code> یا <code>گوشی موبایل اپل {model}</code>.</p>
+				<p class="description">متغیرها: <code>{model}</code> <code>{split}</code> (مقادیر ستون‌های «محصول جدا») یا نامک هر ستون مثل <code>{storage}</code> <code>{condition}</code>، <code>{sheet}</code> <code>{s1}</code> <code>{s2}</code> <code>{s3}</code> (بخش‌های سطر عنوان؛ مثلاً در «PLAY STATION 5 — ACCENT — استوک»، s1=PLAY STATION 5). مثال: <code>گوشی موبایل اپل {model} ظرفیت {storage} {condition}</code>.</p>
 				<table class="widefat striped sbpi-cols">
 					<thead><tr><th>ستون</th><th>نمونه داده</th><th>نقش</th><th>نام ویژگی</th><th>نامک لاتین</th><th>چندمقداری</th></tr></thead>
 					<tbody>

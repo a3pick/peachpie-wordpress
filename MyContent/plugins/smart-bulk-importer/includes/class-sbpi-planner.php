@@ -19,6 +19,7 @@ final class SBPI_Planner {
 		return array(
 			'ignore'      => 'نادیده گرفته شود',
 			'model'       => 'نام / مدل محصول (کلید گروه‌بندی)',
+			'split_attr'  => 'محصول جدا (مقدار در نام محصول می‌آید)',
 			'var_attr'    => 'ویژگی متغیر (ساخت تنوع)',
 			'info_attr'   => 'ویژگی نمایشی (مشخصات)',
 			'sku'         => 'شناسه (SKU)',
@@ -36,14 +37,33 @@ final class SBPI_Planner {
 
 	/** Known attributes: pattern => [label, latin slug, default role]. */
 	const ATTR_GUESS = array(
-		'/storage|حافظه|ظرفیت|هارد|capacity/iu'      => array( 'حافظه داخلی', 'storage', 'var_attr' ),
+		'/storage|حافظه|ظرفیت|هارد|capacity/iu'      => array( 'حافظه داخلی', 'storage', 'split_attr' ),
 		'/colou?r|رنگ/iu'                             => array( 'رنگ', 'color', 'var_attr' ),
 		'/region|منطقه|ریجن|پارت ?نامبر/iu'          => array( 'ریجن (سری منطقه‌ای)', 'region', 'var_attr' ),
-		'/grade|condition|وضعیت|کیفیت|گرید/iu'        => array( 'وضعیت کالا', 'condition', 'var_attr' ),
-		'/ram|رم/iu'                                  => array( 'حافظه رم', 'ram', 'var_attr' ),
+		'/grade|condition|وضعیت|کیفیت|گرید/iu'        => array( 'وضعیت کالا', 'condition', 'split_attr' ),
+		'/ram|رم/iu'                                  => array( 'حافظه رم', 'ram', 'split_attr' ),
 		'/firmware|version|فریمور|فریمویر|نسخه/iu'   => array( 'نسخه فریمور', 'firmware', 'info_attr' ),
 		'/items|اقلام|متعلقات|محتویات|پک/iu'          => array( 'اقلام همراه', 'package', 'info_attr' ),
 		'/warranty|گارانتی/iu'                        => array( 'گارانتی', 'warranty', 'info_attr' ),
+	);
+
+	/** Persian words → latin slug parts (longest first). */
+	const TRANSLIT = array(
+		'نات اکتیو'  => 'not-active',
+		'نات‌اکتیو'  => 'not-active',
+		'اکتیو'      => 'active',
+		'استوک'      => 'used',
+		'کارکرده'    => 'used',
+		'آکبند'      => 'sealed',
+		'اکبند'      => 'sealed',
+		'نو'         => 'new',
+		'ریفربیش'    => 'refurbished',
+		'اکانتی'     => 'account',
+		'کپی‌خور'    => 'copycat',
+		'جیلبریک'    => 'jailbreak',
+		'دسته'       => 'controller',
+		'گیگابایت'   => 'gb',
+		'ترابایت'    => 'tb',
 	);
 
 	/** Brand detection on model / sheet text. Order matters ("Xbox … Galaxy Black"). */
@@ -125,9 +145,9 @@ final class SBPI_Planner {
 		$columns['__s3']    = array( 'role' => 'ignore', 'name' => 'وضعیت کالا', 'slug' => 'condition', 'split' => false );
 		$columns['__sheet'] = array( 'role' => 'ignore', 'name' => 'شیت', 'slug' => '', 'split' => false );
 		if ( $sheet['rows'] && $three > count( $sheet['rows'] ) / 2 ) {
-			$columns['__s2']['role'] = 'var_attr';
+			$columns['__s2']['role'] = 'split_attr';
 			if ( ! $grade_col ) {
-				$columns['__s3']['role'] = 'var_attr';
+				$columns['__s3']['role'] = 'split_attr';
 			}
 		}
 
@@ -137,7 +157,7 @@ final class SBPI_Planner {
 			'enabled'   => 'products' === $sheet['kind'] && ! empty( $sheet['rows'] ),
 			'category'  => '' === $category ? $sheet['name'] : $category,
 			'brand'     => '',
-			'title_tpl' => '{model}',
+			'title_tpl' => '{model} {split}',
 			'columns'   => $columns,
 		);
 	}
@@ -240,7 +260,32 @@ final class SBPI_Planner {
 					's2'    => $get( '__s2' ),
 					's3'    => $get( '__s3' ),
 				);
-				$title  = SBPI_Util::render( $conf['title_tpl'] ? $conf['title_tpl'] : '{model}', $tokens );
+				// "Split" columns (storage, RAM, condition, …) make each combination its own
+				// product: "iPhone 13 128 GB استوک". Tokens: {split} or each column's slug.
+				$split = array();
+				$last  = array();
+				foreach ( $conf['columns'] as $ck => $col ) {
+					if ( 'split_attr' === $col['role'] ) {
+						$v = $get( $ck );
+						// Two-part sections ("ACCESSORIES — لوازم جانبی PS5") carry no option.
+						if ( in_array( (string) $ck, array( '__s2', '__s3' ), true ) && count( $row['section'] ) < 3 ) {
+							$v = '';
+						}
+						if ( ! SBPI_Util::is_empty( $v ) ) {
+							// Condition reads best at the end: "Ps5 Slim ACCENT (اکانتی) استوک".
+							if ( 'condition' === $col['slug'] ) {
+								$last[] = $v;
+							} else {
+								$split[] = $v;
+							}
+							if ( '' !== $col['slug'] ) {
+								$tokens[ $col['slug'] ] = $v;
+							}
+						}
+					}
+				}
+				$tokens['split'] = implode( ' ', array_merge( $split, $last ) );
+				$title           = SBPI_Util::render( $conf['title_tpl'] ? $conf['title_tpl'] : '{model} {split}', $tokens );
 				$key    = self::slug( $title );
 				if ( '' === $key ) {
 					continue;
@@ -255,6 +300,7 @@ final class SBPI_Planner {
 						'key'       => $key,
 						'sheet'     => $sheet['name'],
 						'model'     => $model,
+						'family'    => self::slug( $model ),
 						'title'     => $title,
 						'slug'      => $key,
 						'brand'     => $brand,
@@ -283,10 +329,14 @@ final class SBPI_Planner {
 				);
 				foreach ( $conf['columns'] as $ck => $col ) {
 					$raw = $get( $ck );
+					if ( 'split_attr' === $col['role'] && in_array( (string) $ck, array( '__s2', '__s3' ), true ) && count( $row['section'] ) < 3 ) {
+						continue;
+					}
 					if ( SBPI_Util::is_empty( $raw ) ) {
 						continue;
 					}
 					switch ( $col['role'] ) {
+						case 'split_attr':
 						case 'var_attr':
 						case 'info_attr':
 							$name = '' !== trim( $col['name'] ) ? trim( $col['name'] ) : SBPI_Util::header_label( (string) $ck );
@@ -466,6 +516,7 @@ final class SBPI_Planner {
 			'sheet'      => $g['sheet'],
 			'title'      => $g['title'],
 			'model'      => $g['model'],
+			'family'     => $g['family'],
 			'slug'       => $g['slug'],
 			'type'       => $axes ? 'variable' : 'simple',
 			'brand'      => $g['brand'],
@@ -537,6 +588,9 @@ final class SBPI_Planner {
 		}
 		if ( preg_match( '/refurb|ریفربیش|بازسازی/u', $k ) ) {
 			return 'RefurbishedCondition';
+		}
+		if ( preg_match( '/نات ?اکتیو|not ?activ|non ?activ/u', $k ) ) {
+			return 'NewCondition';
 		}
 		if ( preg_match( '/استوک|کارکرده|دست ?دوم|used|اکتیو|active|open ?box|اوپن/u', $k ) ) {
 			return 'UsedCondition';
@@ -617,12 +671,23 @@ final class SBPI_Planner {
 	 */
 	public static function slug( $text ) {
 		$text = trim( SBPI_Util::latin_digits( (string) $text ) );
+		if ( preg_match( '/^[A-Za-z0-9]/', $text ) ) {
+			// Common grade words get readable latin slugs: "…-128-gb-used".
+			$text = preg_replace_callback(
+				'/(?<![\p{L}])(' . implode( '|', array_map( 'preg_quote', array_keys( self::TRANSLIT ) ) ) . ')(?![\p{L}])/u',
+				static function ( $m ) {
+					return ' ' . self::TRANSLIT[ $m[1] ] . ' ';
+				},
+				$text
+			);
+		}
 		// Titles that start in Persian keep a Persian slug (WordPress encodes it).
 		if ( '' === $text || ! preg_match( '/^[A-Za-z0-9]/', $text ) ) {
 			return sanitize_title( $text );
 		}
 		// "Ps5 Slim Digital (بازبینی 2025)" → "ps5-slim-digital-2025".
 		$latin = sanitize_title( preg_replace( '/[^\x20-\x7E]+/u', ' ', $text ) );
+		$latin = preg_replace( '/(?<=^|-)([a-z0-9]+)(?:-\1)+(?=-|$)/', '$1', $latin );
 		// Persian words outside parentheses can be the only difference between two
 		// products ("Ps4 Slim 500GB جیلبریک"), so keep them distinct with a short hash.
 		$outside = preg_replace( '/\([^)]*\)/u', '', $text );

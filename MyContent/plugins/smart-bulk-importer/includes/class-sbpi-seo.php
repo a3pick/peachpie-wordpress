@@ -21,6 +21,7 @@ final class SBPI_SEO {
 	 */
 	public static function init() {
 		add_filter( 'woocommerce_structured_data_product', array( __CLASS__, 'schema' ), 20, 2 );
+		add_filter( 'the_content', array( __CLASS__, 'sibling_links' ), 20 );
 		if ( ! self::seo_plugin() ) {
 			add_filter( 'pre_get_document_title', array( __CLASS__, 'document_title' ), 20 );
 			add_action( 'wp_head', array( __CLASS__, 'meta_description' ), 1 );
@@ -302,6 +303,53 @@ final class SBPI_SEO {
 			}
 		}
 		return $markup;
+	}
+
+	/**
+	 * Internal links between the separate products of one model
+	 * ("iPhone 13 128 GB نو" ↔ "iPhone 13 256 GB استوک"): helps shoppers compare
+	 * and gives each sibling page a crawlable, descriptive internal link.
+	 *
+	 * @param string $content Content.
+	 * @return string
+	 */
+	public static function sibling_links( $content ) {
+		if ( ! is_singular( 'product' ) || ! in_the_loop() || ! is_main_query() ) {
+			return $content;
+		}
+		$id     = get_the_ID();
+		$family = get_post_meta( $id, '_sbpi_family', true );
+		if ( ! $family ) {
+			return $content;
+		}
+		$cache = 'sbpi_fam_' . md5( $family );
+		$ids   = wp_cache_get( $cache, 'sbpi' );
+		if ( false === $ids ) {
+			$ids = get_posts(
+				array(
+					'post_type'      => 'product',
+					'post_status'    => 'publish',
+					'meta_key'       => '_sbpi_family', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key
+					'meta_value'     => $family, // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_value
+					'fields'         => 'ids',
+					'posts_per_page' => 40,
+					'orderby'        => 'title',
+					'order'          => 'ASC',
+					'no_found_rows'  => true,
+				)
+			);
+			wp_cache_set( $cache, $ids, 'sbpi', HOUR_IN_SECONDS );
+		}
+		$ids = array_diff( $ids, array( $id ) );
+		if ( ! $ids ) {
+			return $content;
+		}
+		$model = get_post_meta( $id, '_sbpi_model', true );
+		$html  = '<h2>' . esc_html( sprintf( 'سایر نسخه‌های %s', $model ) ) . '</h2><ul class="sbpi-siblings">';
+		foreach ( $ids as $sid ) {
+			$html .= '<li><a href="' . esc_url( get_permalink( $sid ) ) . '">' . esc_html( get_the_title( $sid ) ) . '</a></li>';
+		}
+		return $content . $html . '</ul>';
 	}
 
 	/**

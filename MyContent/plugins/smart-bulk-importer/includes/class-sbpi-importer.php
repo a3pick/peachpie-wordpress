@@ -215,6 +215,8 @@ final class SBPI_Importer {
 		}
 
 		$product->update_meta_data( '_sbpi_key', $spec['key'] );
+		$product->update_meta_data( '_sbpi_family', $spec['family'] );
+		$product->update_meta_data( '_sbpi_model', $spec['model'] );
 		$product->update_meta_data( '_sbpi_batch', $batch );
 		$product->update_meta_data( '_sbpi_brand', $spec['brand'] ? $spec['brand'][2] : '' );
 		$product->update_meta_data( '_sbpi_conditions', $spec['conditions'] );
