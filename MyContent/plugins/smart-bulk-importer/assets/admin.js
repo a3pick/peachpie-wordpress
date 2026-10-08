@@ -223,6 +223,52 @@
 		} );
 	} );
 
+	/* Settings: vertical navigation between panels (remembered per browser). */
+	var snav = $$( '.sbpi-snav button' );
+	function showPanel( name ) {
+		snav.forEach( function ( b ) { b.classList.toggle( 'active', b.dataset.panel === name ); b.setAttribute( 'aria-selected', b.dataset.panel === name ); } );
+		$$( '.sbpi-panel' ).forEach( function ( p ) {
+			var on = p.dataset.panel === name;
+			p.hidden = ! on;
+			p.classList.toggle( 'active', on );
+		} );
+		try { localStorage.setItem( 'sbpi-panel', name ); } catch ( e ) {}
+	}
+	snav.forEach( function ( b ) { b.addEventListener( 'click', function () { showPanel( b.dataset.panel ); } ); } );
+	try {
+		var saved = localStorage.getItem( 'sbpi-panel' );
+		if ( saved && $( '.sbpi-panel[data-panel="' + saved + '"]' ) ) { showPanel( saved ); }
+	} catch ( e ) {}
+
+	/* Segmented controls: buttons mirror a (hidden) select, so collect() keeps working. */
+	$$( 'select.sbpi-seg' ).forEach( function ( sel ) {
+		var wrap = document.createElement( 'div' );
+		wrap.className = 'sbpi-segmented';
+		wrap.setAttribute( 'role', 'radiogroup' );
+		Array.prototype.forEach.call( sel.options, function ( o ) {
+			var b = document.createElement( 'button' );
+			b.type = 'button';
+			b.textContent = o.textContent;
+			b.setAttribute( 'role', 'radio' );
+			var sync = function () {
+				$$( 'button', wrap ).forEach( function ( x, i ) {
+					var on = sel.options[ i ].selected;
+					x.classList.toggle( 'on', on );
+					x.setAttribute( 'aria-checked', on );
+				} );
+			};
+			b.addEventListener( 'click', function () {
+				sel.value = o.value;
+				sel.dispatchEvent( new Event( 'change', { bubbles: true } ) );
+				sync();
+			} );
+			wrap.appendChild( b );
+			setTimeout( sync );
+		} );
+		sel.hidden = true;
+		sel.parentNode.insertBefore( wrap, sel );
+	} );
+
 	/* Live Google preview for the SEO title template. */
 	var serp = $( '.sbpi-serp-live' );
 	function renderSerp() {

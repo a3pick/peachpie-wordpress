@@ -633,69 +633,134 @@ final class SBPI_Admin {
 		?>
 		</div>
 
-		<div class="sbpi-card" id="sbpi-global">
-			<h2><span class="dashicons dashicons-admin-settings"></span> تنظیمات</h2>
-			<div class="sbpi-groups">
-				<fieldset>
-					<legend>انتشار و موجودی</legend>
-					<label>وضعیت محصولات جدید
-						<select data-g="status">
-							<?php foreach ( array( 'draft' => 'پیش‌نویس (پیشنهادی)', 'publish' => 'منتشرشده', 'pending' => 'در انتظار بررسی', 'private' => 'خصوصی' ) as $k => $l ) : ?>
-								<option value="<?php echo esc_attr( $k ); ?>" <?php selected( $global['status'], $k ); ?>><?php echo esc_html( $l ); ?></option>
-							<?php endforeach; ?>
-						</select></label>
-					<label>اگر محصول از قبل وجود داشت
-						<select data-g="update_mode">
-							<option value="update" <?php selected( $global['update_mode'], 'update' ); ?>>به‌روزرسانی شود</option>
-							<option value="skip" <?php selected( $global['update_mode'], 'skip' ); ?>>رد شود</option>
-						</select></label>
-					<label>وضعیت موجودی پیش‌فرض
-						<select data-g="stock_status">
-							<option value="instock" <?php selected( $global['stock_status'], 'instock' ); ?>>موجود</option>
-							<option value="outofstock" <?php selected( $global['stock_status'], 'outofstock' ); ?>>ناموجود</option>
-							<option value="onbackorder" <?php selected( $global['stock_status'], 'onbackorder' ); ?>>پیش‌خرید</option>
-						</select></label>
-					<label>قیمت پیش‌فرض <input type="text" data-g="default_price" value="<?php echo esc_attr( $global['default_price'] ); ?>" placeholder="خالی" inputmode="numeric" /><small>وقتی فایل ستون قیمت ندارد</small></label>
-				</fieldset>
+		<div class="sbpi-card sbpi-settings-card" id="sbpi-global">
+			<div class="sbpi-settings-head">
+				<div>
+					<h2><span class="dashicons dashicons-admin-settings"></span> تنظیمات درون‌ریزی</h2>
+					<p>این تنظیمات ذخیره می‌شوند و دفعه بعد خودکار اعمال می‌شوند.</p>
+				</div>
+			</div>
+			<div class="sbpi-settings">
+				<nav class="sbpi-snav" role="tablist">
+					<button type="button" class="active" data-panel="publish" role="tab"><span class="dashicons dashicons-admin-post"></span><span><strong>انتشار و موجودی</strong><small>وضعیت، به‌روزرسانی، قیمت</small></span></button>
+					<button type="button" data-panel="seo" role="tab"><span class="dashicons dashicons-search"></span><span><strong>سئو</strong><small>عنوان، توضیحات، کلمه کلیدی</small></span></button>
+					<button type="button" data-panel="content" role="tab"><span class="dashicons dashicons-text-page"></span><span><strong>محتوا و تصاویر</strong><small>توضیحات، FAQ، تصویر، SKU</small></span></button>
+					<button type="button" data-panel="advanced" role="tab"><span class="dashicons dashicons-admin-tools"></span><span><strong>پیشرفته</strong><small>سقف تنوع، جداکننده، بازنویسی</small></span></button>
+				</nav>
 
-				<fieldset class="sbpi-seo-set">
-					<legend>سئو</legend>
-					<label>نام فروشگاه <input type="text" data-g="store_name" value="<?php echo esc_attr( $global['store_name'] ); ?>" /></label>
-					<label>الگوی عنوان سئو <input type="text" data-g="seo_title_tpl" value="<?php echo esc_attr( $global['seo_title_tpl'] ); ?>" /></label>
-					<label>الگوی توضیحات متا <input type="text" data-g="seo_desc_tpl" value="<?php echo esc_attr( $global['seo_desc_tpl'] ); ?>" placeholder="خالی = تولید هوشمند از ویژگی‌ها" /></label>
-					<label>کلمه کلیدی کانونی <input type="text" data-g="focus_tpl" value="<?php echo esc_attr( $global['focus_tpl'] ); ?>" /></label>
-					<div class="sbpi-serp-live" data-sample="<?php echo esc_attr( $sample_title ? $sample_title : 'iPhone 13 128 GB نو' ); ?>">
-						<small>پیش‌نمایش در گوگل (نمونه)</small>
-						<div class="u" dir="ltr"><?php echo esc_html( wp_parse_url( home_url(), PHP_URL_HOST ) ); ?> › product</div>
-						<div class="t"></div>
-						<div class="m"><span class="sbpi-len"></span></div>
-					</div>
-					<small>متغیرها: <code>{title}</code> <code>{model}</code> <code>{brand}</code> <code>{category}</code> <code>{site}</code> <code>{options}</code> <code>{conditions}</code> <code>{attr:storage}</code></small>
-				</fieldset>
+				<div class="sbpi-panels">
+					<section class="sbpi-panel active" data-panel="publish" role="tabpanel">
+						<div class="sbpi-row">
+							<div class="sbpi-row-label"><strong>وضعیت محصولات جدید</strong><small>پیشنهاد: پیش‌نویس، تا قبل از انتشار بررسی کنید.</small></div>
+							<div class="sbpi-row-control">
+								<select data-g="status" class="sbpi-seg">
+									<?php foreach ( array( 'draft' => 'پیش‌نویس', 'pending' => 'در انتظار', 'publish' => 'منتشرشده', 'private' => 'خصوصی' ) as $k => $l ) : ?>
+										<option value="<?php echo esc_attr( $k ); ?>" <?php selected( $global['status'], $k ); ?>><?php echo esc_html( $l ); ?></option>
+									<?php endforeach; ?>
+								</select>
+							</div>
+						</div>
+						<div class="sbpi-row">
+							<div class="sbpi-row-label"><strong>محصول تکراری</strong><small>اگر محصول از قبل در سایت وجود داشت. به‌روزرسانی قابل بازگردانی است.</small></div>
+							<div class="sbpi-row-control">
+								<select data-g="update_mode" class="sbpi-seg">
+									<option value="update" <?php selected( $global['update_mode'], 'update' ); ?>>به‌روزرسانی</option>
+									<option value="skip" <?php selected( $global['update_mode'], 'skip' ); ?>>رد شود</option>
+								</select>
+							</div>
+						</div>
+						<div class="sbpi-row">
+							<div class="sbpi-row-label"><strong>وضعیت موجودی پیش‌فرض</strong><small>وقتی فایل ستون موجودی ندارد.</small></div>
+							<div class="sbpi-row-control">
+								<select data-g="stock_status" class="sbpi-seg">
+									<option value="instock" <?php selected( $global['stock_status'], 'instock' ); ?>>موجود</option>
+									<option value="outofstock" <?php selected( $global['stock_status'], 'outofstock' ); ?>>ناموجود</option>
+									<option value="onbackorder" <?php selected( $global['stock_status'], 'onbackorder' ); ?>>پیش‌خرید</option>
+								</select>
+							</div>
+						</div>
+						<div class="sbpi-row">
+							<div class="sbpi-row-label"><strong>قیمت پیش‌فرض</strong><small>وقتی فایل ستون قیمت ندارد. خالی = بدون قیمت.</small></div>
+							<div class="sbpi-row-control">
+								<div class="sbpi-input-affix"><input type="text" data-g="default_price" value="<?php echo esc_attr( $global['default_price'] ); ?>" placeholder="خالی" inputmode="numeric" dir="ltr" /><span><?php echo esc_html( function_exists( 'get_woocommerce_currency_symbol' ) ? html_entity_decode( get_woocommerce_currency_symbol() ) : '' ); ?></span></div>
+							</div>
+						</div>
+					</section>
 
-				<fieldset>
-					<legend>محتوا و تصاویر</legend>
-					<label class="sbpi-check"><input type="checkbox" data-g="gen_description" <?php checked( $global['gen_description'] ); ?> /> تولید توضیحات کامل <small>معرفی، جدول مشخصات، تفاوت نسخه‌ها، متن وضعیت</small></label>
-					<label class="sbpi-check"><input type="checkbox" data-g="faq" <?php checked( $global['faq'] ); ?> /> سؤالات متداول + Schema <small><?php echo $glossary_count ? esc_html( sprintf( 'از %s مورد واژه‌نامه', number_format_i18n( $glossary_count ) ) ) : 'این فایل واژه‌نامه ندارد'; ?></small></label>
-					<label class="sbpi-check"><input type="checkbox" data-g="auto_images" <?php checked( $global['auto_images'] ); ?> /> تصویر خودکار از کتابخانه رسانه <small dir="ltr">iphone-13-blue.jpg · iphone-13-128-gb-used.jpg · …_2.jpg</small></label>
-					<label class="sbpi-check"><input type="checkbox" data-g="auto_sku" <?php checked( $global['auto_sku'] ); ?> /> ساخت SKU یکتا</label>
-					<p><a href="<?php echo esc_url( admin_url( 'edit.php?post_type=product&page=' . self::SLUG . '&tab=content' ) ); ?>" target="_blank">ویرایش متن وضعیت‌ها (نو/اکتیو/استوک) ↗</a></p>
-				</fieldset>
+					<section class="sbpi-panel" data-panel="seo" role="tabpanel" hidden>
+						<div class="sbpi-seo-grid">
+							<div>
+								<div class="sbpi-field"><label>نام فروشگاه</label><input type="text" data-g="store_name" value="<?php echo esc_attr( $global['store_name'] ); ?>" /></div>
+								<div class="sbpi-field"><label>الگوی عنوان سئو</label><input type="text" data-g="seo_title_tpl" value="<?php echo esc_attr( $global['seo_title_tpl'] ); ?>" /></div>
+								<div class="sbpi-field"><label>الگوی توضیحات متا</label><input type="text" data-g="seo_desc_tpl" value="<?php echo esc_attr( $global['seo_desc_tpl'] ); ?>" placeholder="خالی = تولید هوشمند از ویژگی‌ها (پیشنهادی)" /></div>
+								<div class="sbpi-field"><label>کلمه کلیدی کانونی</label><input type="text" data-g="focus_tpl" value="<?php echo esc_attr( $global['focus_tpl'] ); ?>" /></div>
+								<div class="sbpi-tokenbar">
+									<small>متغیرها:</small>
+									<?php foreach ( array( '{title}', '{model}', '{brand}', '{category}', '{site}', '{options}', '{conditions}', '{attr:storage}' ) as $tok ) : ?>
+										<code><?php echo esc_html( $tok ); ?></code>
+									<?php endforeach; ?>
+								</div>
+							</div>
+							<div class="sbpi-serp-live" data-sample="<?php echo esc_attr( $sample_title ? $sample_title : 'iPhone 13 128 GB نو' ); ?>">
+								<div class="sbpi-serp-top"><span class="sbpi-serp-fav"><?php echo esc_html( mb_substr( (string) $global['store_name'], 0, 1 ) ); ?></span><div><strong><?php echo esc_html( $global['store_name'] ); ?></strong><div class="u" dir="ltr"><?php echo esc_html( wp_parse_url( home_url(), PHP_URL_HOST ) ); ?> › product</div></div></div>
+								<div class="t"></div>
+								<div class="d">توضیحات متا برای هر محصول از روی ظرفیت، رنگ‌ها و وضعیت ساخته می‌شود؛ متن دقیق هر محصول را در «پیش‌نمایش» ببینید.</div>
+								<div class="m"><span class="sbpi-len"></span><small>پیش‌نمایش گوگل (نمونه)</small></div>
+							</div>
+						</div>
+					</section>
 
-				<details class="sbpi-advanced">
-					<summary>تنظیمات پیشرفته</summary>
-					<div class="sbpi-grid">
-						<label>سقف تنوع هر محصول <input type="number" data-g="max_variations" value="<?php echo esc_attr( $global['max_variations'] ); ?>" min="1" max="2000" /></label>
-						<label>جداکننده مقادیر <input type="text" data-g="separator" value="<?php echo esc_attr( $global['separator'] ); ?>" dir="ltr" /></label>
-						<label>پیشوند SKU <input type="text" data-g="sku_prefix" value="<?php echo esc_attr( $global['sku_prefix'] ); ?>" dir="ltr" placeholder="SH-" /></label>
-					</div>
-					<label class="sbpi-check"><input type="checkbox" data-g="attr_archives" <?php checked( $global['attr_archives'] ); ?> /> آرشیو برای ویژگی‌های جدید <small>فقط اگر برای صفحه هر رنگ/حافظه محتوا دارید</small></label>
-					<label class="sbpi-check"><input type="checkbox" data-g="update_title" <?php checked( $global['update_title'] ); ?> /> بازنویسی نام محصول در به‌روزرسانی</label>
-					<label class="sbpi-check"><input type="checkbox" data-g="overwrite_content" <?php checked( $global['overwrite_content'] ); ?> /> بازنویسی توضیحاتی که دستی ویرایش شده‌اند <small class="sbpi-warn">توصیه نمی‌شود</small></label>
-				</details>
+					<section class="sbpi-panel" data-panel="content" role="tabpanel" hidden>
+						<?php
+						$toggles = array(
+							'gen_description' => array( 'توضیحات کامل محصول', 'معرفی، جدول مشخصات، تفاوت نسخه‌ها و متن وضعیت (نو/اکتیو/استوک).' ),
+							'faq'             => array( 'سؤالات متداول + Schema', $glossary_count ? sprintf( 'از %s مورد واژه‌نامه این فایل.', number_format_i18n( $glossary_count ) ) : 'این فایل واژه‌نامه ندارد؛ بدون اثر.' ),
+							'auto_images'     => array( 'تصویر خودکار از کتابخانه رسانه', 'بر اساس نام فایل: iphone-13-blue.jpg ، iphone-13-128-gb-used.jpg ، …_2.jpg' ),
+							'auto_sku'        => array( 'ساخت SKU یکتا', 'برای محصول و همه تنوع‌ها؛ SKU موجود تغییر نمی‌کند.' ),
+						);
+						foreach ( $toggles as $key => $t ) :
+							?>
+							<label class="sbpi-row sbpi-row-toggle">
+								<div class="sbpi-row-label"><strong><?php echo esc_html( $t[0] ); ?></strong><small><?php echo esc_html( $t[1] ); ?></small></div>
+								<div class="sbpi-row-control"><span class="sbpi-switch"><input type="checkbox" data-g="<?php echo esc_attr( $key ); ?>" <?php checked( $global[ $key ] ); ?> /><span></span></span></div>
+							</label>
+						<?php endforeach; ?>
+						<a class="sbpi-row sbpi-row-link" href="<?php echo esc_url( admin_url( 'edit.php?post_type=product&page=' . self::SLUG . '&tab=content' ) ); ?>" target="_blank">
+							<div class="sbpi-row-label"><strong>متن اختصاصی هر وضعیت</strong><small>نو، اکتیو، استوک، … — در تب «متن وضعیت‌ها»</small></div>
+							<div class="sbpi-row-control"><span class="dashicons dashicons-external"></span></div>
+						</a>
+					</section>
+
+					<section class="sbpi-panel" data-panel="advanced" role="tabpanel" hidden>
+						<div class="sbpi-row">
+							<div class="sbpi-row-label"><strong>سقف تنوع هر محصول</strong><small>حفاظت در برابر ترکیب‌های بیش از حد.</small></div>
+							<div class="sbpi-row-control"><input type="number" class="small-text" data-g="max_variations" value="<?php echo esc_attr( $global['max_variations'] ); ?>" min="1" max="2000" /></div>
+						</div>
+						<div class="sbpi-row">
+							<div class="sbpi-row-label"><strong>جداکننده مقادیر چندتایی</strong><small>در فایل کارفرما «|» است.</small></div>
+							<div class="sbpi-row-control"><input type="text" class="small-text" data-g="separator" value="<?php echo esc_attr( $global['separator'] ); ?>" dir="ltr" /></div>
+						</div>
+						<div class="sbpi-row">
+							<div class="sbpi-row-label"><strong>پیشوند SKU</strong><small>مثلاً SH- ← SH-IPHONE-13-128-GB-NEW</small></div>
+							<div class="sbpi-row-control"><input type="text" data-g="sku_prefix" value="<?php echo esc_attr( $global['sku_prefix'] ); ?>" dir="ltr" placeholder="SH-" /></div>
+						</div>
+						<?php
+						$adv = array(
+							'attr_archives'     => array( 'آرشیو برای ویژگی‌های جدید', 'صفحه مستقل برای هر رنگ/حافظه؛ فقط اگر برایشان محتوا دارید.', false ),
+							'update_title'      => array( 'بازنویسی نام محصول در به‌روزرسانی', 'نام‌هایی که دستی عوض کرده‌اید جایگزین می‌شوند.', false ),
+							'overwrite_content' => array( 'بازنویسی توضیحات ویرایش‌شده', 'متن‌های دستی شما پاک می‌شود — توصیه نمی‌شود.', true ),
+						);
+						foreach ( $adv as $key => $t ) :
+							?>
+							<label class="sbpi-row sbpi-row-toggle<?php echo $t[2] ? ' danger' : ''; ?>">
+								<div class="sbpi-row-label"><strong><?php echo esc_html( $t[0] ); ?></strong><small><?php echo esc_html( $t[1] ); ?></small></div>
+								<div class="sbpi-row-control"><span class="sbpi-switch"><input type="checkbox" data-g="<?php echo esc_attr( $key ); ?>" <?php checked( $global[ $key ] ); ?> /><span></span></span></div>
+							</label>
+						<?php endforeach; ?>
+					</section>
+				</div>
 			</div>
 		</div>
-
 		<div class="sbpi-card" id="sbpi-output" hidden>
 			<div id="sbpi-progress" hidden>
 				<div class="sbpi-progress-head"><strong class="sbpi-pct">۰٪</strong><span class="sbpi-progress-text" aria-live="polite"></span><span class="sbpi-eta"></span></div>
