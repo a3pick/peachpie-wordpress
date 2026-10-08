@@ -2,7 +2,7 @@
 /**
  * Plugin Name:       Smart Bulk Product Importer (درون‌ریز هوشمند محصولات)
  * Description:       درون‌ریزی انبوه محصولات ووکامرس از Excel/CSV با گروه‌بندی خودکار به محصول متغیر، ویژگی‌های سراسری، برند، دسته‌بندی، توضیحات و متای سئو (Yoast / Rank Math) و Schema — با پیش‌نمایش، اجرای مرحله‌ای و بازگردانی.
- * Version:           1.5.0
+ * Version:           1.6.0
  * Requires at least: 6.2
  * Requires PHP:      7.4
  * Author:            Payam Nazeri
@@ -15,7 +15,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'SBPI_VERSION', '1.5.0' );
+define( 'SBPI_VERSION', '1.6.0' );
 define( 'SBPI_FILE', __FILE__ );
 define( 'SBPI_DIR', plugin_dir_path( __FILE__ ) );
 define( 'SBPI_URL', plugin_dir_url( __FILE__ ) );

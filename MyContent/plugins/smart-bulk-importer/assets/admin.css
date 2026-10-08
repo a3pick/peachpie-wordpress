@@ -331,3 +331,110 @@
 }
 .sbpi label.sbpi-row { font-weight: 400; }
 .sbpi .sbpi-row-label small { font-weight: 400; }
+
+/* =====================================================================
+   Theme layer v1.6 — visual language aligned with WS Smart Pricing:
+   WooCommerce purple, gradient hero, underline tabs, soft cards, rounded fields.
+   ===================================================================== */
+.sbpi {
+	--sb-primary: #7f54b3;
+	--sb-primary-dark: #6a4699;
+	--sb-primary-soft: #f1ecfa;
+	--sb-border: #e2e4e9;
+	--sb-muted: #667085;
+	--sb-ink: #1d2327;
+	--sb-good: #1e7e34; --sb-good-soft: #e9f7ef;
+	--sb-bad: #b32d2e;  --sb-bad-soft: #fdecea;
+	--sb-warn: #96590a; --sb-warn-soft: #fff4e5;
+	--sb-radius: 12px;
+	--sb-shadow: 0 1px 2px rgba(16, 24, 40, .03);
+	max-width: 1180px;
+	margin-inline-end: 20px;
+}
+.sbpi *, .sbpi *::before, .sbpi *::after { box-sizing: border-box; }
+
+/* Hero */
+.sbpi-hero { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin: 18px 0; padding: 22px 26px; border-radius: 14px; color: #fff; background: linear-gradient(135deg, var(--sb-primary), var(--sb-primary-dark)); box-shadow: 0 8px 24px rgba(127, 84, 179, .25); }
+.sbpi-hero-title { display: flex; align-items: center; gap: 14px; }
+.sbpi-logo { display: flex; align-items: center; justify-content: center; flex-shrink: 0; width: 52px; height: 52px; border-radius: 12px; background: rgba(255, 255, 255, .15); }
+.sbpi-logo .dashicons { font-size: 28px; width: 28px; height: 28px; color: #fff; }
+.sbpi-hero h1 { margin: 0 0 2px; padding: 0; font-size: 20px; font-weight: 700; color: #fff; }
+.sbpi-hero h1 small { font-size: 12px; font-weight: 400; opacity: .7; }
+.sbpi-hero p { margin: 0; font-size: 13px; color: rgba(255, 255, 255, .85); }
+.sbpi-hero-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.sbpi-hero-chip { padding: 5px 12px; border-radius: 999px; background: rgba(255, 255, 255, .15); font-size: 12px; font-weight: 600; }
+.sbpi-btn { display: inline-flex; align-items: center; gap: 6px; padding: 10px 18px; border: 1px solid transparent; border-radius: 8px; font-size: 13px; font-weight: 600; text-decoration: none; cursor: pointer; transition: transform .08s, opacity .08s; }
+.sbpi-btn:active { transform: translateY(1px); }
+.sbpi-btn-light { background: #fff; color: var(--sb-primary-dark); }
+.sbpi-btn-light:hover, .sbpi-btn-light:focus { opacity: .9; color: var(--sb-primary-dark); }
+
+/* Underline tabs */
+.sbpi-tabs { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 20px; border-bottom: 1px solid var(--sb-border); }
+.sbpi-tab { display: inline-flex; align-items: center; gap: 5px; margin-bottom: -1px; padding: 10px 16px; border-bottom: 2px solid transparent; font-size: 13px; font-weight: 600; color: var(--sb-muted); text-decoration: none; }
+.sbpi-tab .dashicons { font-size: 16px; width: 16px; height: 16px; }
+.sbpi-tab:hover { color: var(--sb-ink); }
+.sbpi-tab:focus { box-shadow: none; outline: 2px solid var(--sb-primary-soft); }
+.sbpi-tab.active { color: var(--sb-primary); border-bottom-color: var(--sb-primary); }
+
+/* Cards & headings */
+.sbpi .sbpi-card { border-color: var(--sb-border); border-radius: var(--sb-radius); padding: 20px; box-shadow: var(--sb-shadow); }
+.sbpi .sbpi-card h2, .sbpi .sbpi-card h3 { color: var(--sb-ink); }
+.sbpi .sbpi-card h2 .dashicons, .sbpi .sbpi-card h3 .dashicons { color: var(--sb-primary); }
+.sbpi-steps { border-color: var(--sb-border); border-radius: var(--sb-radius); }
+
+/* Fields: rounded, roomy */
+.sbpi input[type=text], .sbpi input[type=number], .sbpi input[type=search], .sbpi input[type=url], .sbpi select, .sbpi textarea {
+	min-height: 36px; padding: 6px 10px; border: 1px solid var(--sb-border); border-radius: 8px; font-size: 13px; box-shadow: none;
+}
+.sbpi input:focus, .sbpi select:focus, .sbpi textarea:focus { border-color: var(--sb-primary); box-shadow: 0 0 0 3px var(--sb-primary-soft); outline: none; }
+.sbpi .sbpi-cols input[type=text], .sbpi .sbpi-cols select { min-height: 32px; padding: 4px 8px; }
+.sbpi-input-affix { border-color: var(--sb-border); border-radius: 8px; }
+.sbpi-input-affix:focus-within { border-color: var(--sb-primary); box-shadow: 0 0 0 3px var(--sb-primary-soft); }
+.sbpi-input-affix input:focus { box-shadow: none !important; }
+
+/* Buttons */
+.sbpi .button-primary { background: var(--sb-primary); border-color: var(--sb-primary-dark); border-radius: 8px; }
+.sbpi .button-primary:hover, .sbpi .button-primary:focus { background: var(--sb-primary-dark); border-color: var(--sb-primary-dark); }
+.sbpi .button:not(.button-primary):not(.button-link) { border-radius: 8px; border-color: var(--sb-border); color: var(--sb-ink); }
+.sbpi .button:not(.button-primary):not(.button-link):hover { border-color: var(--sb-primary); color: var(--sb-primary); }
+.sbpi .button-link, .sbpi a:not(.button):not(.sbpi-tab):not(.sbpi-btn):not(.sbpi-badge):not(.sbpi-row) { color: var(--sb-primary-dark); }
+
+/* Toggle: track box keeps the hidden input local (robust in RTL) */
+.sbpi-switch { position: relative; display: inline-block; flex-shrink: 0; width: 40px; height: 22px; }
+.sbpi-switch input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; z-index: 1; }
+.sbpi-switch span { position: absolute; inset: 0; border-radius: 999px; background: #d0d5dd; pointer-events: none; transition: background .15s; }
+.sbpi-switch span::before { content: ""; position: absolute; top: 2px; inset-inline-start: 2px; width: 18px; height: 18px; border-radius: 50%; background: #fff; box-shadow: 0 1px 2px rgba(0, 0, 0, .25); transform: none !important; transition: inset-inline-start .15s; }
+.sbpi-switch input:checked + span { background: var(--sb-primary); }
+.sbpi-switch input:checked + span::before { inset-inline-start: 20px; }
+
+/* Pills & badges in brand colours */
+.sbpi-chip.ok, .sbpi .sbpi-st-new, .sbpi .sbpi-len.ok { background: var(--sb-good-soft); color: var(--sb-good); }
+.sbpi .sbpi-st-update { background: var(--sb-primary-soft); color: var(--sb-primary-dark); }
+.sbpi-steps li.current { background: var(--sb-primary-soft); color: var(--sb-primary-dark); }
+.sbpi-steps li.current span { background: var(--sb-primary); }
+.sbpi-filter.on, .sbpi .sbpi-badge.on { background: var(--sb-primary); border-color: var(--sb-primary); }
+.sbpi-kpi.info { border-top-color: var(--sb-primary); }
+.sbpi .sbpi-bar span { background: linear-gradient(90deg, var(--sb-primary), #a77fd6); }
+.sbpi-drop:hover, .sbpi-drop.over { border-color: var(--sb-primary); background: var(--sb-primary-soft); }
+.sbpi-drop .dashicons { color: var(--sb-primary); }
+.sbpi-token:hover { border-color: var(--sb-primary); color: var(--sb-primary); }
+.sbpi-role-chip.role-var_attr, .sbpi .sbpi-cols tr[data-role=var_attr] { border-color: var(--sb-primary); }
+.sbpi .sbpi-cols tr[data-role=var_attr] { box-shadow: inset -4px 0 0 var(--sb-primary); }
+
+/* Settings card */
+.sbpi-settings-head { background: #fff; padding: 18px 22px; }
+.sbpi-snav { background: #f6f7fb; }
+.sbpi-snav button.active { color: var(--sb-primary-dark); }
+.sbpi-snav button.active .dashicons { background: var(--sb-primary); }
+.sbpi-segmented { background: #f1f2f6; }
+.sbpi-segmented button.on { color: var(--sb-primary-dark); }
+
+/* Sticky action bar like a save bar */
+.sbpi-actionbar { border-color: var(--sb-border); border-radius: var(--sb-radius); box-shadow: 0 -2px 10px rgba(16, 24, 40, .05); background: #fff; }
+.sbpi-actionbar .button-primary { min-height: 38px; padding: 0 18px; }
+
+@media (max-width: 782px) {
+	.sbpi-hero { padding: 18px; }
+	.sbpi-hero h1 { font-size: 17px; }
+	.sbpi-tab { padding: 8px 10px; }
+}

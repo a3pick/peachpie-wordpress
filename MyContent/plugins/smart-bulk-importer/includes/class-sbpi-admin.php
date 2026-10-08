@@ -326,11 +326,23 @@ final class SBPI_Admin {
 
 		$step = in_array( $tab, array( 'history', 'prices', 'content', 'health', 'system' ), true ) ? 0 : ( $job ? 2 : 1 );
 		echo '<div class="wrap sbpi" dir="rtl">';
-		echo '<div class="sbpi-head"><h1><span class="dashicons dashicons-database-import"></span> درون‌ریز هوشمند محصولات <span class="sbpi-ver">v' . esc_html( SBPI_VERSION ) . '</span></h1>';
-		$seo = SBPI_SEO::seo_plugin();
+		$seo       = SBPI_SEO::seo_plugin();
 		$seo_names = array( 'yoast' => 'Yoast SEO', 'rankmath' => 'Rank Math', 'aioseo' => 'AIOSEO' );
-		printf( '<span class="sbpi-chip %s" title="%s">%s</span>', $seo && 'aioseo' !== $seo ? 'ok' : 'warn', esc_attr( 'aioseo' === $seo ? 'متای AIOSEO در جدول اختصاصی آن ذخیره می‌شود و این افزونه آن را پر نمی‌کند.' : 'متای سئو در این افزونه ذخیره می‌شود.' ), esc_html( 'سئو: ' . ( $seo ? $seo_names[ $seo ] : 'داخلی (بدون افزونه سئو)' ) ) );
-		echo '</div>';
+		?>
+		<div class="sbpi-hero">
+			<div class="sbpi-hero-title">
+				<span class="sbpi-logo"><span class="dashicons dashicons-database-import"></span></span>
+				<div>
+					<h1>درون‌ریز هوشمند محصولات <small>نسخه <?php echo esc_html( SBPI_VERSION ); ?></small></h1>
+					<p>محصولات را از Excel با ساختار اصولی، ویژگی‌های سراسری و سئوی کامل به ووکامرس اضافه کنید.</p>
+				</div>
+			</div>
+			<div class="sbpi-hero-actions">
+				<span class="sbpi-hero-chip" title="<?php echo esc_attr( 'aioseo' === $seo ? 'متای AIOSEO در جدول اختصاصی آن ذخیره می‌شود و این افزونه آن را پر نمی‌کند.' : 'متای سئو در این افزونه ذخیره می‌شود.' ); ?>">سئو: <?php echo esc_html( $seo ? $seo_names[ $seo ] : 'داخلی' ); ?></span>
+				<a class="sbpi-btn sbpi-btn-light" href="<?php echo esc_url( wp_nonce_url( admin_url( 'admin-post.php?action=sbpi_template' ), 'sbpi_template' ) ); ?>">⬇ فایل نمونه</a>
+			</div>
+		</div>
+		<?php
 		$tabs = array(
 			''        => array( 'درون‌ریزی', 'upload' ),
 			'prices'  => array( 'قیمت‌ها', 'money-alt' ),
@@ -339,9 +351,9 @@ final class SBPI_Admin {
 			'system'  => array( 'بررسی سیستم', 'shield' ),
 			'history' => array( 'تاریخچه', 'backup' ),
 		);
-		echo '<nav class="nav-tab-wrapper sbpi-tabs">';
+		echo '<nav class="sbpi-tabs">';
 		foreach ( $tabs as $tk => $tl ) {
-			printf( '<a class="nav-tab %s" href="%s"><span class="dashicons dashicons-%s"></span> %s</a>', $tk === $tab ? 'nav-tab-active' : '', esc_url( $tk ? add_query_arg( 'tab', $tk, $base ) : $base ), esc_attr( $tl[1] ), esc_html( $tl[0] ) );
+			printf( '<a class="sbpi-tab %s" href="%s"><span class="dashicons dashicons-%s"></span> %s</a>', $tk === $tab ? 'active' : '', esc_url( $tk ? add_query_arg( 'tab', $tk, $base ) : $base ), esc_attr( $tl[1] ), esc_html( $tl[0] ) );
 		}
 		echo '</nav>';
 		if ( $step ) {
