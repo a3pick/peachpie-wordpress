@@ -967,24 +967,32 @@
 			api('settings_save', { s: cur }).then(function (r) { CFG.settings = r; toast('تنظیمات ذخیره شد.', 'ok'); }).catch(function (er) { toast(er.message, 'err'); });
 		} });
 		SCHEMA.forEach(function (sec) {
-			var fs = h('fieldset', null, h('legend', null, sec[0]));
+			var box = h('div', { class: 'msw-box' }, h('div', { class: 'msw-box-head' }, h('h3', null, sec[0])));
 			sec[1].forEach(function (f) {
 				var key = f[0], type = f[1], label = f[2], extra = f[3], input;
-				if (type === 'bool') { input = h('input', { type: 'checkbox', checked: !!cur[key], onChange: function (e) { cur[key] = e.target.checked ? 1 : 0; } }); fs.appendChild(h('div', { class: 'msw-field' }, h('label', null, input, ' ' + label), typeof extra === 'string' ? h('p', { class: 'description' }, extra) : null)); return; }
+				var hint = typeof extra === 'string' ? h('p', { class: 'msw-hint-t' }, extra) : null;
+				if (type === 'bool') {
+					input = h('label', { class: 'msw-switch' }, h('span', { class: 'msw-switch-track' },
+						h('input', { type: 'checkbox', checked: !!cur[key], onChange: function (e) { cur[key] = e.target.checked ? 1 : 0; } }), h('span', { class: 'msw-switch-slider' })),
+						h('span', { class: 'msw-switch-label' }, label));
+					box.appendChild(h('div', { class: 'msw-field' }, input, hint));
+					return;
+				}
 				if (type === 'checks') {
 					input = h('div', { class: 'msw-checks' }, Object.keys(extra).map(function (k) {
 						return h('label', null, h('input', { type: 'checkbox', checked: (cur[key] || []).indexOf(k) !== -1, onChange: function (e) { var a = cur[key] || []; a = a.filter(function (x) { return x !== k; }); if (e.target.checked) { a.push(k); } cur[key] = a; } }), ' ' + extra[k]);
 					}));
-					fs.appendChild(h('div', { class: 'msw-field' }, h('label', null, label), input)); return;
+					box.appendChild(h('div', { class: 'msw-field' }, h('label', { class: 'msw-field-label' }, label), input));
+					return;
 				}
 				if (type === 'select') { input = selectEl(Object.keys(extra).map(function (k) { return [k, extra[k]]; }), cur[key], function (v) { cur[key] = v; }); }
-				else if (type === 'textarea') { input = h('textarea', { rows: 3, class: 'large-text', onInput: function (e) { cur[key] = e.target.value; } }, cur[key] || ''); }
-				else { input = h('input', { type: type === 'number' ? 'number' : 'text', value: cur[key], class: 'regular-text', onInput: function (e) { cur[key] = e.target.value; } }); }
-				fs.appendChild(h('div', { class: 'msw-field' }, h('label', null, label), input, typeof extra === 'string' ? h('p', { class: 'description' }, extra) : null));
+				else if (type === 'textarea') { input = h('textarea', { rows: 3, onInput: function (e) { cur[key] = e.target.value; } }, cur[key] || ''); }
+				else { input = h('input', { type: type === 'number' ? 'number' : 'text', value: cur[key], onInput: function (e) { cur[key] = e.target.value; } }); }
+				box.appendChild(h('div', { class: 'msw-field' }, h('label', { class: 'msw-field-label' }, label), input, hint));
 			});
-			form.appendChild(fs);
+			form.appendChild(box);
 		});
-		form.appendChild(h('p', null, h('button', { class: 'button button-primary', type: 'submit' }, 'ذخیرهٔ تنظیمات')));
+		form.appendChild(h('div', { class: 'msw-save-bar' }, h('span', { class: 'msw-hint-t' }, 'تغییرات همهٔ بخش‌ها با هم ذخیره می‌شوند.'), h('button', { class: 'button button-primary', type: 'submit' }, 'ذخیرهٔ تنظیمات')));
 		el.appendChild(form);
 	}
 
@@ -1006,16 +1014,20 @@
 	function go(tab) {
 		state.tab = tab;
 		try { history.replaceState(null, '', '#' + tab); } catch (e) { /* ignore */ }
-		Array.prototype.forEach.call(navEl.children, function (a) { a.classList.toggle('nav-tab-active', a.getAttribute('data-tab') === tab); });
+		Array.prototype.forEach.call(navEl.children, function (a) { a.classList.toggle('active', a.getAttribute('data-tab') === tab); });
 		RENDER[tab](clear(view));
 	}
 
-	navEl = h('nav', { class: 'nav-tab-wrapper msw-nav' }, TABS.map(function (t) {
-		return h('a', { href: '#' + t[0], 'data-tab': t[0], class: 'nav-tab', onClick: function (e) { e.preventDefault(); go(t[0]); } }, t[1]);
+	navEl = h('nav', { class: 'msw-tabs msw-nav' }, TABS.map(function (t) {
+		return h('button', { type: 'button', 'data-tab': t[0], class: 'msw-tab', onClick: function () { go(t[0]); } }, t[1]);
 	}));
 	view = h('div', { class: 'msw-view' });
 	clear(root);
-	root.appendChild(h('h1', null, 'Media Sweeper Pro ', h('span', { class: 'msw-ver' }, 'v' + CFG.version)));
+	root.appendChild(h('div', { class: 'msw-header' },
+		h('div', { class: 'msw-header-title' }, h('span', { class: 'msw-logo' }, '🧹'),
+			h('div', null, h('h1', null, 'Media Sweeper Pro', h('small', null, 'v' + CFG.version)),
+				h('p', null, 'رسانه‌های بی‌استفاده را پیدا کنید، با خیال راحت پاک کنید و تصاویر را بدون شکستن لینک به WebP ببرید.'))),
+		h('button', { type: 'button', class: 'msw-btn msw-btn-light', onClick: function () { go('dashboard'); } }, '📊 داشبورد')));
 	root.appendChild(navEl);
 	root.appendChild(view);
 	var initial = (location.hash || '').replace('#', '');

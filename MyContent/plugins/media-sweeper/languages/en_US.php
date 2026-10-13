@@ -6,6 +6,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 return array(
+	'تغییرات همهٔ بخش‌ها با هم ذخیره می‌شوند.' => 'Changes in all sections are saved together.',
+	'رسانه‌های بی‌استفاده را پیدا کنید، با خیال راحت پاک کنید و تصاویر را بدون شکستن لینک به WebP ببرید.' => 'Find unused media, clean it up safely, and move images to WebP without breaking links.',
+	'📊 داشبورد' => '📊 Dashboard',
 	'بازگردانی کوچک‌سازی: ' => 'Optimization revert: ',
 	' تصویر.' => ' images.',
 	'پیوست دیگری از همین فایل استفاده می‌کند' => 'Another attachment uses the same file',
