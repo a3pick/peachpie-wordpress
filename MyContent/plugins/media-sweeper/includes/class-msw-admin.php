@@ -421,6 +421,14 @@ class MSW_Admin {
 		wp_send_json_success();
 	}
 
+	/** Neutralise spreadsheet formula injection (cells starting with = + - @). */
+	private static function csv_safe( $v ) {
+		if ( is_string( $v ) && '' !== $v && false !== strpos( "=+-@\t\r", $v[0] ) ) {
+			return "'" . $v;
+		}
+		return $v;
+	}
+
 	/** CSV download of the current filter (GET). */
 	private static function do_export() {
 		$tab = isset( $_REQUEST['tab'] ) ? sanitize_key( wp_unslash( $_REQUEST['tab'] ) ) : 'unused'; // phpcs:ignore WordPress.Security.NonceVerification
@@ -437,7 +445,7 @@ class MSW_Admin {
 				$f['page'] = $p;
 				$d         = MSW_Query::orphans( $f );
 				foreach ( $d['items'] as $i ) {
-					fputcsv( $out, array( $i['rel'], MSW_Util::url( $i['rel'] ), $i['bytes'], $i['date'] ) );
+					fputcsv( $out, array_map( array( __CLASS__, 'csv_safe' ), array( $i['rel'], MSW_Util::url( $i['rel'] ), $i['bytes'], $i['date'] ) ) );
 				}
 				if ( $p >= $d['pages'] ) {
 					break;
@@ -449,7 +457,7 @@ class MSW_Admin {
 				$f['page'] = $p;
 				$d         = MSW_Query::media( $f );
 				foreach ( $d['items'] as $i ) {
-					fputcsv( $out, array( $i['id'], $i['title'], $i['rel'], $i['url'], $i['type'], $i['mime'], $i['bytes'], $i['date'], $i['status'] . ( $i['locked'] ? '/' . $i['locked'] : '' ), $i['used_in'] ? $i['used_in']['label'] : '', $i['parent'] ? $i['parent']['id'] : '', $i['edit'] ) );
+					fputcsv( $out, array_map( array( __CLASS__, 'csv_safe' ), array( $i['id'], $i['title'], $i['rel'], $i['url'], $i['type'], $i['mime'], $i['bytes'], $i['date'], $i['status'] . ( $i['locked'] ? '/' . $i['locked'] : '' ), $i['used_in'] ? $i['used_in']['label'] : '', $i['parent'] ? $i['parent']['id'] : '', $i['edit'] ) ) );
 				}
 				if ( $p >= $d['pages'] ) {
 					break;

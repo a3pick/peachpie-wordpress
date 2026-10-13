@@ -5,7 +5,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 /**
  * 301 redirects for upload URLs that no longer exist (renamed / converted).
- * Only fires on a 404, so existing files are never intercepted.
+ * Only acts when the requested file no longer exists, so live files are never intercepted.
  */
 class MSW_Redirects {
 
@@ -40,7 +40,7 @@ class MSW_Redirects {
 		}
 		$t   = MSW_Util::t( 'redirects' );
 		$row = $wpdb->get_row( $wpdb->prepare( "SELECT old_rel, new_rel FROM $t WHERE old_rel = %s", $rel ) ); // phpcs:ignore
-		if ( ! $row || $row->old_rel !== $rel || ! is_file( MSW_Util::abs( $row->new_rel ) ) ) {
+		if ( ! $row || $row->old_rel !== $rel || ! is_file( MSW_Util::abs( $row->new_rel ) ) || is_file( MSW_Util::abs( $row->old_rel ) ) ) {
 			return null;
 		}
 		$wpdb->query( $wpdb->prepare( "UPDATE $t SET hits = hits + 1 WHERE old_rel = %s", $rel ) ); // phpcs:ignore
@@ -48,7 +48,8 @@ class MSW_Redirects {
 	}
 
 	public static function handle() {
-		if ( ! is_404() || ! MSW_Util::get( 'redirects_enable' ) || empty( $_SERVER['REQUEST_URI'] ) ) {
+		// Not gated on is_404(): WordPress may treat an upload URL as a page lookup and not flag it as 404.
+		if ( ! MSW_Util::get( 'redirects_enable' ) || empty( $_SERVER['REQUEST_URI'] ) ) {
 			return;
 		}
 		$to = self::resolve( wp_unslash( $_SERVER['REQUEST_URI'] ) ); // phpcs:ignore WordPress.Security

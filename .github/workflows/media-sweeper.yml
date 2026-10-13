@@ -50,6 +50,10 @@ jobs:
           DB_PASS: root
           DB_HOST: 127.0.0.1
         run: bash tests/media-sweeper/integration/run.sh
+      - name: HTTP checks (admin-ajax auth + 301 redirect)
+        env:
+          WP_PATH: /tmp/wp
+        run: bash tests/media-sweeper/integration/http.sh
       - name: Integration test (multisite sub-site)
         env:
           WP_PATH: /tmp/wp-ms
