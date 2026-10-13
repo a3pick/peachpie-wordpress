@@ -19,7 +19,7 @@ if ( ! empty( $msw_settings['remove_data'] ) ) {
 	MSW_Quarantine::restore_all();
 	MSW_Util::rrmdir( MSW_Util::abs( 'msw-quarantine' ) );
 	MSW_DB::drop();
-	foreach ( array( 'msw_settings', 'msw_db_version', 'msw_job', 'msw_log', 'msw_last_scan', 'msw_lock', 'msw_acf', 'msw_filelist', 'msw_stats' ) as $msw_opt ) {
+	foreach ( array( 'msw_settings', 'msw_db_version', 'msw_job', 'msw_log', 'msw_last_scan', 'msw_lock', 'msw_acf', 'msw_filelist', 'msw_stats', 'msw_history' ) as $msw_opt ) {
 		delete_option( $msw_opt );
 	}
 	delete_post_meta_by_key( '_msw_protected' );

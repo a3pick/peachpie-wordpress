@@ -58,6 +58,10 @@
 .msw-b.ok { background:#edfaef; border-color:#a7d9b0; } .msw-b.bad { background:#fcf0f1; border-color:#e6a5a8; } .msw-b.prot { background:#f0f0fb; border-color:#bdbde6; } .msw-b.rec { background:#fcf9e8; border-color:#e5d38a; }
 .msw-name { font-size:12px; font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; direction:ltr; text-align:start; }
 .msw-sub { font-size:11px; color:var(--msw-mute); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; direction:ltr; text-align:start; }
+.msw-spark-card { background:var(--msw-bg); border:1px solid var(--msw-line); border-radius:8px; padding:12px 16px; margin-bottom:16px; }
+.msw-spark { width:100%; height:90px; display:block; }
+.msw-spark-leg { display:flex; gap:16px; flex-wrap:wrap; font-size:12px; }
+.msw-keep { font-size:12px; display:flex; align-items:center; gap:4px; }
 .msw-pager { display:flex; justify-content:center; align-items:center; gap:8px; margin:16px 0; }
 
 .msw-dupgroup { background:var(--msw-bg); border:1px solid var(--msw-line); border-radius:8px; padding:12px; margin-bottom:14px; }

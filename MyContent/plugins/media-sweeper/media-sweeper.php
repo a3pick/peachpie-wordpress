@@ -32,6 +32,7 @@ require_once MSW_DIR . 'includes/class-msw-rewriter.php';
 require_once MSW_DIR . 'includes/class-msw-optimizer.php';
 require_once MSW_DIR . 'includes/class-msw-redirects.php';
 require_once MSW_DIR . 'includes/class-msw-renamer.php';
+require_once MSW_DIR . 'includes/class-msw-merger.php';
 require_once MSW_DIR . 'includes/class-msw-job.php';
 require_once MSW_DIR . 'includes/class-msw-query.php';
 require_once MSW_DIR . 'includes/class-msw-cron.php';

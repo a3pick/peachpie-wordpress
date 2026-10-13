@@ -516,6 +516,9 @@ class MSW_Query {
 				'orphan_size'  => MSW_Util::size( isset( $ls['orphan_bytes'] ) ? $ls['orphan_bytes'] : 0 ),
 				'has_dupes'    => (int) $dup > 0,
 			),
+			'history'     => array_map( function ( $h ) {
+				return array( 'd' => wp_date( 'm/d', $h['t'] ), 'total' => (int) $h['total'], 'unused' => (int) $h['unused'], 'orph' => (int) $h['orph'] );
+			}, (array) get_option( 'msw_history', array() ) ),
 			'quarantine'  => array( 'count' => $q['total'], 'size' => $q['total_size'] ),
 			'webp'        => array( 'count' => (int) $c['n'], 'saved' => MSW_Util::size( $c['saved'] ) ),
 			'caps'        => MSW_Converter::capabilities(),

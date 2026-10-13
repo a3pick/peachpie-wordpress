@@ -25,6 +25,7 @@ class MSW_Job {
 		'finalize'    => 'بررسی نهایی و پاک‌سازی',
 		'optimize'    => 'کوچک‌سازی اصل‌های سنگین',
 		'rename'      => 'تغییر نام فایل‌ها',
+		'merge'       => 'ادغام فایل‌های تکراری',
 	);
 
 	private static $weights = array(
@@ -40,6 +41,7 @@ class MSW_Job {
 		'finalize'    => 5,
 		'optimize'    => 100,
 		'rename'      => 30,
+		'merge'       => 30,
 	);
 
 	public static function get() {
@@ -157,6 +159,22 @@ class MSW_Job {
 			$state['old']             = array();
 			$state['counts']['total'] = count( $items );
 			MSW_Util::log( 'تغییر نام ' . count( $items ) . ' فایل شروع شد.' );
+		} elseif ( 'merge' === $type ) {
+			$items = array();
+			foreach ( isset( $opts['pairs'] ) ? (array) $opts['pairs'] : array() as $p ) {
+				if ( ! empty( $p['d'] ) && ! empty( $p['k'] ) ) {
+					$items[] = array( (int) $p['d'], (int) $p['k'] );
+				}
+			}
+			if ( ! $items ) {
+				return new WP_Error( 'none', 'جفتی برای ادغام انتخاب نشده است.' );
+			}
+			MSW_DB::truncate( 'map' );
+			$state['phases']          = array( 'merge', 'rewrite', 'finalize' );
+			$state['items']           = $items;
+			$state['done']            = array();
+			$state['counts']['total'] = count( $items );
+			MSW_Util::log( 'ادغام ' . count( $items ) . ' فایل تکراری شروع شد.' );
 		} elseif ( 'revert' === $type ) {
 			$n = MSW_Converter::prepare_revert( isset( $opts['ids'] ) ? (array) $opts['ids'] : array() );
 			if ( is_wp_error( $n ) ) {
@@ -284,6 +302,10 @@ class MSW_Job {
 			$ls['time']     = time();
 			$ls['duration'] = $dur;
 			update_option( 'msw_last_scan', $ls, false );
+			$hist   = get_option( 'msw_history', array() );
+			$hist   = is_array( $hist ) ? $hist : array();
+			$hist[] = array( 't' => time(), 'total' => (int) $ls['total_bytes'], 'unused' => (int) $ls['unused_bytes'], 'orph' => (int) $ls['orphan_bytes'] );
+			update_option( 'msw_history', array_slice( $hist, -60 ), false );
 			MSW_Util::log( sprintf( 'اسکن پایان یافت: %d بدون استفاده (%s)، %d فایل یتیم. مدت: %d ثانیه.', $ls['unused'], MSW_Util::size( $ls['unused_bytes'] ), $ls['orphans'], $dur ) );
 			if ( ! empty( $s['opts']['notify'] ) ) {
 				MSW_Cron::send_report( $ls );
@@ -291,6 +313,8 @@ class MSW_Job {
 		} elseif ( 'optimize' === $s['type'] ) {
 			$c = $s['counts'];
 			MSW_Util::log( sprintf( 'کوچک‌سازی پایان یافت: %d تصویر کوچک شد، %d اصل حذف شد؛ صرفه‌جویی: %s.', isset( $c['resized'] ) ? $c['resized'] : 0, isset( $c['dropped'] ) ? $c['dropped'] : 0, MSW_Util::size( isset( $c['saved'] ) ? $c['saved'] : 0 ) ) );
+		} elseif ( 'merge' === $s['type'] ) {
+			MSW_Util::log( sprintf( 'ادغام پایان یافت: %d کپی ادغام و به قرنطینه رفت.', isset( $s['counts']['merged'] ) ? $s['counts']['merged'] : 0 ) );
 		} elseif ( 'rename' === $s['type'] ) {
 			MSW_Util::log( sprintf( 'تغییر نام پایان یافت: %d فایل با ریدایرکت ۳۰۱.', isset( $s['counts']['renamed'] ) ? $s['counts']['renamed'] : 0 ) );
 		} elseif ( 'revert' === $s['type'] ) {
@@ -499,6 +523,31 @@ class MSW_Job {
 		return empty( $s['items'] );
 	}
 
+	private static function phase_merge( array &$s, $deadline ) {
+		$c = $s['counts'];
+		foreach ( array( 'merged', 'failed', 'processed' ) as $k ) {
+			if ( ! isset( $c[ $k ] ) ) {
+				$c[ $k ] = 0;
+			}
+		}
+		while ( microtime( true ) < $deadline && $s['items'] ) {
+			$pair = array_shift( $s['items'] );
+			$r    = MSW_Merger::merge_one( $pair[0], $pair[1] );
+			$c['processed']++;
+			if ( is_array( $r ) ) {
+				$c['merged']++;
+				$s['done'][] = $r['dup'];
+			} else {
+				$c['failed']++;
+				MSW_Util::log( "ادغام #{$pair[0]} ردشد: $r", 'warn' );
+			}
+			$s['counts'] = $c;
+			$s['frac']   = $c['total'] ? min( 1, $c['processed'] / $c['total'] ) : 1;
+			$s['detail'] = '#' . $pair[0];
+		}
+		return empty( $s['items'] );
+	}
+
 	private static function phase_optimize( array &$s, $deadline ) {
 		global $wpdb;
 		if ( ! $s['smax_ok'] ) {
@@ -525,11 +574,12 @@ class MSW_Job {
 
 	private static function phase_rewrite( array &$s, $deadline ) {
 		global $wpdb;
-		MSW_Rewriter::$exts = ( 'revert' === $s['type'] ) ? 'webp' : ( 'rename' === $s['type'] ? 'jpe?g|png|gif|webp|avif|bmp' : 'jpe?g|png' );
+		MSW_Rewriter::$exts = ( 'revert' === $s['type'] ) ? 'webp' : ( 'rename' === $s['type'] ? 'jpe?g|png|gif|webp|avif|bmp' : ( 'merge' === $s['type'] ? MSW_Extractor::EXT : 'jpe?g|png' ) );
 		if ( ! $s['smax_ok'] && 0 === (int) $s['si'] ) {
 			MSW_Rewriter::reset();
-			$tbl     = 'rename' === $s['type'] ? MSW_Util::t( 'map' ) : MSW_Util::t( 'converted' );
-			$cond    = 'rename' === $s['type'] ? '' : " WHERE status IN ('converted','reverting')";
+			$use_map = in_array( $s['type'], array( 'rename', 'merge' ), true );
+			$tbl     = $use_map ? MSW_Util::t( 'map' ) : MSW_Util::t( 'converted' );
+			$cond    = $use_map ? '' : " WHERE status IN ('converted','reverting')";
 			$pending = (int) $wpdb->get_var( "SELECT COUNT(*) FROM $tbl$cond" ); // phpcs:ignore
 			if ( ! $pending ) {
 				return true;
@@ -541,6 +591,19 @@ class MSW_Job {
 
 	private static function phase_finalize( array &$s, $deadline ) {
 		global $wpdb;
+		if ( 'merge' === $s['type'] ) {
+			$q = 0;
+			foreach ( (array) $s['done'] as $dup ) {
+				if ( true === MSW_Quarantine::quarantine( (int) $dup ) ) {
+					$q++;
+				}
+			}
+			$s['done'] = array();
+			MSW_DB::truncate( 'map' );
+			MSW_Util::flush_caches();
+			MSW_Scanner::summarize();
+			return true;
+		}
 		if ( 'rename' === $s['type'] ) {
 			foreach ( (array) $s['old'] as $id => $old ) {
 				MSW_Renamer::remove_old( (int) $id, (array) $old );

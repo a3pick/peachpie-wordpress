@@ -201,6 +201,7 @@ class MSW_Scanner {
 		$protect  = (int) $s['protect_days'] * DAY_IN_SECONDS;
 		$now      = time();
 		$vals     = array();
+		$pats     = array_filter( array_map( 'trim', preg_split( '~\R+~', (string) $s['protect_patterns'] ) ) );
 
 		foreach ( $rows as $r ) {
 			$id   = (int) $r->ID;
@@ -246,7 +247,7 @@ class MSW_Scanner {
 
 			$status = in_array( $type, $types, true ) ? 'unused' : 'skipped';
 			$locked = '';
-			if ( get_post_meta( $id, '_msw_protected', true ) ) {
+			if ( get_post_meta( $id, '_msw_protected', true ) || self::matches_protection( $pats, $rel, (int) $r->post_parent ) ) {
 				$locked = 'protected';
 			} elseif ( $protect && $r->post_date_gmt && '0000-00-00 00:00:00' !== $r->post_date_gmt && ( $now - strtotime( $r->post_date_gmt . ' UTC' ) ) < $protect ) {
 				$locked = 'recent';
@@ -276,6 +277,24 @@ class MSW_Scanner {
 			'REPLACE INTO ' . MSW_Util::t( 'media' ) . ' (attachment_id,type,mime,rel_path,path_key,base_key,bytes,width,height,status,locked,parent_id,poster_id,missing,uploaded) VALUES ' . implode( ',', $vals ) // phpcs:ignore WordPress.DB.PreparedSQL
 		);
 		return (int) end( $ids );
+	}
+
+	/** Glob / substring / "parent:ID" rules from settings. */
+	public static function matches_protection( array $pats, $rel, $parent ) {
+		foreach ( $pats as $p ) {
+			if ( 0 === stripos( $p, 'parent:' ) ) {
+				if ( (int) substr( $p, 7 ) === $parent && $parent > 0 ) {
+					return true;
+				}
+			} elseif ( false !== strpbrk( $p, '*?[' ) ) {
+				if ( fnmatch( $p, $rel, FNM_CASEFOLD ) || fnmatch( $p, basename( $rel ), FNM_CASEFOLD ) ) {
+					return true;
+				}
+			} elseif ( '' !== $p && false !== stripos( $rel, $p ) ) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	/* -------------------------------------------------------------- verdict */

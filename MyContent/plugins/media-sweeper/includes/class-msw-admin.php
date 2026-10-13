@@ -141,6 +141,14 @@ class MSW_Admin {
 				$opts['items'][ absint( $iid ) ] = sanitize_text_field( (string) $name );
 			}
 		}
+		if ( isset( $o['pairs'] ) && is_array( $o['pairs'] ) ) {
+			$opts['pairs'] = array();
+			foreach ( $o['pairs'] as $pp ) {
+				if ( is_array( $pp ) ) {
+					$opts['pairs'][] = array( 'd' => absint( isset( $pp['d'] ) ? $pp['d'] : 0 ), 'k' => absint( isset( $pp['k'] ) ? $pp['k'] : 0 ) );
+				}
+			}
+		}
 		if ( isset( $o['max_px'] ) ) {
 			$opts['max_px'] = absint( $o['max_px'] );
 		}

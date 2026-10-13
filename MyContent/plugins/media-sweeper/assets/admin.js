@@ -365,6 +365,23 @@
 		return h('div', { class: 'msw-stat ' + (cls || '') }, h('div', { class: 'msw-stat-v' }, value), h('div', { class: 'msw-stat-l' }, label), sub ? h('div', { class: 'msw-stat-s' }, sub) : null);
 	}
 
+	function sparkCard(hist) {
+		var W = 640, H = 90, P = 6, ns = 'http://www.w3.org/2000/svg';
+		var max = Math.max.apply(null, hist.map(function (x) { return x.total; })) || 1;
+		function path(key) {
+			return hist.map(function (x, i) { return (i ? 'L' : 'M') + (P + i * (W - 2 * P) / (hist.length - 1)).toFixed(1) + ' ' + (H - P - (x[key] / max) * (H - 2 * P)).toFixed(1); }).join(' ');
+		}
+		var svg = document.createElementNS(ns, 'svg');
+		svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H); svg.setAttribute('class', 'msw-spark'); svg.setAttribute('role', 'img');
+		[['total', '#2271b1'], ['unused', '#d63638'], ['orph', '#dba617']].forEach(function (s) {
+			var p = document.createElementNS(ns, 'path'); p.setAttribute('d', path(s[0])); p.setAttribute('fill', 'none'); p.setAttribute('stroke', s[1]); p.setAttribute('stroke-width', '2'); svg.appendChild(p);
+		});
+		var last = hist[hist.length - 1], first = hist[0];
+		function mb(b) { return (b / 1048576).toFixed(0) + ' MB'; }
+		return h('div', { class: 'msw-spark-card' }, h('div', { class: 'msw-stat-l' }, 'روند حجم کتابخانه (' + first.d + ' تا ' + last.d + ')'), svg,
+			h('div', { class: 'msw-spark-leg' }, h('span', { style: 'color:#2271b1' }, '● کل ' + mb(last.total)), h('span', { style: 'color:#d63638' }, '● بدون استفاده ' + mb(last.unused)), h('span', { style: 'color:#dba617' }, '● یتیم ' + mb(last.orph))));
+	}
+
 	function tabDashboard(el) {
 		clear(el).appendChild(h('p', { class: 'msw-loading' }, 'در حال بارگذاری…'));
 		refreshDash().then(function (d) {
@@ -404,6 +421,7 @@
 				box));
 			warn.forEach(function (w) { el.appendChild(h('div', { class: 'msw-notice warn' }, w)); });
 			if (s.time) {
+				if (d.history && d.history.length > 1) { el.appendChild(sparkCard(d.history)); }
 				el.appendChild(h('div', { class: 'msw-stats' },
 					stat('بدون استفاده', num(s.unused), s.unused_size + ' قابل آزادسازی', 'primary'),
 					stat('فایل‌های یتیم', num(s.orphans), s.orphan_size + ' خارج از کتابخانه'),
@@ -527,12 +545,23 @@
 				d.groups.forEach(function (g) {
 					var row = h('div', { class: 'msw-grid dup' });
 					var unused = g.items.filter(function (i) { return i.status === 'unused' && !i.locked; });
-					g.items.forEach(function (it, idx) { row.appendChild(mediaCard(it, function () { lightbox(g.items, idx, { actions: [{ label: '📦 قرنطینه', cls: 'button-primary', fn: function (items) { runOp('quarantine', items.map(function (x) { return x.id; }), load); } }] }); })); });
+					var keeper = (g.items.filter(function (i) { return i.status === 'used'; })[0] || g.items[0]).id;
+					g.items.forEach(function (it, idx) { var c = mediaCard(it, function () { lightbox(g.items, idx, { actions: [{ label: '📦 قرنطینه', cls: 'button-primary', fn: function (items) { runOp('quarantine', items.map(function (x) { return x.id; }), load); } }] }); });
+						c.appendChild(h('label', { class: 'msw-keep' }, h('input', { type: 'radio', name: 'keep-' + g.hash, checked: it.id === keeper, onChange: function () { keeper = it.id; } }), ' نگه‌دار'));
+						row.appendChild(c); });
 					el.appendChild(h('section', { class: 'msw-dupgroup' },
 						h('header', null, h('strong', null, g.count + ' نسخه یکسان'), ' — ' + g.size, unused.length ? h('button', { class: 'button', onClick: function () {
 							if (!window.confirm(unused.length + ' نسخهٔ بدون استفاده به قرنطینه برود؟')) { return; }
 							runOp('quarantine', unused.map(function (x) { return x.id; }), load);
-						} }, '📦 قرنطینهٔ نسخه‌های بدون استفاده (' + unused.length + ')') : null), row));
+						} }, '📦 قرنطینهٔ نسخه‌های بدون استفاده (' + unused.length + ')') : null,
+						h('button', { class: 'button button-primary', title: 'ارجاع به فایل کپی‌ها به نسخهٔ «نگه‌دار» منتقل و کپی‌ها قرنطینه می‌شوند. کپی‌هایی که با شناسهٔ پیوست (تصویر شاخص، گالری…) استفاده شده‌اند ادغام نمی‌شوند.', onClick: function () {
+							var pairs = g.items.filter(function (i) { return i.id !== keeper; }).map(function (i) { return { d: i.id, k: keeper }; });
+							if (!window.confirm('ادغام شود؟ ' + pairs.length + ' کپی به نسخهٔ نگه‌دار ادغام و قرنطینه می‌شود (قابل بازگردانی از قرنطینه، اما لینک‌های اصلاح‌شده برنمی‌گردند).')) { return; }
+							var host = document.querySelector('.msw-view'); var area = h('div'); host.insertBefore(area, host.firstChild);
+							var jb = jobBox({ title: 'ادغام تکراری‌ها', onDone: function () { area.remove(); load(); refreshDash(); } });
+							area.appendChild(jb);
+							api('job_start', { type: 'merge', opts: { pairs: pairs } }).then(function (st) { jb.start(st); }).catch(function (e) { area.remove(); toast(e.message, 'err'); });
+						} }, '🔗 ادغام در نسخهٔ «نگه‌دار»')), row));
 				});
 				if (d.pages > 1) {
 					el.appendChild(h('div', { class: 'msw-pager' },
@@ -741,6 +770,7 @@
 		['اسکن', [
 			['scan_types', 'checks', 'انواع رسانه در اسکن', { image: 'تصویر', video: 'ویدئو', audio: 'صدا', doc: 'سند (PDF، Office، ZIP)' }],
 			['protect_days', 'number', 'محافظت از رسانه‌های جدیدتر از (روز)', 'هرگز پیشنهاد حذف نمی‌شوند؛ ۰ = غیرفعال'],
+			['protect_patterns', 'textarea', 'قوانین محافظت (هر خط یک الگو)', 'نمونه: 2023/*  یا  *logo*  یا  brand/  یا  parent:123 (آپلودشده در نوشتهٔ 123). تطبیق‌دادهشده‌ها هرگز پیشنهاد حذف نمی‌شوند.'],
 			['parent_used', 'bool', 'پیوست‌شده به نوشتهٔ منتشرشده = در حال استفاده', 'محافظه‌کارانه؛ اما ممکن است تصاویر آپلودشده و حذف‌شده از متن را «استفاده‌شده» نگه دارد'],
 			['include_revisions', 'bool', 'ارجاع‌های داخل پیش‌نویس‌های قدیمی (Revision) هم حساب شود'],
 			['deep_tables', 'bool', 'جدول‌های سفارشی افزونه‌ها هم بررسی شوند (اسلایدرها، گالری‌ها…)'],

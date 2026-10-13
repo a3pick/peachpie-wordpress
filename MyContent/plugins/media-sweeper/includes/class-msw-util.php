@@ -15,6 +15,7 @@ class MSW_Util {
 			// Scan.
 			'scan_types'          => array( 'image', 'video', 'audio' ),
 			'protect_days'        => 14,
+			'protect_patterns'    => '',
 			'parent_used'         => 0,
 			'include_revisions'   => 0,
 			'deep_tables'         => 1,
@@ -76,6 +77,7 @@ class MSW_Util {
 						$v = $def;
 					}
 					break;
+				case 'protect_patterns':
 				case 'exclude_tables':
 					$v = sanitize_textarea_field( (string) $v );
 					break;
