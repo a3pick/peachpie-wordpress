@@ -98,6 +98,7 @@ class MSW_Extractor {
 			'ids'   => array(),
 			'paths' => array(),
 			'bases' => array(),
+			'raw'   => array(),
 		);
 		$text = (string) $text;
 		if ( strlen( $text ) < 2 ) {
@@ -111,6 +112,8 @@ class MSW_Extractor {
 			if ( preg_match_all( $re, $t, $m ) ) {
 				foreach ( $m[1] as $rel ) {
 					$out['paths'][ self::path_key( $rel ) ] = true;
+					$raw = preg_replace( '~^sites/\d+/~', '', false !== strpos( $rel, '%' ) ? rawurldecode( $rel ) : $rel );
+					$out['raw'][ $raw ] = true;
 				}
 			}
 		}

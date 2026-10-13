@@ -363,7 +363,7 @@ class MSW_Query {
 		$status = isset( $a['status'] ) ? $a['status'] : '';
 		$w      = '1=1';
 		$args   = array();
-		if ( in_array( $status, array( 'done', 'deleted', 'skipped', 'failed', 'error', 'converted' ), true ) ) {
+		if ( in_array( $status, array( 'done', 'deleted', 'skipped', 'failed', 'error', 'converted', 'reverting', 'reverted' ), true ) ) {
 			$w     = 'c.status = %s';
 			$args[] = $status;
 		}
@@ -403,6 +403,29 @@ class MSW_Query {
 		);
 	}
 
+	/* -------------------------------------------------------------- broken */
+
+	public static function broken( array $a ) {
+		global $wpdb;
+		$t    = MSW_Util::t( 'broken' );
+		$per  = 50;
+		$page = isset( $a['page'] ) ? max( 1, (int) $a['page'] ) : 1;
+		$args = array();
+		$w    = '1=1';
+		if ( ! empty( $a['q'] ) ) {
+			$w     = 'rel_path LIKE %s';
+			$args[] = '%' . $wpdb->esc_like( $a['q'] ) . '%';
+		}
+		$tot  = (int) ( $args ? $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM $t WHERE $w", $args ) ) : $wpdb->get_var( "SELECT COUNT(*) FROM $t" ) ); // phpcs:ignore
+		$rows = $wpdb->get_results( $wpdb->prepare( "SELECT * FROM $t WHERE $w ORDER BY rel_path LIMIT %d OFFSET %d", array_merge( $args, array( $per, ( $page - 1 ) * $per ) ) ) ); // phpcs:ignore
+		$items = array();
+		foreach ( (array) $rows as $r ) {
+			$d       = self::describe_src( $r->src );
+			$items[] = array( 'rel' => $r->rel_path, 'where' => $d['label'], 'link' => $d['link'] );
+		}
+		return array( 'items' => $items, 'total' => $tot, 'pages' => max( 1, (int) ceil( $tot / $per ) ), 'page' => $page );
+	}
+
 	/* ------------------------------------------------------------- dashboard */
 
 	public static function dashboard() {
@@ -423,6 +446,7 @@ class MSW_Query {
 				'unused_size'  => MSW_Util::size( isset( $ls['unused_bytes'] ) ? $ls['unused_bytes'] : 0 ),
 				'locked'       => isset( $ls['locked'] ) ? (int) $ls['locked'] : 0,
 				'missing'      => isset( $ls['missing'] ) ? (int) $ls['missing'] : 0,
+				'broken'       => isset( $ls['broken'] ) ? (int) $ls['broken'] : 0,
 				'total_size'   => MSW_Util::size( isset( $ls['total_bytes'] ) ? $ls['total_bytes'] : 0 ),
 				'orphans'      => isset( $ls['orphans'] ) ? (int) $ls['orphans'] : 0,
 				'orphan_size'  => MSW_Util::size( isset( $ls['orphan_bytes'] ) ? $ls['orphan_bytes'] : 0 ),

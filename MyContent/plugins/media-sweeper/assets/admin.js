@@ -69,8 +69,9 @@
 		['unused', 'بدون استفاده'],
 		['orphans', 'فایل‌های یتیم'],
 		['duplicates', 'تکراری‌ها'],
+		['broken', 'لینک‌های خراب'],
 		['quarantine', 'قرنطینه'],
-		['webp', 'تبدیل WebP'],
+		['webp', 'WebP و بهینه‌سازی'],
 		['settings', 'تنظیمات'],
 		['log', 'گزارش']
 	];
@@ -410,7 +411,8 @@
 					stat('در قرنطینه', num(d.quarantine.count), d.quarantine.size),
 					stat('صرفه‌جویی WebP', d.webp.saved, num(d.webp.count) + ' تصویر'),
 					stat('فضای خالی هاست', d.free || '—', ''),
-					stat('فایل مفقود', num(s.missing), 'رکورد دارد، فایل ندارد')));
+					stat('فایل مفقود', num(s.missing), 'رکورد دارد، فایل ندارد'),
+					stat('لینک خراب', num(s.broken), 'ارجاع به فایل ناموجود')));
 				el.appendChild(h('div', { class: 'msw-quick' },
 					h('button', { class: 'button', onClick: function () { go('unused'); } }, 'مشاهدهٔ ' + num(s.unused) + ' مورد بدون استفاده'),
 					h('button', { class: 'button', onClick: function () { go('orphans'); } }, 'فایل‌های یتیم'),
@@ -541,6 +543,27 @@
 		load();
 	}
 
+	function tabBroken(el) {
+		var page = 1, q = '';
+		function load() {
+			api('list', { tab: 'broken', f: { page: page, q: q } }).then(function (d) {
+				clear(el);
+				el.appendChild(h('div', { class: 'msw-notice' }, 'ارجاع‌هایی در سایت به فایل‌هایی در uploads که روی دیسک وجود ندارند (تصویر شکسته). اگر رسانه‌ها روی CDN/S3 هستند ممکن است نادرست باشد. ' + num(d.total) + ' مورد.'));
+				el.appendChild(h('div', { class: 'msw-filters' }, h('input', { type: 'search', value: q, placeholder: 'جست‌وجوی مسیر…', onInput: debounce(function (e) { q = e.target.value; page = 1; load(); }, 400) })));
+				var body = h('tbody');
+				d.items.forEach(function (it) {
+					body.appendChild(h('tr', null, h('td', { dir: 'ltr', style: 'text-align:start' }, it.rel), h('td', null, it.link ? h('a', { href: it.link, target: '_blank', rel: 'noopener' }, it.where) : it.where)));
+				});
+				el.appendChild(h('table', { class: 'widefat striped msw-table' }, h('thead', null, h('tr', null, h('th', null, 'فایل مفقود'), h('th', null, 'ارجاع در'))), body));
+				if (d.pages > 1) {
+					el.appendChild(h('div', { class: 'msw-pager' }, h('button', { class: 'button', disabled: page <= 1, onClick: function () { page--; load(); } }, 'قبلی'), ' ' + page + ' / ' + d.pages + ' ', h('button', { class: 'button', disabled: page >= d.pages, onClick: function () { page++; load(); } }, 'بعدی')));
+				}
+			}).catch(function (e) { clear(el).appendChild(h('p', { class: 'warn' }, e.message)); });
+		}
+		clear(el).appendChild(h('p', { class: 'msw-loading' }, 'در حال بارگذاری…'));
+		load();
+	}
+
 	function tabWebp(el) {
 		clear(el).appendChild(h('p', { class: 'msw-loading' }, 'در حال بارگذاری…'));
 		var scope = CFG.settings.webp_scope || 'used';
@@ -562,16 +585,23 @@
 						stat('ناموفق', num(sm.failed), ''),
 						stat('منتظر حذف اصل', num(sm.pending_originals), 'فایل‌های اصلی نگه‌داشته‌شده')));
 					if (sm.pending_originals) {
+						listArea.appendChild(h('p', null, h('button', { class: 'button', onClick: function () {
+							if (!window.confirm('تبدیل WebP همهٔ تصاویری که اصل‌شان هنوز نگه‌داشته شده به JPG/PNG برگردد و لینک‌ها اصلاح شود؟')) { return; }
+							clear(jobArea);
+							var jb = jobBox({ title: 'بازگردانی به JPG/PNG', onDone: function () { loadList(1); } });
+							jobArea.appendChild(jb);
+							api('job_start', { type: 'revert', opts: {} }).then(function (st) { jb.start(st); }).catch(function (e) { clear(jobArea); toast(e.message, 'err'); });
+						} }, '↩ بازگردانی به JPG/PNG (تا قبل از حذف اصل‌ها)')));
 						listArea.appendChild(h('p', null, h('button', { class: 'button msw-danger', onClick: function () {
 							if (!window.confirm('فایل‌های اصلی JPG/PNG ' + sm.pending_originals + ' تصویر همین حالا حذف شود؟ بعد از آن بازگشت ممکن نیست. ابتدا سایت را در چند صفحه بررسی کنید.')) { return; }
 							api('act', { op: 'purge_originals' }).then(function (x) { toast(x.ok + ' تصویر پاک‌سازی شد.', 'ok'); loadList(1); }).catch(function (e) { toast(e.message, 'err'); });
 						} }, '🗑 حذف فایل‌های اصلی همین حالا')));
 					}
-					listArea.appendChild(h('div', { class: 'msw-filters' }, selectEl([['', 'همه'], ['done', 'تبدیل‌شده (در انتظار حذف اصل)'], ['deleted', 'تبدیل‌شده (اصل حذف شد)'], ['skipped', 'ردشده'], ['failed', 'ناموفق'], ['error', 'خطای بررسی نهایی']], status, function (v) { status = v; loadList(1); })));
+					listArea.appendChild(h('div', { class: 'msw-filters' }, selectEl([['', 'همه'], ['reverted', 'بازگردانده‌شده'], ['done', 'تبدیل‌شده (در انتظار حذف اصل)'], ['deleted', 'تبدیل‌شده (اصل حذف شد)'], ['skipped', 'ردشده'], ['failed', 'ناموفق'], ['error', 'خطای بررسی نهایی']], status, function (v) { status = v; loadList(1); })));
 					var tb = h('table', { class: 'widefat striped msw-table' }, h('thead', null, h('tr', null, ['#', 'عنوان', 'وضعیت', 'قبل', 'بعد', 'صرفه‌جویی', 'توضیح'].map(function (x) { return h('th', null, x); }))));
 					var body = h('tbody');
 					r.items.forEach(function (it) {
-						body.appendChild(h('tr', null, h('td', null, h('a', { href: it.edit, target: '_blank', rel: 'noopener' }, it.id)), h('td', null, it.title), h('td', null, ({ done: 'تبدیل شد', deleted: 'تبدیل شد (اصل حذف شد)', skipped: 'ردشد', failed: 'ناموفق', error: 'خطای بررسی نهایی', converted: 'در حال اصلاح لینک' }[it.status] || it.status) + (it.delete_after ? ' (حذف اصل: ' + it.delete_after + ')' : '')), h('td', null, it.before), h('td', null, it.after), h('td', null, it.pct ? it.pct + '٪ (' + it.saved + ')' : '—'), h('td', null, it.reason)));
+						body.appendChild(h('tr', null, h('td', null, h('a', { href: it.edit, target: '_blank', rel: 'noopener' }, it.id)), h('td', null, it.title), h('td', null, ({ done: 'تبدیل شد', deleted: 'تبدیل شد (اصل حذف شد)', reverted: 'بازگردانده شد', reverting: 'در حال بازگردانی', skipped: 'ردشد', failed: 'ناموفق', error: 'خطای بررسی نهایی', converted: 'در حال اصلاح لینک' }[it.status] || it.status) + (it.delete_after ? ' (حذف اصل: ' + it.delete_after + ')' : '')), h('td', null, it.before), h('td', null, it.after), h('td', null, it.pct ? it.pct + '٪ (' + it.saved + ')' : '—'), h('td', null, it.reason)));
 					});
 					tb.appendChild(body);
 					listArea.appendChild(tb);
@@ -610,6 +640,19 @@
 						}).catch(function (e) { clear(simArea).appendChild(h('p', { class: 'warn' }, e.message)); });
 					} }, '🧪 آزمایش روی چند نمونه'))));
 			el.appendChild(simArea);
+			var maxpx = h('input', { type: 'number', value: 2560, min: 800, step: 10, class: 'small-text' });
+			var dropOrig = h('input', { type: 'checkbox', checked: true });
+			var optArea = h('div');
+			el.appendChild(h('div', { class: 'msw-hero' }, h('div', null, h('h2', null, 'کوچک‌سازی اصل‌های سنگین'), h('p', null, 'نام فایل‌ها تغییر نمی‌کند، پس لینکی نمی‌شکند. حذف original_image نسخهٔ بزرگ‌تر از -scaled را پاک می‌کند (بازسازی از اصل بعداً ممکن نیست).')),
+				h('div', { class: 'msw-scope' }, h('label', null, 'حداکثر ابعاد (px): ', maxpx), h('label', null, dropOrig, ' حذف original_image نسخه‌های -scaled')),
+				h('button', { class: 'button button-primary', onClick: function () {
+					if (!window.confirm('اصل‌های سنگین کوچک شوند؟ این کار برگشت‌پذیر نیست. بک‌آپ دارید؟')) { return; }
+					clear(optArea);
+					var jb = jobBox({ title: 'کوچک‌سازی اصل‌ها', onDone: function () { refreshDash(); } });
+					optArea.appendChild(jb);
+					api('job_start', { type: 'optimize', opts: { max_px: maxpx.value, drop_original: dropOrig.checked } }).then(function (st) { jb.start(st); }).catch(function (e) { clear(optArea); toast(e.message, 'err'); });
+				} }, '📉 اجرا')));
+			el.appendChild(optArea);
 			el.appendChild(h('div', { class: 'msw-notice' }, 'امنیت: هر فایل جدید ابتدا ساخته و اعتبارسنجی می‌شود؛ تا پایان اصلاح لینک‌ها فایل اصلی دست‌نخورده می‌ماند؛ تصاویری که WebP آن‌ها کوچک‌تر نشود، متحرک باشند، روی ذخیره‌ساز خارجی باشند یا در فایل‌های قالب لینک مستقیم داشته باشند، رد می‌شوند. کیفیت و سایر گزینه‌ها در «تنظیمات».'));
 			el.appendChild(jobArea);
 			if (d.job && d.job.status === 'running' && d.job.type === 'convert') {
@@ -702,7 +745,7 @@
 
 	/* ------------------------------------------------------------- shell */
 
-	var RENDER = { dashboard: tabDashboard, unused: tabUnused, orphans: tabOrphans, duplicates: tabDuplicates, quarantine: tabQuarantine, webp: tabWebp, settings: tabSettings, log: tabLog };
+	var RENDER = { dashboard: tabDashboard, unused: tabUnused, orphans: tabOrphans, duplicates: tabDuplicates, broken: tabBroken, quarantine: tabQuarantine, webp: tabWebp, settings: tabSettings, log: tabLog };
 
 	function go(tab) {
 		state.tab = tab;

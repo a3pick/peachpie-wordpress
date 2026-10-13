@@ -17,11 +17,13 @@ class MSW_Rewriter {
 	/** @var array old_rel => new_rel|null  (lookup cache) */
 	private static $cache = array();
 	public static $changed = 0;
+	/** Source extensions the rewriter looks for (regex alternation). */
+	public static $exts = 'jpe?g|png';
 
 	/* ---------------------------------------------------------------- regex */
 
 	private static function re() {
-		return '~' . preg_quote( MSW_Extractor::$marker, '~' ) . '(\\\\?/)((?:[^\s"\'<>()\\\\|,;{}\[\]]|\\\\/)+?)\.(jpe?g|png)(?![a-z0-9_]|\.(?:webp|avif))~i';
+		return '~' . preg_quote( MSW_Extractor::$marker, '~' ) . '(\\\\?/)((?:[^\s"\'<>()\\\\|,;{}\[\]]|\\\\/)+?)\.(' . self::$exts . ')(?![a-z0-9_]|\.(?:webp|avif))~i';
 	}
 
 	/** Split "sites/2/2024/05/foo" into [prefix, rest]. */
@@ -76,6 +78,10 @@ class MSW_Rewriter {
 			},
 			$s
 		);
+	}
+
+	public static function reset() {
+		self::$cache = array();
 	}
 
 	public static function looks_serialized( $s ) {

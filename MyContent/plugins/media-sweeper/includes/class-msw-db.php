@@ -68,6 +68,7 @@ class MSW_DB {
   status varchar(12) NOT NULL DEFAULT 'pending',
   reason varchar(190) NOT NULL DEFAULT '',
   old_files longtext,
+  new_files longtext,
   bytes_before bigint(20) unsigned NOT NULL DEFAULT 0,
   bytes_after bigint(20) unsigned NOT NULL DEFAULT 0,
   updated datetime DEFAULT NULL,
@@ -84,6 +85,13 @@ class MSW_DB {
   KEY att_id (att_id)
 ) $c;";
 
+		$sql[] = 'CREATE TABLE ' . MSW_Util::t( 'broken' ) . " (
+  rel_hash char(32) NOT NULL,
+  rel_path varchar(600) NOT NULL DEFAULT '',
+  src varchar(120) NOT NULL DEFAULT '',
+  PRIMARY KEY  (rel_hash)
+) $c;";
+
 		foreach ( $sql as $q ) {
 			dbDelta( $q );
 		}
@@ -98,7 +106,7 @@ class MSW_DB {
 
 	public static function drop() {
 		global $wpdb;
-		foreach ( array( 'refs', 'media', 'orphans', 'converted', 'map' ) as $t ) {
+		foreach ( array( 'refs', 'media', 'orphans', 'converted', 'map', 'broken' ) as $t ) {
 			$wpdb->query( 'DROP TABLE IF EXISTS ' . MSW_Util::t( $t ) ); // phpcs:ignore WordPress.DB.PreparedSQL
 		}
 	}

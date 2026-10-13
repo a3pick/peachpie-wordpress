@@ -459,6 +459,7 @@ class MSW_Converter {
 			'before' => $before,
 			'after'  => $after,
 			'old'    => array_keys( $pairs ),
+			'pairs'  => $pairs,
 		);
 	}
 
@@ -529,6 +530,7 @@ class MSW_Converter {
 			'bytes_before' => isset( $r['before'] ) ? (int) $r['before'] : 0,
 			'bytes_after'  => isset( $r['after'] ) ? (int) $r['after'] : 0,
 			'old_files'    => isset( $r['old'] ) ? wp_json_encode( $r['old'] ) : null,
+			'new_files'    => isset( $r['pairs'] ) ? wp_json_encode( $r['pairs'] ) : null,
 			'updated'      => gmdate( 'Y-m-d H:i:s' ),
 		);
 		$wpdb->update( $c, $row, array( 'attachment_id' => $id ) );
@@ -623,6 +625,106 @@ class MSW_Converter {
 			MSW_Util::log( "فایل‌های اصلی $n تصویر تبدیل‌شده حذف شد." );
 		}
 		return $n;
+	}
+
+	/* -------------------------------------------------------------- revert */
+
+	/**
+	 * Prepare a revert: restore attachment metadata to the original files and
+	 * queue reverse map rows. References are rewritten by the revert job.
+	 *
+	 * @return int|WP_Error number of attachments prepared.
+	 */
+	public static function prepare_revert( array $ids = array() ) {
+		global $wpdb;
+		$c    = MSW_Util::t( 'converted' );
+		$mt   = MSW_Util::t( 'map' );
+		$cond = "status = 'done' AND new_files IS NOT NULL";
+		if ( $ids ) {
+			$cond .= ' AND attachment_id IN (' . implode( ',', array_map( 'intval', $ids ) ) . ')';
+		}
+		$rows = $wpdb->get_results( "SELECT * FROM $c WHERE $cond" ); // phpcs:ignore
+		if ( ! $rows ) {
+			return new WP_Error( 'none', 'موردی برای بازگردانی نیست (فقط تصاویری که اصل‌شان هنوز نگه‌داشته شده).' );
+		}
+		MSW_DB::truncate( 'map' );
+		$n = 0;
+		foreach ( $rows as $r ) {
+			$pairs = json_decode( (string) $r->new_files, true );
+			$id    = (int) $r->attachment_id;
+			if ( ! is_array( $pairs ) || ! $pairs ) {
+				continue;
+			}
+			$ok = true;
+			foreach ( $pairs as $old => $new ) {
+				if ( ! is_file( MSW_Util::abs( $old ) ) ) {
+					$ok = false;
+				}
+			}
+			if ( ! $ok ) {
+				$wpdb->update( $c, array( 'reason' => 'فایل اصلی دیگر روی دیسک نیست؛ بازگردانی ممکن نیست' ), array( 'attachment_id' => $id ) );
+				continue;
+			}
+			$rev  = array_flip( $pairs ); // new => old.
+			$rel  = (string) get_post_meta( $id, '_wp_attached_file', true );
+			$meta = get_post_meta( $id, '_wp_attachment_metadata', true );
+			$dir  = ( false === strpos( $rel, '/' ) ) ? '' : dirname( $rel ) . '/';
+			$mime = ( 'png' === strtolower( pathinfo( (string) array_search( $rel, $pairs, true ), PATHINFO_EXTENSION ) ) ) ? 'image/png' : 'image/jpeg';
+			if ( isset( $rev[ $rel ] ) ) {
+				update_post_meta( $id, '_wp_attached_file', $rev[ $rel ] );
+			}
+			if ( is_array( $meta ) ) {
+				if ( isset( $rev[ $rel ] ) ) {
+					$meta['file'] = $rev[ $rel ];
+				}
+				foreach ( (array) ( isset( $meta['sizes'] ) ? $meta['sizes'] : array() ) as $name => $sz ) {
+					if ( ! empty( $sz['file'] ) && isset( $rev[ $dir . $sz['file'] ] ) ) {
+						$old_rel = $rev[ $dir . $sz['file'] ];
+						$meta['sizes'][ $name ]['file']      = basename( $old_rel );
+						$meta['sizes'][ $name ]['mime-type'] = preg_match( '~\.png$~i', $old_rel ) ? 'image/png' : 'image/jpeg';
+						$p = MSW_Util::abs( $old_rel );
+						$meta['sizes'][ $name ]['filesize']  = (int) @filesize( $p );
+					}
+				}
+				if ( ! empty( $meta['original_image'] ) && isset( $rev[ $dir . $meta['original_image'] ] ) ) {
+					$meta['original_image'] = basename( $rev[ $dir . $meta['original_image'] ] );
+				}
+				if ( isset( $rev[ $rel ] ) ) {
+					$meta['filesize'] = (int) @filesize( MSW_Util::abs( $rev[ $rel ] ) );
+				}
+				update_post_meta( $id, '_wp_attachment_metadata', $meta );
+			}
+			$main_old = isset( $rev[ $rel ] ) ? $rev[ $rel ] : $rel;
+			$wpdb->update( $wpdb->posts, array( 'post_mime_type' => $mime, 'guid' => MSW_Util::url( $main_old ) ), array( 'ID' => $id ) );
+			clean_post_cache( $id );
+			foreach ( $rev as $new => $old ) {
+				if ( strlen( $new ) <= 185 ) {
+					$wpdb->query( $wpdb->prepare( "REPLACE INTO $mt (old_rel,new_rel,att_id) VALUES (%s,%s,%d)", $new, $old, $id ) ); // phpcs:ignore
+				}
+			}
+			$wpdb->update( $c, array( 'status' => 'reverting', 'reason' => '', 'updated' => gmdate( 'Y-m-d H:i:s' ) ), array( 'attachment_id' => $id ) );
+			$wpdb->update( MSW_Util::t( 'media' ), array( 'rel_path' => $main_old, 'path_key' => MSW_Extractor::path_key( $main_old ), 'mime' => $mime ), array( 'attachment_id' => $id ) );
+			$n++;
+		}
+		return $n ? $n : new WP_Error( 'none', 'بازگردانی هیچ موردی ممکن نبود.' );
+	}
+
+	/** After references were rewritten back: remove the WebP files. */
+	public static function finalize_revert() {
+		global $wpdb;
+		$c    = MSW_Util::t( 'converted' );
+		$rows = $wpdb->get_results( "SELECT * FROM $c WHERE status = 'reverting' LIMIT 200" ); // phpcs:ignore
+		foreach ( (array) $rows as $r ) {
+			$pairs = json_decode( (string) $r->new_files, true );
+			foreach ( (array) $pairs as $old => $new ) {
+				$p = MSW_Util::abs( $new );
+				if ( is_file( $p ) && is_file( MSW_Util::abs( $old ) ) ) {
+					@unlink( $p );
+				}
+			}
+			$wpdb->update( $c, array( 'status' => 'reverted' ), array( 'attachment_id' => $r->attachment_id ) );
+		}
+		return count( (array) $rows );
 	}
 
 	/** Convert a handful of images into temp files to report real-world savings. */

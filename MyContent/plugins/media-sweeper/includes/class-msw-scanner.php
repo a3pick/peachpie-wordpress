@@ -23,6 +23,16 @@ class MSW_Scanner {
 
 	public static function flush() {
 		global $wpdb;
+		if ( self::$broken ) {
+			$vals = array();
+			foreach ( self::$broken as $rel => $src ) {
+				$vals[] = $wpdb->prepare( '(%s,%s,%s)', md5( $rel ), $rel, substr( $src, 0, 120 ) );
+			}
+			self::$broken = array();
+			foreach ( array_chunk( $vals, 200 ) as $chunk ) {
+				$wpdb->query( 'INSERT IGNORE INTO ' . MSW_Util::t( 'broken' ) . ' (rel_hash,rel_path,src) VALUES ' . implode( ',', $chunk ) ); // phpcs:ignore
+			}
+		}
 		if ( ! self::$buf ) {
 			return;
 		}
@@ -54,11 +64,31 @@ class MSW_Scanner {
 		foreach ( $r['ids'] as $id => $_ ) {
 			self::add( 'i:' . $id, $src );
 		}
+		foreach ( $r['raw'] as $rel => $_ ) {
+			self::check_exists( $rel, $src );
+		}
 		foreach ( $r['paths'] as $k => $_ ) {
 			self::add( 'p:' . $k, $src );
 		}
 		foreach ( $r['bases'] as $k => $_ ) {
 			self::add( 'b:' . $k, $src );
+		}
+	}
+
+	private static $seen = array();
+	private static $broken = array();
+
+	/** Remember upload paths that are referenced but missing on disk. */
+	private static function check_exists( $rel, $src ) {
+		if ( isset( self::$seen[ $rel ] ) || 0 === strpos( $src, 'file:' ) ) {
+			return;
+		}
+		if ( count( self::$seen ) > 50000 ) {
+			self::$seen = array();
+		}
+		self::$seen[ $rel ] = true;
+		if ( MSW_Util::safe_rel( $rel ) && ! file_exists( MSW_Util::abs( $rel ) ) ) {
+			self::$broken[ $rel ] = $src;
 		}
 	}
 
@@ -287,6 +317,7 @@ class MSW_Scanner {
 			ARRAY_A
 		);
 		$orph = $wpdb->get_row( "SELECT COUNT(*) c, COALESCE(SUM(bytes),0) b FROM " . MSW_Util::t( 'orphans' ) . " WHERE status='orphan'", ARRAY_A ); // phpcs:ignore
+		$brk  = (int) $wpdb->get_var( 'SELECT COUNT(*) FROM ' . MSW_Util::t( 'broken' ) ); // phpcs:ignore
 		$prev = get_option( 'msw_last_scan', array() );
 		update_option(
 			'msw_last_scan',
@@ -298,6 +329,7 @@ class MSW_Scanner {
 				'used'          => (int) $row['used'],
 				'locked'        => (int) $row['locked'],
 				'missing'       => (int) $row['missing'],
+				'broken'        => $brk,
 				'total_bytes'   => (int) $row['total_bytes'],
 				'orphans'       => (int) $orph['c'],
 				'orphan_bytes'  => (int) $orph['b'],

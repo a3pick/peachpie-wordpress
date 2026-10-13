@@ -16,7 +16,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 define( 'MSW_VERSION', '1.0.0' );
-define( 'MSW_DB_VERSION', '1' );
+define( 'MSW_DB_VERSION', '2' );
 define( 'MSW_FILE', __FILE__ );
 define( 'MSW_DIR', plugin_dir_path( __FILE__ ) );
 define( 'MSW_URL', plugin_dir_url( __FILE__ ) );
@@ -29,6 +29,7 @@ require_once MSW_DIR . 'includes/class-msw-scanner.php';
 require_once MSW_DIR . 'includes/class-msw-quarantine.php';
 require_once MSW_DIR . 'includes/class-msw-converter.php';
 require_once MSW_DIR . 'includes/class-msw-rewriter.php';
+require_once MSW_DIR . 'includes/class-msw-optimizer.php';
 require_once MSW_DIR . 'includes/class-msw-job.php';
 require_once MSW_DIR . 'includes/class-msw-query.php';
 require_once MSW_DIR . 'includes/class-msw-cron.php';

@@ -130,10 +130,16 @@ class MSW_Admin {
 		$type = isset( $_POST['type'] ) ? sanitize_key( wp_unslash( $_POST['type'] ) ) : '';
 		$o    = isset( $_POST['opts'] ) && is_array( $_POST['opts'] ) ? wp_unslash( $_POST['opts'] ) : array();
 		$opts = array();
-		foreach ( array( 'orphans', 'duplicates', 'retry', 'bg' ) as $k ) {
+		foreach ( array( 'orphans', 'duplicates', 'retry', 'bg', 'drop_original' ) as $k ) {
 			if ( isset( $o[ $k ] ) ) {
 				$opts[ $k ] = ! empty( $o[ $k ] ) && 'false' !== $o[ $k ] && '0' !== $o[ $k ];
 			}
+		}
+		if ( isset( $o['max_px'] ) ) {
+			$opts['max_px'] = absint( $o['max_px'] );
+		}
+		if ( isset( $o['ids'] ) ) {
+			$opts['ids'] = array_map( 'absint', (array) $o['ids'] );
 		}
 		if ( isset( $o['scope'] ) ) {
 			$opts['scope'] = ( 'all' === $o['scope'] ) ? 'all' : 'used';
@@ -171,6 +177,9 @@ class MSW_Admin {
 				break;
 			case 'quarantine':
 				$data = MSW_Query::quarantine( $f );
+				break;
+			case 'broken':
+				$data = MSW_Query::broken( $f );
 				break;
 			case 'converted':
 				$data = MSW_Query::converted( $f );

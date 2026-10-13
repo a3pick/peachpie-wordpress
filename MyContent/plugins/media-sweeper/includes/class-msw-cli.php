@@ -13,6 +13,8 @@ if ( ! defined( 'ABSPATH' ) ) {
  *   wp msw delete [same filters] --yes       (permanent!)
  *   wp msw restore
  *   wp msw convert [--scope=<used|all>] [--retry]
+ *   wp msw optimize [--max-px=<px>] [--drop-original]
+ *   wp msw revert
  *   wp msw purge-originals
  */
 class MSW_CLI {
@@ -135,6 +137,31 @@ class MSW_CLI {
 		);
 		$c = $st['counts'];
 		WP_CLI::success( sprintf( 'Converted %d, skipped %d, failed %d, saved %s', $c['converted'], $c['skipped'], $c['failed'], MSW_Util::size( $c['saved'] ) ) );
+	}
+
+	/**
+	 * Downscale oversized originals / drop the pre-scaled original_image.
+	 *
+	 *   wp msw optimize [--max-px=<px>] [--drop-original]
+	 */
+	public function optimize( $args, $assoc ) {
+		$st = $this->run_job(
+			'optimize',
+			array(
+				'max_px'        => isset( $assoc['max-px'] ) ? (int) $assoc['max-px'] : 2560,
+				'drop_original' => isset( $assoc['drop-original'] ),
+			)
+		);
+		$c = $st['counts'];
+		WP_CLI::success( sprintf( 'Resized %d, dropped %d originals, saved %s', isset( $c['resized'] ) ? $c['resized'] : 0, isset( $c['dropped'] ) ? $c['dropped'] : 0, MSW_Util::size( isset( $c['saved'] ) ? $c['saved'] : 0 ) ) );
+	}
+
+	/**
+	 * Revert WebP conversions whose originals are still on disk.
+	 */
+	public function revert() {
+		$this->run_job( 'revert', array() );
+		WP_CLI::success( 'Reverted.' );
 	}
 
 	/**

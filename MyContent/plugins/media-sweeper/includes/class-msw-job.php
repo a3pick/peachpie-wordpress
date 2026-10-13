@@ -23,6 +23,7 @@ class MSW_Job {
 		'convert'     => 'تبدیل به WebP',
 		'rewrite'     => 'اصلاح لینک‌ها در دیتابیس',
 		'finalize'    => 'بررسی نهایی و پاک‌سازی',
+		'optimize'    => 'کوچک‌سازی اصل‌های سنگین',
 	);
 
 	private static $weights = array(
@@ -36,6 +37,7 @@ class MSW_Job {
 		'convert'     => 55,
 		'rewrite'     => 38,
 		'finalize'    => 5,
+		'optimize'    => 100,
 	);
 
 	public static function get() {
@@ -99,6 +101,7 @@ class MSW_Job {
 			$state['phases'] = $phases;
 			MSW_DB::truncate( 'refs' );
 			MSW_DB::truncate( 'media' );
+			MSW_DB::truncate( 'broken' );
 			$wpdb->query( "DELETE FROM " . MSW_Util::t( 'orphans' ) . " WHERE status = 'orphan'" ); // phpcs:ignore
 			MSW_Scanner::prepare_acf();
 			$state['stages'] = MSW_Sources::stages( 'scan' );
@@ -120,6 +123,29 @@ class MSW_Job {
 			$state['counts']['total']  = $n;
 			$state['retention']        = (int) MSW_Util::get( 'webp_retention_days' );
 			MSW_Util::log( "تبدیل WebP شروع شد ($n تصویر)." );
+		} elseif ( 'optimize' === $type ) {
+			if ( ! function_exists( 'wp_get_image_editor' ) ) {
+				require_once ABSPATH . 'wp-includes/media.php';
+			}
+			$state['phases']  = array( 'optimize' );
+			$state['max_px']  = isset( $opts['max_px'] ) ? max( 0, (int) $opts['max_px'] ) : 2560;
+			$state['drop_original'] = ! empty( $opts['drop_original'] );
+			$state['quality'] = (int) MSW_Util::get( 'webp_jpeg_quality' );
+			if ( $state['max_px'] < 800 && $state['max_px'] > 0 ) {
+				return new WP_Error( 'max', 'حداکثر ابعاد باید حداقل ۸۰۰ پیکسل باشد.' );
+			}
+			if ( ! $state['max_px'] && ! $state['drop_original'] ) {
+				return new WP_Error( 'none', 'حداقل یکی از دو گزینه را فعال کنید.' );
+			}
+			MSW_Util::log( 'کوچک‌سازی اصل‌ها شروع شد.' );
+		} elseif ( 'revert' === $type ) {
+			$n = MSW_Converter::prepare_revert( isset( $opts['ids'] ) ? (array) $opts['ids'] : array() );
+			if ( is_wp_error( $n ) ) {
+				return $n;
+			}
+			$state['phases']          = array( 'rewrite', 'finalize' );
+			$state['counts']['total'] = $n;
+			MSW_Util::log( "بازگردانی تبدیل WebP شروع شد ($n تصویر)." );
 		} else {
 			return new WP_Error( 'type', 'نوع عملیات نامعتبر است.' );
 		}
@@ -243,6 +269,11 @@ class MSW_Job {
 			if ( ! empty( $s['opts']['notify'] ) ) {
 				MSW_Cron::send_report( $ls );
 			}
+		} elseif ( 'optimize' === $s['type'] ) {
+			$c = $s['counts'];
+			MSW_Util::log( sprintf( 'کوچک‌سازی پایان یافت: %d تصویر کوچک شد، %d اصل حذف شد؛ صرفه‌جویی: %s.', isset( $c['resized'] ) ? $c['resized'] : 0, isset( $c['dropped'] ) ? $c['dropped'] : 0, MSW_Util::size( isset( $c['saved'] ) ? $c['saved'] : 0 ) ) );
+		} elseif ( 'revert' === $s['type'] ) {
+			MSW_Util::log( 'بازگردانی WebP پایان یافت.' );
 		} else {
 			$c = $s['counts'];
 			MSW_Util::log( sprintf( 'تبدیل WebP پایان یافت: %d تبدیل، %d ردشده، %d ناموفق؛ صرفه‌جویی: %s.', isset( $c['converted'] ) ? $c['converted'] : 0, isset( $c['skipped'] ) ? $c['skipped'] : 0, isset( $c['failed'] ) ? $c['failed'] : 0, MSW_Util::size( isset( $c['saved'] ) ? $c['saved'] : 0 ) ) );
@@ -419,10 +450,36 @@ class MSW_Job {
 		return false;
 	}
 
+	private static function phase_optimize( array &$s, $deadline ) {
+		global $wpdb;
+		if ( ! $s['smax_ok'] ) {
+			$s['smax']    = (int) $wpdb->get_var( "SELECT MAX(ID) FROM {$wpdb->posts} WHERE post_type='attachment'" );
+			$s['smax_ok'] = 1;
+		}
+		$o = array( 'max_px' => $s['max_px'], 'drop_original' => $s['drop_original'], 'quality' => $s['quality'] );
+		while ( microtime( true ) < $deadline ) {
+			$r = MSW_Optimizer::batch( (int) $s['cur'], $o );
+			if ( false === $r ) {
+				return true;
+			}
+			$s['cur'] = $r[0];
+			$c        = $s['counts'];
+			foreach ( $r[1] as $k => $v ) {
+				$c[ $k ] = ( isset( $c[ $k ] ) ? $c[ $k ] : 0 ) + $v;
+			}
+			$s['counts'] = $c;
+			$s['frac']   = $s['smax'] ? min( 1, $s['cur'] / $s['smax'] ) : 1;
+			$s['detail'] = '#' . $s['cur'];
+		}
+		return false;
+	}
+
 	private static function phase_rewrite( array &$s, $deadline ) {
 		global $wpdb;
+		MSW_Rewriter::$exts = ( 'revert' === $s['type'] ) ? 'webp' : 'jpe?g|png';
 		if ( ! $s['smax_ok'] && 0 === (int) $s['si'] ) {
-			$pending = (int) $wpdb->get_var( 'SELECT COUNT(*) FROM ' . MSW_Util::t( 'converted' ) . " WHERE status = 'converted'" ); // phpcs:ignore
+			MSW_Rewriter::reset();
+			$pending = (int) $wpdb->get_var( 'SELECT COUNT(*) FROM ' . MSW_Util::t( 'converted' ) . " WHERE status IN ('converted','reverting')" ); // phpcs:ignore
 			if ( ! $pending ) {
 				return true;
 			}
@@ -433,6 +490,12 @@ class MSW_Job {
 
 	private static function phase_finalize( array &$s, $deadline ) {
 		global $wpdb;
+		if ( 'revert' === $s['type'] ) {
+			MSW_Converter::finalize_revert();
+			MSW_DB::truncate( 'map' );
+			MSW_Util::flush_caches();
+			return true;
+		}
 		$ret = isset( $s['retention'] ) ? (int) $s['retention'] : 0;
 		while ( microtime( true ) < $deadline ) {
 			if ( ! MSW_Converter::finalize( $ret ) ) {
