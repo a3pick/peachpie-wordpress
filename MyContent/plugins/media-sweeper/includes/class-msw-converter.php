@@ -445,6 +445,9 @@ class MSW_Converter {
 		foreach ( $pairs as $old => $new ) {
 			$wpdb->query( $wpdb->prepare( "REPLACE INTO $mt (old_rel,new_rel,att_id) VALUES (%s,%s,%d)", $old, $new, $id ) ); // phpcs:ignore
 		}
+		foreach ( $pairs as $old => $new ) {
+			MSW_Redirects::add( $old, $new, $id );
+		}
 		$mrow = array(
 			'rel_path' => $new_main,
 			'path_key' => MSW_Extractor::path_key( $new_main ),

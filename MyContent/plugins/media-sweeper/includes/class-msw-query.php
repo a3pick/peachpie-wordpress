@@ -403,6 +403,70 @@ class MSW_Query {
 		);
 	}
 
+	/* ------------------------------------------------------------------ seo */
+
+	const BAD_NAME_SQL = "m.rel_path REGEXP '(^|/)(img|dsc|dscn|dscf|dji|pxl|mvimg|imgp|image|photo|pic|picture|screenshot|screen-shot|whatsapp-image|untitled|unnamed|download|copy-of)[-_ ]*[0-9(]|(^|/)[0-9_-]+[.][a-z0-9]+$|(^|/)[0-9a-f]{8}-[0-9a-f]{4}-'";
+
+	public static function seo( array $a ) {
+		global $wpdb;
+		$m     = MSW_Util::t( 'media' );
+		$issue = isset( $a['status'] ) ? $a['status'] : 'any';
+		$alt   = "COALESCE(am.meta_value,'') = ''";
+		$w     = "m.type = 'image' AND m.status = 'used' AND m.missing = 0";
+		if ( 'alt' === $issue ) {
+			$w .= " AND $alt";
+		} elseif ( 'name' === $issue ) {
+			$w .= ' AND ' . self::BAD_NAME_SQL;
+		} elseif ( 'ok' !== $issue ) {
+			$w .= " AND ($alt OR " . self::BAD_NAME_SQL . ')';
+		}
+		$args = array();
+		if ( ! empty( $a['q'] ) ) {
+			$w     .= ' AND (m.rel_path LIKE %s OR p.post_title LIKE %s)';
+			$like   = '%' . $wpdb->esc_like( $a['q'] ) . '%';
+			$args[] = $like;
+			$args[] = $like;
+		}
+		$join = " FROM $m m INNER JOIN {$wpdb->posts} p ON p.ID = m.attachment_id LEFT JOIN {$wpdb->postmeta} am ON am.post_id = m.attachment_id AND am.meta_key = '_wp_attachment_image_alt'";
+		$per  = 30;
+		$page = isset( $a['page'] ) ? max( 1, (int) $a['page'] ) : 1;
+		$sql  = "SELECT COUNT(*) $join WHERE $w";
+		$tot  = (int) ( $args ? $wpdb->get_var( $wpdb->prepare( $sql, $args ) ) : $wpdb->get_var( $sql ) ); // phpcs:ignore
+		$sql  = "SELECT m.attachment_id, m.rel_path, m.used_in, p.post_title, am.meta_value alt $join WHERE $w ORDER BY m.attachment_id DESC LIMIT %d OFFSET %d";
+		$rows = $wpdb->get_results( $wpdb->prepare( $sql, array_merge( $args, array( $per, ( $page - 1 ) * $per ) ) ) ); // phpcs:ignore
+		$items = array();
+		foreach ( (array) $rows as $r ) {
+			$bad  = MSW_Renamer::bad_name( $r->rel_path );
+			$sug  = MSW_Renamer::sanitize_base( $r->post_title );
+			$items[] = array(
+				'id'      => (int) $r->attachment_id,
+				'rel'     => $r->rel_path,
+				'file'    => wp_basename( $r->rel_path ),
+				'thumb'   => wp_get_attachment_image_url( (int) $r->attachment_id, 'thumbnail' ),
+				'title'   => $r->post_title,
+				'alt'     => (string) $r->alt,
+				'bad'     => $bad,
+				'suggest' => ( $bad && $sug && ! MSW_Renamer::bad_name( $sug ) ) ? $sug : '',
+				'used_in' => $r->used_in ? self::describe_src( $r->used_in ) : null,
+			);
+		}
+		return array( 'items' => $items, 'total' => $tot, 'pages' => max( 1, (int) ceil( $tot / $per ) ), 'page' => $page );
+	}
+
+	public static function redirects( array $a ) {
+		global $wpdb;
+		$t    = MSW_Util::t( 'redirects' );
+		$per  = 30;
+		$page = isset( $a['page'] ) ? max( 1, (int) $a['page'] ) : 1;
+		$tot  = (int) $wpdb->get_var( "SELECT COUNT(*) FROM $t" ); // phpcs:ignore
+		$rows = $wpdb->get_results( $wpdb->prepare( "SELECT * FROM $t ORDER BY hits DESC, created DESC LIMIT %d OFFSET %d", $per, ( $page - 1 ) * $per ) ); // phpcs:ignore
+		$items = array();
+		foreach ( (array) $rows as $r ) {
+			$items[] = array( 'old' => $r->old_rel, 'new' => $r->new_rel, 'hits' => (int) $r->hits, 'date' => $r->created ? get_date_from_gmt( $r->created, 'Y/m/d' ) : '' );
+		}
+		return array( 'items' => $items, 'total' => $tot, 'pages' => max( 1, (int) ceil( $tot / $per ) ), 'page' => $page );
+	}
+
 	/* -------------------------------------------------------------- broken */
 
 	public static function broken( array $a ) {

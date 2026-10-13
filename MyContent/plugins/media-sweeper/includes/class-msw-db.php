@@ -92,6 +92,16 @@ class MSW_DB {
   PRIMARY KEY  (rel_hash)
 ) $c;";
 
+		$sql[] = 'CREATE TABLE ' . MSW_Util::t( 'redirects' ) . " (
+  old_rel varchar(191) NOT NULL,
+  new_rel varchar(600) NOT NULL DEFAULT '',
+  att_id bigint(20) unsigned NOT NULL DEFAULT 0,
+  hits int(10) unsigned NOT NULL DEFAULT 0,
+  created datetime DEFAULT NULL,
+  PRIMARY KEY  (old_rel),
+  KEY att_id (att_id)
+) $c;";
+
 		foreach ( $sql as $q ) {
 			dbDelta( $q );
 		}
@@ -106,7 +116,7 @@ class MSW_DB {
 
 	public static function drop() {
 		global $wpdb;
-		foreach ( array( 'refs', 'media', 'orphans', 'converted', 'map', 'broken' ) as $t ) {
+		foreach ( array( 'refs', 'media', 'orphans', 'converted', 'map', 'broken', 'redirects' ) as $t ) {
 			$wpdb->query( 'DROP TABLE IF EXISTS ' . MSW_Util::t( $t ) ); // phpcs:ignore WordPress.DB.PreparedSQL
 		}
 	}

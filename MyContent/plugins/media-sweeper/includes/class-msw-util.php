@@ -38,6 +38,8 @@ class MSW_Util {
 			'webp_originals'      => 1,
 			'webp_retention_days' => 7,
 			'webp_on_upload'      => 0,
+			// SEO.
+			'redirects_enable'    => 1,
 			// Automation.
 			'auto_scan'           => 'off',
 			'notify_email'        => '',

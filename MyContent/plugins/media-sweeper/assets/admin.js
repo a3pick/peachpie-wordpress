@@ -69,6 +69,7 @@
 		['unused', 'بدون استفاده'],
 		['orphans', 'فایل‌های یتیم'],
 		['duplicates', 'تکراری‌ها'],
+		['seo', 'سئو تصاویر'],
 		['broken', 'لینک‌های خراب'],
 		['quarantine', 'قرنطینه'],
 		['webp', 'WebP و بهینه‌سازی'],
@@ -543,6 +544,78 @@
 		load();
 	}
 
+	function tabSeo(el) {
+		var f = { status: 'any', q: '', page: 1 };
+		var top = h('div'), tableBox = h('div'), jobArea = h('div'), redirBox = h('div');
+		var rows = {}; // id -> {alt, name, cb, orig}
+		function load() {
+			clear(tableBox).appendChild(h('p', { class: 'msw-loading' }, 'در حال بارگذاری…'));
+			api('list', { tab: 'seo', f: f }).then(function (d) {
+				clear(tableBox); rows = {};
+				var body = h('tbody');
+				d.items.forEach(function (it) {
+					var alt = h('input', { type: 'text', value: it.alt, class: 'regular-text', placeholder: 'متن جایگزین (Alt)' });
+					var name = h('input', { type: 'text', value: it.suggest, class: 'regular-text', dir: 'ltr', placeholder: it.bad ? 'نام جدید (انگلیسی، با خط‌تیره)' : 'بدون تغییر' });
+					var cb = h('input', { type: 'checkbox', checked: !!it.suggest });
+					rows[it.id] = { alt: alt, name: name, cb: cb, orig: it.alt, title: it.title };
+					body.appendChild(h('tr', null,
+						h('td', null, cb),
+						h('td', null, it.thumb ? h('img', { src: it.thumb, width: 56, height: 56, loading: 'lazy', alt: '', style: 'object-fit:cover;border-radius:4px' }) : ''),
+						h('td', { dir: 'ltr', style: 'text-align:start' }, it.file, it.bad ? h('div', { class: 'warn' }, '⚠ نام بی‌معنی') : null,
+							it.used_in ? h('div', { class: 'description' }, it.used_in.link ? h('a', { href: it.used_in.link, target: '_blank', rel: 'noopener' }, it.used_in.label) : it.used_in.label) : null),
+						h('td', null, alt, it.alt ? null : h('div', { class: 'warn' }, '⚠ Alt خالی')),
+						h('td', null, name)));
+				});
+				tableBox.appendChild(h('div', { class: 'msw-info' }, num(d.total) + ' تصویر'));
+				tableBox.appendChild(h('table', { class: 'widefat striped msw-table' }, h('thead', null, h('tr', null, h('th', null, ''), h('th', null, ''), h('th', null, 'فایل'), h('th', null, 'Alt'), h('th', null, 'نام جدید فایل'))), body));
+				if (d.pages > 1) {
+					tableBox.appendChild(h('div', { class: 'msw-pager' }, h('button', { class: 'button', disabled: f.page <= 1, onClick: function () { f.page--; load(); } }, 'قبلی'), ' ' + d.page + ' / ' + d.pages + ' ', h('button', { class: 'button', disabled: f.page >= d.pages, onClick: function () { f.page++; load(); } }, 'بعدی')));
+				}
+			}).catch(function (e) { clear(tableBox).appendChild(h('p', { class: 'warn' }, e.message)); });
+		}
+		function saveAlts() {
+			var alts = {}, n = 0;
+			Object.keys(rows).forEach(function (id) { var v = rows[id].alt.value.trim(); if (v !== rows[id].orig) { alts[id] = v; n++; } });
+			if (!n) { toast('Alt تغییری نکرده است.', 'warn'); return; }
+			api('act', { op: 'set_alt', alts: alts }).then(function (r) { toast(r.ok + ' Alt ذخیره شد.', 'ok'); load(); }).catch(function (e) { toast(e.message, 'err'); });
+		}
+		function renameSel() {
+			var items = {}, n = 0;
+			Object.keys(rows).forEach(function (id) { var v = rows[id].name.value.trim(); if (rows[id].cb.checked && v) { items[id] = v; n++; } });
+			if (!n) { toast('برای تصاویر انتخاب‌شده نام جدید وارد کنید.', 'warn'); return; }
+			if (!window.confirm(n + ' فایل تغییر نام یابد؟\n\n• فایل‌ها ابتدا کپی می‌شوند، سپس تمام لینک‌ها در دیتابیس اصلاح می‌شوند.\n• آدرس‌های قدیمی با ریدایرکت ۳۰۱ به جدید می‌روند.\n• فایل‌های قدیمی بعد از اصلاح حذف می‌شوند.\n\nبک‌آپ دارید؟')) { return; }
+			clear(jobArea);
+			var jb = jobBox({ title: 'تغییر نام فایل‌ها', onDone: function () { load(); loadRedirects(1); } });
+			jobArea.appendChild(jb);
+			api('job_start', { type: 'rename', opts: { items: items } }).then(function (st) { jb.start(st); }).catch(function (e) { clear(jobArea); toast(e.message, 'err'); });
+		}
+		function loadRedirects(page) {
+			api('list', { tab: 'redirects', f: { page: page } }).then(function (d) {
+				clear(redirBox);
+				redirBox.appendChild(h('h3', null, 'ریدایرکت‌های ۳۰۱ تصاویر (' + num(d.total) + ')'));
+				var body = h('tbody');
+				d.items.forEach(function (it) {
+					body.appendChild(h('tr', null, h('td', { dir: 'ltr', style: 'text-align:start' }, it.old), h('td', { dir: 'ltr', style: 'text-align:start' }, it.new), h('td', null, num(it.hits)), h('td', null, it.date),
+						h('td', null, h('button', { class: 'button-link', onClick: function () { api('act', { op: 'redirect_delete', olds: [it.old] }).then(function () { loadRedirects(page); }); } }, 'حذف'))));
+				});
+				redirBox.appendChild(h('table', { class: 'widefat striped msw-table' }, h('thead', null, h('tr', null, ['از', 'به', 'بازدید', 'تاریخ', ''].map(function (x) { return h('th', null, x); }))), body));
+				if (d.pages > 1) {
+					redirBox.appendChild(h('div', { class: 'msw-pager' }, h('button', { class: 'button', disabled: page <= 1, onClick: function () { loadRedirects(page - 1); } }, 'قبلی'), ' ' + d.page + ' / ' + d.pages + ' ', h('button', { class: 'button', disabled: page >= d.pages, onClick: function () { loadRedirects(page + 1); } }, 'بعدی')));
+				}
+			});
+		}
+		clear(el);
+		el.appendChild(h('div', { class: 'msw-notice' }, 'فقط تصاویر «در حال استفاده» (بر اساس آخرین اسکن) نمایش داده می‌شوند. Alt را خودتان بنویسید یا از عنوان پر کنید و بازبینی کنید؛ Alt مناسب باید محتوای تصویر را توصیف کند، نه کلمهٔ کلیدی انبوه. توجه: تغییر Alt پیوست، روی تصاویر قبلاً درج‌شده در متن (که Alt خودشان را دارند) اثر ندارد؛ برای تصویر شاخص، بلوک‌ها و درج‌های بعدی اثر می‌گذارد.'));
+		el.appendChild(h('div', { class: 'msw-filters' },
+			selectEl([['any', 'دارای مشکل (Alt خالی یا نام بی‌معنی)'], ['alt', 'فقط Alt خالی'], ['name', 'فقط نام بی‌معنی'], ['ok', 'همه (بدون فیلتر مشکل)']], f.status, function (v) { f.status = v; f.page = 1; load(); }),
+			h('input', { type: 'search', placeholder: 'جست‌وجو…', onInput: debounce(function (e) { f.q = e.target.value; f.page = 1; load(); }, 400) }),
+			h('button', { class: 'button', onClick: function () { Object.keys(rows).forEach(function (id) { if (!rows[id].alt.value.trim() && rows[id].title) { rows[id].alt.value = rows[id].title; } }); } }, 'پر کردن Alt خالی‌ها با عنوان (پیش‌نویس)'),
+			h('button', { class: 'button button-primary', onClick: saveAlts }, '💾 ذخیرهٔ Altها'),
+			h('button', { class: 'button msw-danger', onClick: renameSel }, '✏️ تغییر نام انتخاب‌شده‌ها + ۳۰۱')));
+		el.appendChild(jobArea); el.appendChild(tableBox); el.appendChild(redirBox);
+		load(); loadRedirects(1);
+	}
+
 	function tabBroken(el) {
 		var page = 1, q = '';
 		function load() {
@@ -694,6 +767,9 @@
 			['webp_retention_days', 'number', 'نگه‌داری فایل‌های اصلی پس از تبدیل (روز)', '۰ = بلافاصله بعد از بررسی نهایی حذف شود. پیشنهاد: ۷ روز برای اطمینان'],
 			['webp_on_upload', 'bool', 'تصاویر جدید هنگام آپلود خودکار WebP شوند']
 		]],
+		['سئو', [
+			['redirects_enable', 'bool', 'ریدایرکت ۳۰۱ خودکار برای آدرس‌های قدیمی تصاویر (تغییر نام/تبدیل WebP)', 'فقط وقتی فایل قدیمی دیگر وجود ندارد و صفحه ۴۰۴ می‌شود فعال می‌شود']
+		]],
 		['خودکارسازی', [
 			['auto_scan', 'select', 'اسکن زمان‌بندی‌شده', { off: 'خاموش', weekly: 'هفتگی (شب)', monthly: 'ماهانه (شب)' }],
 			['notify_email', 'text', 'ایمیل گزارش اسکن (خالی = بدون ایمیل)']
@@ -745,7 +821,7 @@
 
 	/* ------------------------------------------------------------- shell */
 
-	var RENDER = { dashboard: tabDashboard, unused: tabUnused, orphans: tabOrphans, duplicates: tabDuplicates, broken: tabBroken, quarantine: tabQuarantine, webp: tabWebp, settings: tabSettings, log: tabLog };
+	var RENDER = { dashboard: tabDashboard, unused: tabUnused, orphans: tabOrphans, duplicates: tabDuplicates, broken: tabBroken, seo: tabSeo, quarantine: tabQuarantine, webp: tabWebp, settings: tabSettings, log: tabLog };
 
 	function go(tab) {
 		state.tab = tab;

@@ -24,6 +24,7 @@ class MSW_Job {
 		'rewrite'     => 'اصلاح لینک‌ها در دیتابیس',
 		'finalize'    => 'بررسی نهایی و پاک‌سازی',
 		'optimize'    => 'کوچک‌سازی اصل‌های سنگین',
+		'rename'      => 'تغییر نام فایل‌ها',
 	);
 
 	private static $weights = array(
@@ -38,6 +39,7 @@ class MSW_Job {
 		'rewrite'     => 38,
 		'finalize'    => 5,
 		'optimize'    => 100,
+		'rename'      => 30,
 	);
 
 	public static function get() {
@@ -138,6 +140,23 @@ class MSW_Job {
 				return new WP_Error( 'none', 'حداقل یکی از دو گزینه را فعال کنید.' );
 			}
 			MSW_Util::log( 'کوچک‌سازی اصل‌ها شروع شد.' );
+		} elseif ( 'rename' === $type ) {
+			$items = array();
+			foreach ( isset( $opts['items'] ) ? (array) $opts['items'] : array() as $id => $name ) {
+				$b = MSW_Renamer::sanitize_base( $name );
+				if ( (int) $id > 0 && '' !== $b ) {
+					$items[ (int) $id ] = $b;
+				}
+			}
+			if ( ! $items ) {
+				return new WP_Error( 'none', 'نام جدیدی وارد نشده است.' );
+			}
+			MSW_DB::truncate( 'map' );
+			$state['phases']          = array( 'rename', 'rewrite', 'finalize' );
+			$state['items']           = $items;
+			$state['old']             = array();
+			$state['counts']['total'] = count( $items );
+			MSW_Util::log( 'تغییر نام ' . count( $items ) . ' فایل شروع شد.' );
 		} elseif ( 'revert' === $type ) {
 			$n = MSW_Converter::prepare_revert( isset( $opts['ids'] ) ? (array) $opts['ids'] : array() );
 			if ( is_wp_error( $n ) ) {
@@ -272,6 +291,8 @@ class MSW_Job {
 		} elseif ( 'optimize' === $s['type'] ) {
 			$c = $s['counts'];
 			MSW_Util::log( sprintf( 'کوچک‌سازی پایان یافت: %d تصویر کوچک شد، %d اصل حذف شد؛ صرفه‌جویی: %s.', isset( $c['resized'] ) ? $c['resized'] : 0, isset( $c['dropped'] ) ? $c['dropped'] : 0, MSW_Util::size( isset( $c['saved'] ) ? $c['saved'] : 0 ) ) );
+		} elseif ( 'rename' === $s['type'] ) {
+			MSW_Util::log( sprintf( 'تغییر نام پایان یافت: %d فایل با ریدایرکت ۳۰۱.', isset( $s['counts']['renamed'] ) ? $s['counts']['renamed'] : 0 ) );
 		} elseif ( 'revert' === $s['type'] ) {
 			MSW_Util::log( 'بازگردانی WebP پایان یافت.' );
 		} else {
@@ -450,6 +471,34 @@ class MSW_Job {
 		return false;
 	}
 
+	private static function phase_rename( array &$s, $deadline ) {
+		$c = $s['counts'];
+		foreach ( array( 'renamed', 'failed', 'processed' ) as $k ) {
+			if ( ! isset( $c[ $k ] ) ) {
+				$c[ $k ] = 0;
+			}
+		}
+		while ( microtime( true ) < $deadline && $s['items'] ) {
+			reset( $s['items'] );
+			$id   = key( $s['items'] );
+			$base = $s['items'][ $id ];
+			unset( $s['items'][ $id ] );
+			$r = MSW_Renamer::rename_one( (int) $id, $base );
+			$c['processed']++;
+			if ( is_array( $r ) ) {
+				$c['renamed']++;
+				$s['old'][ $id ] = $r['old'];
+			} else {
+				$c['failed']++;
+				MSW_Util::log( "تغییر نام #$id ناموفق: $r", 'warn' );
+			}
+			$s['counts'] = $c;
+			$s['frac']   = $c['total'] ? min( 1, $c['processed'] / $c['total'] ) : 1;
+			$s['detail'] = '#' . $id;
+		}
+		return empty( $s['items'] );
+	}
+
 	private static function phase_optimize( array &$s, $deadline ) {
 		global $wpdb;
 		if ( ! $s['smax_ok'] ) {
@@ -476,10 +525,12 @@ class MSW_Job {
 
 	private static function phase_rewrite( array &$s, $deadline ) {
 		global $wpdb;
-		MSW_Rewriter::$exts = ( 'revert' === $s['type'] ) ? 'webp' : 'jpe?g|png';
+		MSW_Rewriter::$exts = ( 'revert' === $s['type'] ) ? 'webp' : ( 'rename' === $s['type'] ? 'jpe?g|png|gif|webp|avif|bmp' : 'jpe?g|png' );
 		if ( ! $s['smax_ok'] && 0 === (int) $s['si'] ) {
 			MSW_Rewriter::reset();
-			$pending = (int) $wpdb->get_var( 'SELECT COUNT(*) FROM ' . MSW_Util::t( 'converted' ) . " WHERE status IN ('converted','reverting')" ); // phpcs:ignore
+			$tbl     = 'rename' === $s['type'] ? MSW_Util::t( 'map' ) : MSW_Util::t( 'converted' );
+			$cond    = 'rename' === $s['type'] ? '' : " WHERE status IN ('converted','reverting')";
+			$pending = (int) $wpdb->get_var( "SELECT COUNT(*) FROM $tbl$cond" ); // phpcs:ignore
 			if ( ! $pending ) {
 				return true;
 			}
@@ -490,6 +541,15 @@ class MSW_Job {
 
 	private static function phase_finalize( array &$s, $deadline ) {
 		global $wpdb;
+		if ( 'rename' === $s['type'] ) {
+			foreach ( (array) $s['old'] as $id => $old ) {
+				MSW_Renamer::remove_old( (int) $id, (array) $old );
+			}
+			$s['old'] = array();
+			MSW_DB::truncate( 'map' );
+			MSW_Util::flush_caches();
+			return true;
+		}
 		if ( 'revert' === $s['type'] ) {
 			MSW_Converter::finalize_revert();
 			MSW_DB::truncate( 'map' );

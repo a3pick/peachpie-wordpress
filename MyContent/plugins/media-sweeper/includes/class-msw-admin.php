@@ -135,6 +135,12 @@ class MSW_Admin {
 				$opts[ $k ] = ! empty( $o[ $k ] ) && 'false' !== $o[ $k ] && '0' !== $o[ $k ];
 			}
 		}
+		if ( isset( $o['items'] ) && is_array( $o['items'] ) ) {
+			$opts['items'] = array();
+			foreach ( $o['items'] as $iid => $name ) {
+				$opts['items'][ absint( $iid ) ] = sanitize_text_field( (string) $name );
+			}
+		}
 		if ( isset( $o['max_px'] ) ) {
 			$opts['max_px'] = absint( $o['max_px'] );
 		}
@@ -177,6 +183,12 @@ class MSW_Admin {
 				break;
 			case 'quarantine':
 				$data = MSW_Query::quarantine( $f );
+				break;
+			case 'seo':
+				$data = MSW_Query::seo( $f );
+				break;
+			case 'redirects':
+				$data = MSW_Query::redirects( $f );
 				break;
 			case 'broken':
 				$data = MSW_Query::broken( $f );
@@ -315,6 +327,23 @@ class MSW_Admin {
 			if ( $res['ok'] ) {
 				MSW_Util::log( sprintf( 'فایل یتیم (%s): %d مورد، %s.', $op, $res['ok'], MSW_Util::size( $res['bytes'] ) ) );
 				MSW_Scanner::summarize();
+			}
+		} elseif ( 'set_alt' === $op ) {
+			$alts = isset( $_POST['alts'] ) && is_array( $_POST['alts'] ) ? wp_unslash( $_POST['alts'] ) : array();
+			foreach ( $alts as $aid => $text ) {
+				$aid = absint( $aid );
+				if ( $aid && 'attachment' === get_post_type( $aid ) && current_user_can( 'edit_post', $aid ) ) {
+					update_post_meta( $aid, '_wp_attachment_image_alt', sanitize_text_field( (string) $text ) );
+					$res['ok']++;
+				}
+			}
+			if ( $res['ok'] ) {
+				MSW_Util::log( 'Alt متن برای ' . $res['ok'] . ' تصویر ذخیره شد.' );
+			}
+		} elseif ( 'redirect_delete' === $op ) {
+			$olds = isset( $_POST['olds'] ) ? (array) wp_unslash( $_POST['olds'] ) : array();
+			foreach ( $olds as $o ) {
+				$res['ok'] += (int) $wpdb->delete( MSW_Util::t( 'redirects' ), array( 'old_rel' => sanitize_text_field( (string) $o ) ) );
 			}
 		} elseif ( 'purge_originals' === $op ) {
 			$res['ok'] = MSW_Converter::purge_originals( true );
