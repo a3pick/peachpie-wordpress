@@ -501,7 +501,7 @@ class MSW_Converter {
 		if ( $retry ) {
 			$wpdb->query( "DELETE FROM $c WHERE status IN ('failed','skipped')" ); // phpcs:ignore
 		}
-		$wpdb->query( "DELETE FROM $c WHERE status = 'pending'" ); // phpcs:ignore
+		$wpdb->query( "DELETE FROM $c WHERE status IN ('pending','reverted')" ); // phpcs:ignore
 		if ( 'used' === $scope ) {
 			if ( ! (int) $wpdb->get_var( "SELECT COUNT(*) FROM $m" ) ) { // phpcs:ignore
 				return new WP_Error( 'noscan', 'برای حالت «فقط عکس‌های در حال استفاده» ابتدا یک اسکن کامل انجام دهید.' );

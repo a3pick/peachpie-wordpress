@@ -1,0 +1,52 @@
+name: Media Sweeper tests
+
+on:
+  push:
+    paths:
+      - 'MyContent/plugins/media-sweeper/**'
+      - 'tests/media-sweeper/**'
+      - '.github/workflows/media-sweeper.yml'
+  pull_request:
+    paths:
+      - 'MyContent/plugins/media-sweeper/**'
+      - 'tests/media-sweeper/**'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        php: ['7.4', '8.1', '8.3']
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: wp
+        ports: ['3306:3306']
+        options: >-
+          --health-cmd="mysqladmin ping -proot" --health-interval=5s --health-timeout=5s --health-retries=20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: gd, mysqli, mbstring, exif, xml
+          tools: wp-cli
+      - name: Lint PHP
+        run: find MyContent/plugins/media-sweeper -name '*.php' -print0 | xargs -0 -n1 php -l
+      - name: Lint JS
+        run: node --check MyContent/plugins/media-sweeper/assets/admin.js
+      - name: Unit tests
+        run: for f in tests/media-sweeper/test-*.php; do php "$f"; done
+      - name: Download WordPress
+        run: wp core download --path=/tmp/wp --allow-root
+      - name: Integration test
+        env:
+          WP_PATH: /tmp/wp
+          DB_NAME: wp
+          DB_USER: root
+          DB_PASS: root
+          DB_HOST: 127.0.0.1
+        run: php -d memory_limit=768M $(which wp) --version >/dev/null && bash tests/media-sweeper/integration/run.sh

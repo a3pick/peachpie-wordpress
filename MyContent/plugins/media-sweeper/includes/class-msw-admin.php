@@ -287,15 +287,22 @@ class MSW_Admin {
 					$res['failed'][] = array( 'id' => $id, 'msg' => $r );
 				}
 			}
+			if ( $res['ok'] && 'delete' === $op ) {
+				MSW_Util::stat_add( 'deleted', $res['bytes'] );
+			}
 			if ( $res['ok'] ) {
 				MSW_Util::log( sprintf( '%s: %d مورد (%s).', 'quarantine' === $op ? 'قرنطینه' : 'حذف دائمی', $res['ok'], MSW_Util::size( $res['bytes'] ) ) );
 				MSW_Scanner::summarize();
 			}
 		} elseif ( 'restore' === $op || 'purge' === $op ) {
 			foreach ( $ids as $id ) {
-				$r = ( 'restore' === $op ) ? MSW_Quarantine::restore( $id ) : MSW_Quarantine::purge( $id );
+				$qb = (int) get_post_meta( $id, '_msw_q_bytes', true );
+				$r  = ( 'restore' === $op ) ? MSW_Quarantine::restore( $id ) : MSW_Quarantine::purge( $id );
 				if ( true === $r ) {
 					$res['ok']++;
+					if ( 'purge' === $op ) {
+						MSW_Util::stat_add( 'deleted', $qb );
+					}
 				} else {
 					$res['failed'][] = array( 'id' => $id, 'msg' => $r );
 				}
@@ -332,6 +339,9 @@ class MSW_Admin {
 					$res['failed'][] = array( 'id' => $h, 'msg' => $r );
 				}
 			}
+			if ( $res['ok'] && in_array( $op, array( 'orphan_delete', 'orphan_purge' ), true ) ) {
+				MSW_Util::stat_add( 'orphans', $res['bytes'] );
+			}
 			if ( $res['ok'] ) {
 				MSW_Util::log( sprintf( 'فایل یتیم (%s): %d مورد، %s.', $op, $res['ok'], MSW_Util::size( $res['bytes'] ) ) );
 				MSW_Scanner::summarize();
@@ -360,6 +370,10 @@ class MSW_Admin {
 		}
 		$res['size'] = MSW_Util::size( $res['bytes'] );
 		wp_send_json_success( $res );
+	}
+
+	private static function do_report() {
+		wp_send_json_success( MSW_Query::report() );
 	}
 
 	private static function do_sim() {

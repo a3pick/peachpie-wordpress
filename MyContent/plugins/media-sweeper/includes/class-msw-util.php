@@ -262,6 +262,18 @@ class MSW_Util {
 		do_action( 'msw_flush_caches' );
 	}
 
+	/** Cumulative counters for the client report (bytes freed per source). */
+	public static function stat_add( $key, $bytes ) {
+		$bytes = (int) $bytes;
+		if ( $bytes <= 0 ) {
+			return;
+		}
+		$st         = get_option( 'msw_stats', array() );
+		$st         = is_array( $st ) ? $st : array();
+		$st[ $key ] = (int) ( isset( $st[ $key ] ) ? $st[ $key ] : 0 ) + $bytes;
+		update_option( 'msw_stats', $st, false );
+	}
+
 	public static function size( $bytes ) {
 		$out = size_format( (float) $bytes, 2 );
 		return false === $out ? '0 B' : $out;

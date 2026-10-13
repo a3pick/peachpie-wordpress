@@ -312,6 +312,7 @@ class MSW_Job {
 			}
 		} elseif ( 'optimize' === $s['type'] ) {
 			$c = $s['counts'];
+			MSW_Util::stat_add( 'optimized', isset( $c['saved'] ) ? $c['saved'] : 0 );
 			MSW_Util::log( sprintf( 'کوچک‌سازی پایان یافت: %d تصویر کوچک شد، %d اصل حذف شد؛ صرفه‌جویی: %s.', isset( $c['resized'] ) ? $c['resized'] : 0, isset( $c['dropped'] ) ? $c['dropped'] : 0, MSW_Util::size( isset( $c['saved'] ) ? $c['saved'] : 0 ) ) );
 		} elseif ( 'merge' === $s['type'] ) {
 			MSW_Util::log( sprintf( 'ادغام پایان یافت: %d کپی ادغام و به قرنطینه رفت.', isset( $s['counts']['merged'] ) ? $s['counts']['merged'] : 0 ) );

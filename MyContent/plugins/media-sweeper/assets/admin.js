@@ -74,7 +74,8 @@
 		['quarantine', 'قرنطینه'],
 		['webp', 'WebP و بهینه‌سازی'],
 		['settings', 'تنظیمات'],
-		['log', 'گزارش']
+		['report', 'گزارش مشتری'],
+		['log', 'لاگ']
 	];
 
 	var state = { tab: 'dashboard', dash: null };
@@ -645,6 +646,31 @@
 		load(); loadRedirects(1);
 	}
 
+	function tabReport(el) {
+		clear(el).appendChild(h('p', { class: 'msw-loading' }, 'در حال بارگذاری…'));
+		api('report').then(function (r) {
+			clear(el);
+			function row(k, v) { return h('tr', null, h('th', null, k), h('td', null, v)); }
+			el.appendChild(h('p', { class: 'msw-noprint' }, h('button', { class: 'button button-primary', onClick: function () { window.print(); } }, '🖨 چاپ / ذخیره PDF'),
+				h('span', { class: 'description' }, ' از پنجرهٔ چاپ مرورگر «Save as PDF» را بزنید.')));
+			el.appendChild(h('article', { class: 'msw-report' },
+				h('h2', null, 'گزارش بهینه‌سازی رسانه'), h('p', null, r.site + ' — ' + r.date),
+				h('div', { class: 'msw-report-big' }, h('div', { class: 'msw-stat-v' }, r.freed_total), h('div', null, 'فضای آزادشده تا امروز')),
+				h('h3', null, 'جزئیات صرفه‌جویی'),
+				h('table', { class: 'widefat striped' }, h('tbody', null,
+					row('تبدیل به WebP (' + num(r.converted) + ' تصویر)', r.freed.webp), row('کوچک‌سازی اصل‌های سنگین', r.freed.optimized),
+					row('حذف رسانه‌های بدون استفاده', r.freed.deleted), row('حذف فایل‌های یتیم', r.freed.orphans))),
+				h('h3', null, 'وضعیت فعلی (آخرین اسکن: ' + (r.scan_time || '—') + ')'),
+				h('table', { class: 'widefat striped' }, h('tbody', null,
+					row('حجم کل کتابخانه', r.library + (r.first ? ' (در اولین اسکن ' + r.first_date + ': ' + r.first + ')' : '')),
+					row('بدون استفاده (قابل پاک‌سازی)', num(r.unused) + ' مورد — ' + r.unused_size), row('فایل‌های یتیم', num(r.orphans)),
+					row('لینک‌های خراب', num(r.broken)))),
+				h('h3', null, 'سئوی تصاویر'),
+				h('table', { class: 'widefat striped' }, h('tbody', null,
+					row('تصاویر مورد استفاده بدون Alt', num(r.alt_missing)), row('تصاویر با نام فایل بی‌معنی', num(r.bad_names)), row('ریدایرکت ۳۰۱ فعال', num(r.redirects))))));
+		}).catch(function (e) { clear(el).appendChild(h('p', { class: 'warn' }, e.message)); });
+	}
+
 	function tabBroken(el) {
 		var page = 1, q = '';
 		function load() {
@@ -851,7 +877,7 @@
 
 	/* ------------------------------------------------------------- shell */
 
-	var RENDER = { dashboard: tabDashboard, unused: tabUnused, orphans: tabOrphans, duplicates: tabDuplicates, broken: tabBroken, seo: tabSeo, quarantine: tabQuarantine, webp: tabWebp, settings: tabSettings, log: tabLog };
+	var RENDER = { dashboard: tabDashboard, unused: tabUnused, orphans: tabOrphans, duplicates: tabDuplicates, broken: tabBroken, seo: tabSeo, report: tabReport, quarantine: tabQuarantine, webp: tabWebp, settings: tabSettings, log: tabLog };
 
 	function go(tab) {
 		state.tab = tab;

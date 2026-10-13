@@ -228,8 +228,10 @@ class MSW_Quarantine {
 		);
 		$n = 0;
 		foreach ( (array) $ids as $id ) {
+			$qb = (int) get_post_meta( (int) $id, '_msw_q_bytes', true );
 			if ( true === self::purge( (int) $id ) ) {
 				$n++;
+				MSW_Util::stat_add( 'deleted', $qb );
 			}
 		}
 		if ( $n ) {

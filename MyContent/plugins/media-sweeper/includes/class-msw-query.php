@@ -467,6 +467,44 @@ class MSW_Query {
 		return array( 'items' => $items, 'total' => $tot, 'pages' => max( 1, (int) ceil( $tot / $per ) ), 'page' => $page );
 	}
 
+	/** Numbers for the printable client report. */
+	public static function report() {
+		global $wpdb;
+		$m   = MSW_Util::t( 'media' );
+		$st  = (array) get_option( 'msw_stats', array() );
+		$ls  = (array) get_option( 'msw_last_scan', array() );
+		$h   = (array) get_option( 'msw_history', array() );
+		$alt = (int) $wpdb->get_var( "SELECT COUNT(*) FROM $m m LEFT JOIN {$wpdb->postmeta} am ON am.post_id = m.attachment_id AND am.meta_key = '_wp_attachment_image_alt' WHERE m.type = 'image' AND m.status = 'used' AND COALESCE(am.meta_value,'') = ''" ); // phpcs:ignore
+		$bad = (int) $wpdb->get_var( "SELECT COUNT(*) FROM $m m WHERE m.type = 'image' AND m.status = 'used' AND " . self::BAD_NAME_SQL ); // phpcs:ignore
+		$conv = $wpdb->get_row( 'SELECT COUNT(*) n FROM ' . MSW_Util::t( 'converted' ) . " WHERE status IN ('done','deleted')", ARRAY_A ); // phpcs:ignore
+		$red  = (int) $wpdb->get_var( 'SELECT COUNT(*) FROM ' . MSW_Util::t( 'redirects' ) ); // phpcs:ignore
+		$rows = array(
+			'webp'      => (int) ( isset( $st['saved'] ) ? $st['saved'] : 0 ),
+			'optimized' => (int) ( isset( $st['optimized'] ) ? $st['optimized'] : 0 ),
+			'deleted'   => (int) ( isset( $st['deleted'] ) ? $st['deleted'] : 0 ),
+			'orphans'   => (int) ( isset( $st['orphans'] ) ? $st['orphans'] : 0 ),
+		);
+		$total = array_sum( $rows );
+		return array(
+			'site'        => home_url(),
+			'date'        => wp_date( 'Y/m/d H:i' ),
+			'scan_time'   => ! empty( $ls['time'] ) ? wp_date( 'Y/m/d H:i', $ls['time'] ) : '',
+			'freed'       => array_map( array( 'MSW_Util', 'size' ), $rows ),
+			'freed_total' => MSW_Util::size( $total ),
+			'library'     => MSW_Util::size( isset( $ls['total_bytes'] ) ? $ls['total_bytes'] : 0 ),
+			'first'       => $h ? MSW_Util::size( $h[0]['total'] ) : '',
+			'first_date'  => $h ? wp_date( 'Y/m/d', $h[0]['t'] ) : '',
+			'converted'   => (int) $conv['n'],
+			'redirects'   => $red,
+			'unused'      => isset( $ls['unused'] ) ? (int) $ls['unused'] : 0,
+			'unused_size' => MSW_Util::size( isset( $ls['unused_bytes'] ) ? $ls['unused_bytes'] : 0 ),
+			'orphans'     => isset( $ls['orphans'] ) ? (int) $ls['orphans'] : 0,
+			'broken'      => isset( $ls['broken'] ) ? (int) $ls['broken'] : 0,
+			'alt_missing' => $alt,
+			'bad_names'   => $bad,
+		);
+	}
+
 	/* -------------------------------------------------------------- broken */
 
 	public static function broken( array $a ) {
