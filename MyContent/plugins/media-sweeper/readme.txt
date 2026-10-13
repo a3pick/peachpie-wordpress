@@ -19,7 +19,7 @@ convert JPG/PNG to WebP with safe reference rewriting, and fix image SEO (alt te
 * Oversized-original optimizer, broken-link report, alt/file-name audit with rename + 301 redirects.
 * Printable client report, scan history chart, scheduled scans with e-mail, WP-CLI (`wp msw ...`).
 
-The admin interface is currently in Persian (fa_IR).
+The interface is written in Persian and ships with an English catalog (`languages/en_US.php`). Persian (fa*) locales show the original text; every other locale uses `languages/<locale>.php` if present, otherwise English. To add a language, copy `en_US.php` to `languages/<locale>.php` and translate the values.
 
 == Installation ==
 1. Upload the `media-sweeper` folder to `/wp-content/plugins/` (or use `tools/build-zip.sh` to build a zip).

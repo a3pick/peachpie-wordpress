@@ -6,6 +6,39 @@
 	if (!root || !window.MSW) { return; }
 	var CFG = window.MSW;
 
+	/* ------------------------------------------------------- translation */
+	// Source strings are Persian; CFG.i18n maps them to the site language (empty for fa).
+	var DICT = (CFG.i18n && Object.keys(CFG.i18n).length) ? CFG.i18n : null;
+	var FA_RE = /[\u0600-\u06FF]/;
+	var LETTER = /[\u0600-\u06FF\u200c]/;
+	var DKEYS = null;
+	function repl(s, k, v) {
+		var out = '', pos = 0, i;
+		var needL = LETTER.test(k.charAt(0)), needR = LETTER.test(k.charAt(k.length - 1));
+		while ((i = s.indexOf(k, pos)) !== -1) {
+			var before = i > 0 ? s.charAt(i - 1) : '', after = s.charAt(i + k.length);
+			if ((needL && before && LETTER.test(before)) || (needR && after && LETTER.test(after))) {
+				out += s.slice(pos, i + 1); pos = i + 1; continue;
+			}
+			out += s.slice(pos, i) + v; pos = i + k.length;
+		}
+		return out + s.slice(pos);
+	}
+	function T(s) {
+		if (!DICT || typeof s !== 'string' || !FA_RE.test(s)) { return s; }
+		if (Object.prototype.hasOwnProperty.call(DICT, s)) { return DICT[s]; }
+		if (!DKEYS) { DKEYS = Object.keys(DICT).sort(function (a, b) { return b.length - a.length; }); }
+		for (var i = 0; i < DKEYS.length && FA_RE.test(s); i++) {
+			if (s.indexOf(DKEYS[i]) !== -1) { s = repl(s, DKEYS[i], DICT[DKEYS[i]]); }
+		}
+		return s;
+	}
+	/** User data (titles, paths): rendered as a text node so it is never translated. */
+	function R(x) { return document.createTextNode(String(x === null || x === undefined ? '' : x)); }
+	var nativeConfirm = window.confirm.bind(window), nativePrompt = window.prompt.bind(window);
+	function confirmT(m) { return nativeConfirm(T(m)); }
+	function promptT(m) { return nativePrompt(T(m)); }
+
 	/* ------------------------------------------------------------ helpers */
 
 	function h(tag, props) {
@@ -17,6 +50,7 @@
 			if (k === 'class') { el.className = v; }
 			else if (k.indexOf('on') === 0) { el.addEventListener(k.slice(2).toLowerCase(), v); }
 			else if (k === 'value' || k === 'checked' || k === 'selected' || k === 'disabled') { el[k] = v; }
+			else if (k === 'placeholder' || k === 'title' || k === 'aria-label') { el.setAttribute(k, T(String(v))); }
 			else if (v === true) { el.setAttribute(k, ''); }
 			else { el.setAttribute(k, v); }
 		});
@@ -26,7 +60,7 @@
 	function add(el, c) {
 		if (c === null || c === undefined || c === false) { return; }
 		if (Array.isArray(c)) { c.forEach(function (x) { add(el, x); }); return; }
-		el.appendChild(c.nodeType ? c : document.createTextNode(String(c)));
+		el.appendChild(c.nodeType ? c : document.createTextNode(T(String(c))));
 	}
 	function clear(el) { while (el.firstChild) { el.removeChild(el.firstChild); } return el; }
 	function num(n) { return Number(n || 0).toLocaleString(); }
@@ -102,8 +136,8 @@
 		});
 		function paint(s) {
 			bar.style.width = (s.pct || 0) + '%';
-			label.textContent = (s.pct || 0) + '٪ — ' + (s.label || '');
-			detail.textContent = s.detail || '';
+			label.textContent = T((s.pct || 0) + '٪ — ' + (s.label || ''));
+			detail.textContent = T(s.detail || '');
 			var c = s.counts || {}, parts = [];
 			if (c.total) { parts.push('کل: ' + num(c.total)); }
 			if (c.converted !== undefined) { parts.push('تبدیل‌شده: ' + num(c.converted)); }
@@ -111,7 +145,7 @@
 			if (c.failed) { parts.push('ناموفق: ' + num(c.failed)); }
 			if (c.saved) { parts.push('صرفه‌جویی: ' + (c.saved / 1048576).toFixed(1) + ' MB'); }
 			if (c.rewritten) { parts.push('ردیف اصلاح‌شده: ' + num(c.rewritten)); }
-			counts.textContent = parts.join(' | ');
+			counts.textContent = T(parts.join(' | '));
 		}
 		function loop() {
 			if (stopped) { return finish({ status: 'cancelled' }); }
@@ -119,7 +153,7 @@
 				paint(s);
 				if (s.status === 'running') { setTimeout(loop, 150); } else { finish(s); }
 			}).catch(function (e) {
-				label.textContent = 'خطای ارتباط: ' + e.message + ' — تلاش مجدد…';
+				label.textContent = T('خطای ارتباط: ' + e.message + ' — تلاش مجدد…');
 				setTimeout(loop, 3000);
 			});
 		}
@@ -157,7 +191,7 @@
 				pos += chunkSize;
 				var p = Math.min(100, Math.round(pos / total * 100));
 				bar.style.width = p + '%';
-				msg.textContent = num(Math.min(pos, total)) + ' / ' + num(total);
+				msg.textContent = T(num(Math.min(pos, total)) + ' / ' + num(total));
 				next();
 			}).catch(function (e) {
 				ov.remove();
@@ -191,7 +225,7 @@
 			else { media = h('div', { class: 'msw-lb-icon' }, ICON[it.type] || '📄'); }
 			var usageBox = h('div', { class: 'msw-usage' });
 			var rows = h('table', { class: 'msw-meta' },
-				row('نام', it.title || it.file), row('فایل', it.rel, true), row('نوع', it.mime || it.type),
+				row('نام', R(it.title || it.file)), row('فایل', R(it.rel), true), row('نوع', it.mime || it.type),
 				row('حجم (با تمام سایزها)', it.size), row('ابعاد', it.w ? it.w + '×' + it.h : ''), row('تاریخ', it.date),
 				it.missing ? row('وضعیت', 'فایل روی دیسک وجود ندارد') : null,
 				it.used_in ? h('tr', null, h('th', null, 'استفاده در'), h('td', null, it.used_in.link ? h('a', { href: it.used_in.link, target: '_blank', rel: 'noopener' }, it.used_in.label) : it.used_in.label)) : null,
@@ -286,9 +320,9 @@
 		function doBulk(b) {
 			fetchIds().then(function (ids) {
 				if (!ids.length) { return; }
-				if (b.confirm && !window.confirm(b.confirm.replace('{n}', num(ids.length)))) { return; }
+				if (b.confirm && !confirmT(T(b.confirm).replace('{n}', num(ids.length)))) { return; }
 				if (b.typed) {
-					var t = window.prompt('این کار برگشت‌پذیر نیست. برای تأیید، عبارت DELETE را تایپ کنید:');
+					var t = promptT('این کار برگشت‌پذیر نیست. برای تأیید، عبارت DELETE را تایپ کنید:');
 					if (t !== 'DELETE') { return; }
 				}
 				runOp(b.op, ids, function () { B.sel = {}; B.allMatching = false; reload(true); refreshDash(); });
@@ -298,8 +332,8 @@
 			Array.prototype.forEach.call(grid.querySelectorAll('input.msw-cb'), function (cb) { cb.checked = !!B.sel[cb.getAttribute('data-id')]; cb.closest('.msw-card').classList.toggle('sel', cb.checked); });
 		}
 		function singleAction(items, b) {
-			if (b.confirm && !window.confirm(b.confirm.replace('{n}', num(items.length)))) { return; }
-			if (b.typed && window.prompt('برای تأیید، عبارت DELETE را تایپ کنید:') !== 'DELETE') { return; }
+			if (b.confirm && !confirmT(T(b.confirm).replace('{n}', num(items.length)))) { return; }
+			if (b.typed && promptT('برای تأیید، عبارت DELETE را تایپ کنید:') !== 'DELETE') { return; }
 			runOp(b.op, items.map(cfg.idOf), function () { reload(true); refreshDash(); });
 		}
 		function paint() {
@@ -354,7 +388,7 @@
 		return h('div', { class: 'msw-card' },
 			h('button', { class: 'msw-thumb', type: 'button', onClick: open, title: 'پیش‌نمایش' }, thumb, h('span', { class: 'msw-type' }, ICON[it.type] || '')),
 			badges,
-			h('div', { class: 'msw-name', title: it.rel }, it.file || it.title),
+			h('div', { class: 'msw-name', title: it.rel }, R(it.file || it.title)),
 			h('div', { class: 'msw-sub' }, [it.w ? it.w + '×' + it.h : '', it.date].filter(Boolean).join(' • ')));
 	}
 
@@ -492,7 +526,7 @@
 				var thumb = it.thumb ? h('img', { src: it.thumb, loading: 'lazy', alt: '' }) : h('span', { class: 'msw-ico' }, ICON[it.type] || '📄');
 				return h('div', { class: 'msw-card' }, h('button', { class: 'msw-thumb', type: 'button', onClick: open }, thumb, h('span', { class: 'msw-type' }, ICON[it.type] || '')),
 					h('div', { class: 'msw-badges' }, h('span', { class: 'msw-b' }, it.size)),
-					h('div', { class: 'msw-name', title: it.rel }, it.file), h('div', { class: 'msw-sub' }, it.rel));
+					h('div', { class: 'msw-name', title: it.rel }, R(it.file)), h('div', { class: 'msw-sub' }, R(it.rel)));
 			},
 			lbItem: function (it) { return { id: 0, status: '', title: it.file, rel: it.rel, url: it.url, thumb: it.thumb, type: it.type, size: it.size, date: it.date, mime: '' }; },
 			bulk: [
@@ -523,7 +557,7 @@
 			card: function (it, open) {
 				return h('div', { class: 'msw-card' }, h('button', { class: 'msw-thumb', type: 'button', onClick: open }, h('span', { class: 'msw-ico' }, ICON[it.type] || '📄')),
 					h('div', { class: 'msw-badges' }, h('span', { class: 'msw-b' }, it.size), it.days_left !== null ? h('span', { class: 'msw-b ' + (it.days_left < 4 ? 'bad' : '') }, it.days_left + ' روز تا حذف') : null),
-					h('div', { class: 'msw-name' }, it.file || it.title), h('div', { class: 'msw-sub' }, it.date));
+					h('div', { class: 'msw-name' }, R(it.file || it.title)), h('div', { class: 'msw-sub' }, it.date));
 			},
 			lbItem: function (it) { return { id: 0, title: it.title, rel: it.file, type: it.type, size: it.size, date: it.date, status: '' }; },
 			bulk: [
@@ -552,12 +586,12 @@
 						row.appendChild(c); });
 					el.appendChild(h('section', { class: 'msw-dupgroup' },
 						h('header', null, h('strong', null, g.count + ' نسخه یکسان'), ' — ' + g.size, unused.length ? h('button', { class: 'button', onClick: function () {
-							if (!window.confirm(unused.length + ' نسخهٔ بدون استفاده به قرنطینه برود؟')) { return; }
+							if (!confirmT(unused.length + ' نسخهٔ بدون استفاده به قرنطینه برود؟')) { return; }
 							runOp('quarantine', unused.map(function (x) { return x.id; }), load);
 						} }, '📦 قرنطینهٔ نسخه‌های بدون استفاده (' + unused.length + ')') : null,
 						h('button', { class: 'button button-primary', title: 'ارجاع به فایل کپی‌ها به نسخهٔ «نگه‌دار» منتقل و کپی‌ها قرنطینه می‌شوند. کپی‌هایی که با شناسهٔ پیوست (تصویر شاخص، گالری…) استفاده شده‌اند ادغام نمی‌شوند.', onClick: function () {
 							var pairs = g.items.filter(function (i) { return i.id !== keeper; }).map(function (i) { return { d: i.id, k: keeper }; });
-							if (!window.confirm('ادغام شود؟ ' + pairs.length + ' کپی به نسخهٔ نگه‌دار ادغام و قرنطینه می‌شود (قابل بازگردانی از قرنطینه، اما لینک‌های اصلاح‌شده برنمی‌گردند).')) { return; }
+							if (!confirmT('ادغام شود؟ ' + pairs.length + ' کپی به نسخهٔ نگه‌دار ادغام و قرنطینه می‌شود (قابل بازگردانی از قرنطینه، اما لینک‌های اصلاح‌شده برنمی‌گردند).')) { return; }
 							var host = document.querySelector('.msw-view'); var area = h('div'); host.insertBefore(area, host.firstChild);
 							var jb = jobBox({ title: 'ادغام تکراری‌ها', onDone: function () { area.remove(); load(); refreshDash(); } });
 							area.appendChild(jb);
@@ -591,7 +625,7 @@
 					body.appendChild(h('tr', null,
 						h('td', null, cb),
 						h('td', null, it.thumb ? h('img', { src: it.thumb, width: 56, height: 56, loading: 'lazy', alt: '', style: 'object-fit:cover;border-radius:4px' }) : ''),
-						h('td', { dir: 'ltr', style: 'text-align:start' }, it.file, it.bad ? h('div', { class: 'warn' }, '⚠ نام بی‌معنی') : null,
+						h('td', { dir: 'ltr', style: 'text-align:start' }, R(it.file), it.bad ? h('div', { class: 'warn' }, '⚠ نام بی‌معنی') : null,
 							it.used_in ? h('div', { class: 'description' }, it.used_in.link ? h('a', { href: it.used_in.link, target: '_blank', rel: 'noopener' }, it.used_in.label) : it.used_in.label) : null),
 						h('td', null, alt, it.alt ? null : h('div', { class: 'warn' }, '⚠ Alt خالی')),
 						h('td', null, name)));
@@ -613,7 +647,7 @@
 			var items = {}, n = 0;
 			Object.keys(rows).forEach(function (id) { var v = rows[id].name.value.trim(); if (rows[id].cb.checked && v) { items[id] = v; n++; } });
 			if (!n) { toast('برای تصاویر انتخاب‌شده نام جدید وارد کنید.', 'warn'); return; }
-			if (!window.confirm(n + ' فایل تغییر نام یابد؟\n\n• فایل‌ها ابتدا کپی می‌شوند، سپس تمام لینک‌ها در دیتابیس اصلاح می‌شوند.\n• آدرس‌های قدیمی با ریدایرکت ۳۰۱ به جدید می‌روند.\n• فایل‌های قدیمی بعد از اصلاح حذف می‌شوند.\n\nبک‌آپ دارید؟')) { return; }
+			if (!confirmT(n + ' فایل تغییر نام یابد؟\n\n• فایل‌ها ابتدا کپی می‌شوند، سپس تمام لینک‌ها در دیتابیس اصلاح می‌شوند.\n• آدرس‌های قدیمی با ریدایرکت ۳۰۱ به جدید می‌روند.\n• فایل‌های قدیمی بعد از اصلاح حذف می‌شوند.\n\nبک‌آپ دارید؟')) { return; }
 			clear(jobArea);
 			var jb = jobBox({ title: 'تغییر نام فایل‌ها', onDone: function () { load(); loadRedirects(1); } });
 			jobArea.appendChild(jb);
@@ -625,7 +659,7 @@
 				redirBox.appendChild(h('h3', null, 'ریدایرکت‌های ۳۰۱ تصاویر (' + num(d.total) + ')'));
 				var body = h('tbody');
 				d.items.forEach(function (it) {
-					body.appendChild(h('tr', null, h('td', { dir: 'ltr', style: 'text-align:start' }, it.old), h('td', { dir: 'ltr', style: 'text-align:start' }, it.new), h('td', null, num(it.hits)), h('td', null, it.date),
+					body.appendChild(h('tr', null, h('td', { dir: 'ltr', style: 'text-align:start' }, R(it.old)), h('td', { dir: 'ltr', style: 'text-align:start' }, R(it.new)), h('td', null, num(it.hits)), h('td', null, it.date),
 						h('td', null, h('button', { class: 'button-link', onClick: function () { api('act', { op: 'redirect_delete', olds: [it.old] }).then(function () { loadRedirects(page); }); } }, 'حذف'))));
 				});
 				redirBox.appendChild(h('table', { class: 'widefat striped msw-table' }, h('thead', null, h('tr', null, ['از', 'به', 'بازدید', 'تاریخ', ''].map(function (x) { return h('th', null, x); }))), body));
@@ -680,7 +714,7 @@
 				el.appendChild(h('div', { class: 'msw-filters' }, h('input', { type: 'search', value: q, placeholder: 'جست‌وجوی مسیر…', onInput: debounce(function (e) { q = e.target.value; page = 1; load(); }, 400) })));
 				var body = h('tbody');
 				d.items.forEach(function (it) {
-					body.appendChild(h('tr', null, h('td', { dir: 'ltr', style: 'text-align:start' }, it.rel), h('td', null, it.link ? h('a', { href: it.link, target: '_blank', rel: 'noopener' }, it.where) : it.where)));
+					body.appendChild(h('tr', null, h('td', { dir: 'ltr', style: 'text-align:start' }, R(it.rel)), h('td', null, it.link ? h('a', { href: it.link, target: '_blank', rel: 'noopener' }, it.where) : it.where)));
 				});
 				el.appendChild(h('table', { class: 'widefat striped msw-table' }, h('thead', null, h('tr', null, h('th', null, 'فایل مفقود'), h('th', null, 'ارجاع در'))), body));
 				if (d.pages > 1) {
@@ -714,14 +748,14 @@
 						stat('منتظر حذف اصل', num(sm.pending_originals), 'فایل‌های اصلی نگه‌داشته‌شده')));
 					if (sm.pending_originals) {
 						listArea.appendChild(h('p', null, h('button', { class: 'button', onClick: function () {
-							if (!window.confirm('تبدیل WebP همهٔ تصاویری که اصل‌شان هنوز نگه‌داشته شده به JPG/PNG برگردد و لینک‌ها اصلاح شود؟')) { return; }
+							if (!confirmT('تبدیل WebP همهٔ تصاویری که اصل‌شان هنوز نگه‌داشته شده به JPG/PNG برگردد و لینک‌ها اصلاح شود؟')) { return; }
 							clear(jobArea);
 							var jb = jobBox({ title: 'بازگردانی به JPG/PNG', onDone: function () { loadList(1); } });
 							jobArea.appendChild(jb);
 							api('job_start', { type: 'revert', opts: {} }).then(function (st) { jb.start(st); }).catch(function (e) { clear(jobArea); toast(e.message, 'err'); });
 						} }, '↩ بازگردانی به JPG/PNG (تا قبل از حذف اصل‌ها)')));
 						listArea.appendChild(h('p', null, h('button', { class: 'button msw-danger', onClick: function () {
-							if (!window.confirm('فایل‌های اصلی JPG/PNG ' + sm.pending_originals + ' تصویر همین حالا حذف شود؟ بعد از آن بازگشت ممکن نیست. ابتدا سایت را در چند صفحه بررسی کنید.')) { return; }
+							if (!confirmT('فایل‌های اصلی JPG/PNG ' + sm.pending_originals + ' تصویر همین حالا حذف شود؟ بعد از آن بازگشت ممکن نیست. ابتدا سایت را در چند صفحه بررسی کنید.')) { return; }
 							api('act', { op: 'purge_originals' }).then(function (x) { toast(x.ok + ' تصویر پاک‌سازی شد.', 'ok'); loadList(1); }).catch(function (e) { toast(e.message, 'err'); });
 						} }, '🗑 حذف فایل‌های اصلی همین حالا')));
 					}
@@ -729,7 +763,7 @@
 					var tb = h('table', { class: 'widefat striped msw-table' }, h('thead', null, h('tr', null, ['#', 'عنوان', 'وضعیت', 'قبل', 'بعد', 'صرفه‌جویی', 'توضیح'].map(function (x) { return h('th', null, x); }))));
 					var body = h('tbody');
 					r.items.forEach(function (it) {
-						body.appendChild(h('tr', null, h('td', null, h('a', { href: it.edit, target: '_blank', rel: 'noopener' }, it.id)), h('td', null, it.title), h('td', null, ({ done: 'تبدیل شد', deleted: 'تبدیل شد (اصل حذف شد)', reverted: 'بازگردانده شد', reverting: 'در حال بازگردانی', skipped: 'ردشد', failed: 'ناموفق', error: 'خطای بررسی نهایی', converted: 'در حال اصلاح لینک' }[it.status] || it.status) + (it.delete_after ? ' (حذف اصل: ' + it.delete_after + ')' : '')), h('td', null, it.before), h('td', null, it.after), h('td', null, it.pct ? it.pct + '٪ (' + it.saved + ')' : '—'), h('td', null, it.reason)));
+						body.appendChild(h('tr', null, h('td', null, h('a', { href: it.edit, target: '_blank', rel: 'noopener' }, it.id)), h('td', null, R(it.title)), h('td', null, ({ done: 'تبدیل شد', deleted: 'تبدیل شد (اصل حذف شد)', reverted: 'بازگردانده شد', reverting: 'در حال بازگردانی', skipped: 'ردشد', failed: 'ناموفق', error: 'خطای بررسی نهایی', converted: 'در حال اصلاح لینک' }[it.status] || it.status) + (it.delete_after ? ' (حذف اصل: ' + it.delete_after + ')' : '')), h('td', null, it.before), h('td', null, it.after), h('td', null, it.pct ? it.pct + '٪ (' + it.saved + ')' : '—'), h('td', null, it.reason)));
 					});
 					tb.appendChild(body);
 					listArea.appendChild(tb);
@@ -739,7 +773,7 @@
 				});
 			}
 			function start(retry) {
-				if (!window.confirm('تبدیل شروع شود؟\n\n• ابتدا فایل‌های WebP ساخته و بررسی می‌شوند.\n• سپس تمام لینک‌ها در دیتابیس اصلاح می‌شوند.\n• فایل‌های اصلی ' + (s.webp_retention_days > 0 ? 'تا ' + s.webp_retention_days + ' روز نگه‌داشته و بعد حذف می‌شوند' : 'پس از بررسی نهایی بلافاصله حذف می‌شوند') + '.\n\nآیا بک‌آپ کامل دارید؟')) { return; }
+				if (!confirmT('تبدیل شروع شود؟\n\n• ابتدا فایل‌های WebP ساخته و بررسی می‌شوند.\n• سپس تمام لینک‌ها در دیتابیس اصلاح می‌شوند.\n• فایل‌های اصلی ' + (s.webp_retention_days > 0 ? 'تا ' + s.webp_retention_days + ' روز نگه‌داشته و بعد حذف می‌شوند' : 'پس از بررسی نهایی بلافاصله حذف می‌شوند') + '.\n\nآیا بک‌آپ کامل دارید؟')) { return; }
 				clear(jobArea);
 				var jb = jobBox({ title: 'تبدیل به WebP', onDone: function () { loadList(1); refreshDash(); } });
 				jobArea.appendChild(jb);
@@ -774,7 +808,7 @@
 			el.appendChild(h('div', { class: 'msw-hero' }, h('div', null, h('h2', null, 'کوچک‌سازی اصل‌های سنگین'), h('p', null, 'نام فایل‌ها تغییر نمی‌کند، پس لینکی نمی‌شکند. حذف original_image نسخهٔ بزرگ‌تر از -scaled را پاک می‌کند (بازسازی از اصل بعداً ممکن نیست).')),
 				h('div', { class: 'msw-scope' }, h('label', null, 'حداکثر ابعاد (px): ', maxpx), h('label', null, dropOrig, ' حذف original_image نسخه‌های -scaled')),
 				h('button', { class: 'button button-primary', onClick: function () {
-					if (!window.confirm('اصل‌های سنگین کوچک شوند؟ این کار برگشت‌پذیر نیست. بک‌آپ دارید؟')) { return; }
+					if (!confirmT('اصل‌های سنگین کوچک شوند؟ این کار برگشت‌پذیر نیست. بک‌آپ دارید؟')) { return; }
 					clear(optArea);
 					var jb = jobBox({ title: 'کوچک‌سازی اصل‌ها', onDone: function () { refreshDash(); } });
 					optArea.appendChild(jb);

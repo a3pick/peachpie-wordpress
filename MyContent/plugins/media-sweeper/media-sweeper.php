@@ -22,6 +22,7 @@ define( 'MSW_DIR', plugin_dir_path( __FILE__ ) );
 define( 'MSW_URL', plugin_dir_url( __FILE__ ) );
 
 require_once MSW_DIR . 'includes/class-msw-util.php';
+require_once MSW_DIR . 'includes/class-msw-i18n.php';
 require_once MSW_DIR . 'includes/class-msw-db.php';
 require_once MSW_DIR . 'includes/class-msw-extractor.php';
 require_once MSW_DIR . 'includes/class-msw-sources.php';

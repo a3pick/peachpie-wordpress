@@ -21,7 +21,7 @@ class MSW_Admin {
 	}
 
 	public static function action_links( $links ) {
-		array_unshift( $links, '<a href="' . esc_url( admin_url( 'upload.php?page=' . self::SLUG ) ) . '">اسکن رسانه</a>' );
+		array_unshift( $links, '<a href="' . esc_url( admin_url( 'upload.php?page=' . self::SLUG ) ) . '">' . esc_html( MSW_I18n::tr( 'اسکن رسانه' ) ) . '</a>' );
 		return $links;
 	}
 
@@ -45,6 +45,8 @@ class MSW_Admin {
 				'settings' => MSW_Util::all(),
 				'version'  => MSW_VERSION,
 				'qdays'    => (int) MSW_Util::get( 'quarantine_days' ),
+				'i18n'     => MSW_I18n::js_catalog(),
+				'lang'     => MSW_I18n::active() ? substr( MSW_I18n::locale(), 0, 2 ) : 'fa',
 			)
 		);
 	}
@@ -53,8 +55,8 @@ class MSW_Admin {
 		if ( ! current_user_can( self::cap() ) ) {
 			wp_die( esc_html__( 'Access denied.' ) );
 		}
-		echo '<div class="wrap msw-wrap"><div id="msw-app" class="msw-app"><p>در حال بارگذاری…</p></div>';
-		echo '<noscript><p>برای استفاده از این صفحه جاوااسکریپت لازم است.</p></noscript></div>';
+		echo '<div class="wrap msw-wrap"><div id="msw-app" class="msw-app"><p>' . esc_html( MSW_I18n::tr( 'در حال بارگذاری…' ) ) . '</p></div>';
+		echo '<noscript><p>' . esc_html( MSW_I18n::tr( 'برای استفاده از این صفحه جاوااسکریپت لازم است.' ) ) . '</p></noscript></div>';
 	}
 
 	/* --------------------------------------------- "protect" on attachment */
@@ -64,7 +66,7 @@ class MSW_Admin {
 		$fields['msw_protect'] = array(
 			'label' => 'Media Sweeper',
 			'input' => 'html',
-			'html'  => '<input type="hidden" name="attachments[' . (int) $post->ID . '][msw_protect_present]" value="1"><label><input type="checkbox" name="attachments[' . (int) $post->ID . '][msw_protect]" value="1" ' . $checked . '> محافظت شود (هرگز حذف/قرنطینه نشود)</label>',
+			'html'  => '<input type="hidden" name="attachments[' . (int) $post->ID . '][msw_protect_present]" value="1"><label><input type="checkbox" name="attachments[' . (int) $post->ID . '][msw_protect]" value="1" ' . $checked . '> ' . esc_html( MSW_I18n::tr( 'محافظت شود (هرگز حذف/قرنطینه نشود)' ) ) . '</label>',
 		);
 		return $fields;
 	}

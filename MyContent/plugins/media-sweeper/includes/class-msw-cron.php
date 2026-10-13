@@ -79,7 +79,7 @@ class MSW_Cron {
 			return;
 		}
 		$body = sprintf(
-			"گزارش Media Sweeper — %s\n\nکل رسانه‌ها: %d\nبدون استفاده: %d (%s)\nفایل‌های یتیم: %d (%s)\nمفقود: %d\n\nبرای مشاهده و پاک‌سازی: %s",
+			MSW_I18n::tr( "گزارش Media Sweeper — %s\n\nکل رسانه‌ها: %d\nبدون استفاده: %d (%s)\nفایل‌های یتیم: %d (%s)\nمفقود: %d\n\nبرای مشاهده و پاک‌سازی: %s" ),
 			home_url(),
 			$ls['total'],
 			$ls['unused'],
@@ -89,6 +89,6 @@ class MSW_Cron {
 			$ls['missing'],
 			admin_url( 'upload.php?page=media-sweeper' )
 		);
-		wp_mail( $to, 'گزارش اسکن رسانه — ' . wp_parse_url( home_url(), PHP_URL_HOST ), $body );
+		wp_mail( $to, MSW_I18n::tr( 'گزارش اسکن رسانه — ' ) . wp_parse_url( home_url(), PHP_URL_HOST ), $body );
 	}
 }
