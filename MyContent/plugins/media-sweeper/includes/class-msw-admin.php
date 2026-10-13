@@ -151,6 +151,9 @@ class MSW_Admin {
 				}
 			}
 		}
+		if ( isset( $o['kind'] ) ) {
+			$opts['kind'] = sanitize_key( $o['kind'] );
+		}
 		if ( isset( $o['max_px'] ) ) {
 			$opts['max_px'] = absint( $o['max_px'] );
 		}
@@ -193,6 +196,9 @@ class MSW_Admin {
 				break;
 			case 'quarantine':
 				$data = MSW_Query::quarantine( $f );
+				break;
+			case 'undo':
+				$data = MSW_Query::undo_items();
 				break;
 			case 'seo':
 				$data = MSW_Query::seo( $f );
@@ -360,6 +366,20 @@ class MSW_Admin {
 			if ( $res['ok'] ) {
 				MSW_Util::log( 'Alt متن برای ' . $res['ok'] . ' تصویر ذخیره شد.' );
 			}
+		} elseif ( 'undo_optimize' === $op ) {
+			foreach ( $ids as $id ) {
+				$r = MSW_Optimizer::undo( $id );
+				if ( true === $r ) {
+					$res['ok']++;
+				} else {
+					$res['failed'][] = array( 'id' => $id, 'msg' => $r );
+				}
+			}
+			if ( $res['ok'] ) {
+				MSW_Util::log( 'بازگردانی کوچک‌سازی: ' . $res['ok'] . ' تصویر.' );
+			}
+		} elseif ( 'purge_undo' === $op ) {
+			$res['ok'] = MSW_Renamer::purge_undo( true ) + MSW_Optimizer::purge_backups( true );
 		} elseif ( 'redirect_delete' === $op ) {
 			$olds = isset( $_POST['olds'] ) ? (array) wp_unslash( $_POST['olds'] ) : array();
 			foreach ( $olds as $o ) {

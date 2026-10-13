@@ -26,6 +26,7 @@ class MSW_Job {
 		'optimize'    => 'کوچک‌سازی اصل‌های سنگین',
 		'rename'      => 'تغییر نام فایل‌ها',
 		'merge'       => 'ادغام فایل‌های تکراری',
+		'preview'     => 'پیش‌نمایش تغییرات',
 	);
 
 	private static $weights = array(
@@ -42,6 +43,7 @@ class MSW_Job {
 		'optimize'    => 100,
 		'rename'      => 30,
 		'merge'       => 30,
+		'preview'     => 100,
 	);
 
 	public static function get() {
@@ -157,8 +159,22 @@ class MSW_Job {
 			$state['phases']          = array( 'rename', 'rewrite', 'finalize' );
 			$state['items']           = $items;
 			$state['old']             = array();
+			$state['pairs']           = array();
 			$state['counts']['total'] = count( $items );
 			MSW_Util::log( 'تغییر نام ' . count( $items ) . ' فایل شروع شد.' );
+		} elseif ( 'preview' === $type ) {
+			$r = self::start_preview( $state, $opts );
+			if ( is_wp_error( $r ) ) {
+				return $r;
+			}
+		} elseif ( 'undo_rename' === $type ) {
+			$n = MSW_Renamer::prepare_undo( isset( $opts['ids'] ) ? (array) $opts['ids'] : array() );
+			if ( is_wp_error( $n ) ) {
+				return $n;
+			}
+			$state['phases']          = array( 'rewrite', 'finalize' );
+			$state['counts']['total'] = $n;
+			MSW_Util::log( "بازگردانی تغییر نام شروع شد ($n فایل)." );
 		} elseif ( 'merge' === $type ) {
 			$items = array();
 			foreach ( isset( $opts['pairs'] ) ? (array) $opts['pairs'] : array() as $p ) {
@@ -193,6 +209,86 @@ class MSW_Job {
 		return true;
 	}
 
+	/** Build the plan for a dry-run: nothing on disk or in the real tables is changed. */
+	private static function start_preview( array &$state, array $opts ) {
+		global $wpdb;
+		$kind   = isset( $opts['kind'] ) ? $opts['kind'] : '';
+		$pairs  = array();
+		$errors = array();
+		$items  = 0;
+		if ( 'rename' === $kind ) {
+			foreach ( isset( $opts['items'] ) ? (array) $opts['items'] : array() as $id => $name ) {
+				$pl = MSW_Renamer::plan( (int) $id, MSW_Renamer::sanitize_base( $name ) );
+				if ( is_string( $pl ) ) {
+					$errors[] = '#' . (int) $id . ': ' . $pl;
+				} else {
+					$pairs += $pl['pairs'];
+					$items++;
+				}
+			}
+		} elseif ( 'merge' === $kind ) {
+			foreach ( isset( $opts['pairs'] ) ? (array) $opts['pairs'] : array() as $p ) {
+				$pl = MSW_Merger::plan( (int) $p['d'], (int) $p['k'] );
+				if ( is_string( $pl ) ) {
+					$errors[] = '#' . (int) $p['d'] . ': ' . $pl;
+				} else {
+					$pairs += $pl['pairs'];
+					$items++;
+				}
+			}
+		} elseif ( 'convert' === $kind ) {
+			$scope = isset( $opts['scope'] ) && 'all' === $opts['scope'] ? 'all' : 'used';
+			if ( 'used' === $scope ) {
+				$extra = MSW_Util::get( 'webp_skip_theme' ) ? ' AND theme_ref = 0' : '';
+				$ids   = $wpdb->get_col( "SELECT attachment_id FROM " . MSW_Util::t( 'media' ) . " WHERE mime IN ('image/jpeg','image/png') AND status = 'used' AND missing = 0$extra ORDER BY attachment_id LIMIT 400" ); // phpcs:ignore
+				if ( ! $ids ) {
+					return new WP_Error( 'noscan', 'برای پیش‌نمایش این حالت ابتدا اسکن کامل انجام دهید.' );
+				}
+			} else {
+				$ids = $wpdb->get_col( "SELECT ID FROM {$wpdb->posts} WHERE post_type = 'attachment' AND post_status = 'inherit' AND post_mime_type IN ('image/jpeg','image/png') ORDER BY ID LIMIT 400" );
+			}
+			foreach ( $ids as $id ) {
+				$pp = MSW_Converter::plan_pairs( (int) $id );
+				if ( $pp ) {
+					$pairs += $pp;
+					$items++;
+				}
+			}
+		} else {
+			return new WP_Error( 'kind', 'نوع پیش‌نمایش نامعتبر است.' );
+		}
+		if ( ! $pairs ) {
+			return new WP_Error( 'none', $errors ? implode( ' | ', array_slice( $errors, 0, 3 ) ) : 'چیزی برای پیش‌نمایش نیست.' );
+		}
+		MSW_DB::truncate( 'pmap' );
+		$vals = array();
+		foreach ( $pairs as $old => $new ) {
+			if ( strlen( $old ) <= 185 ) {
+				$vals[] = $wpdb->prepare( '(%s,%s)', $old, $new );
+			}
+		}
+		foreach ( array_chunk( $vals, 300 ) as $chunk ) {
+			$wpdb->query( 'INSERT IGNORE INTO ' . MSW_Util::t( 'pmap' ) . ' (old_rel,new_rel) VALUES ' . implode( ',', $chunk ) ); // phpcs:ignore
+		}
+		$state['phases']  = array( 'preview' );
+		$state['kind']    = $kind;
+		$state['preview'] = array( 'kind' => $kind, 'items' => $items, 'files' => count( $pairs ), 'errors' => array_slice( $errors, 0, 20 ), 'rows' => 0, 'by' => array(), 'samples' => array(), 'sampled' => 'convert' === $kind && $items >= 400 );
+		return true;
+	}
+
+	private static function diff_snip( $a, $b ) {
+		$n = min( strlen( $a ), strlen( $b ) );
+		$i = 0;
+		while ( $i < $n && $a[ $i ] === $b[ $i ] ) {
+			$i++;
+		}
+		$cut = function ( $s, $from, $len ) {
+			return function_exists( 'mb_strcut' ) ? mb_strcut( $s, max( 0, $from ), $len, 'UTF-8' ) : substr( $s, max( 0, $from ), $len );
+		};
+		$from = max( 0, $i - 60 );
+		return array( $cut( $a, $from, 150 ), $cut( $b, $from, 150 ) );
+	}
+
 	public static function cancel() {
 		$s = self::get();
 		if ( isset( $s['status'] ) && 'running' === $s['status'] ) {
@@ -212,6 +308,7 @@ class MSW_Job {
 		}
 		$phase = isset( $s['phases'][ $s['pi'] ] ) ? $s['phases'][ $s['pi'] ] : '';
 		return array(
+			'preview' => isset( $s['preview'] ) && 'preview' === $s['type'] ? $s['preview'] : null,
 			'type'    => $s['type'],
 			'status'  => $s['status'],
 			'phase'   => $phase,
@@ -314,6 +411,10 @@ class MSW_Job {
 			$c = $s['counts'];
 			MSW_Util::stat_add( 'optimized', isset( $c['saved'] ) ? $c['saved'] : 0 );
 			MSW_Util::log( sprintf( 'کوچک‌سازی پایان یافت: %d تصویر کوچک شد، %d اصل حذف شد؛ صرفه‌جویی: %s.', isset( $c['resized'] ) ? $c['resized'] : 0, isset( $c['dropped'] ) ? $c['dropped'] : 0, MSW_Util::size( isset( $c['saved'] ) ? $c['saved'] : 0 ) ) );
+		} elseif ( 'preview' === $s['type'] ) {
+			$noop = true;
+		} elseif ( 'undo_rename' === $s['type'] ) {
+			MSW_Util::log( 'بازگردانی تغییر نام پایان یافت.' );
 		} elseif ( 'merge' === $s['type'] ) {
 			MSW_Util::log( sprintf( 'ادغام پایان یافت: %d کپی ادغام و به قرنطینه رفت.', isset( $s['counts']['merged'] ) ? $s['counts']['merged'] : 0 ) );
 		} elseif ( 'rename' === $s['type'] ) {
@@ -373,6 +474,19 @@ class MSW_Job {
 			foreach ( $rows as $row ) {
 				if ( 'scan' === $mode ) {
 					MSW_Scanner::row( $st, $row );
+				} elseif ( 'preview' === $mode ) {
+					$changes = MSW_Rewriter::row( $st, $row );
+					if ( $changes ) {
+						$pv                     = $s['preview'];
+						$pv['rows']++;
+						$pv['by'][ $st['label'] ] = ( isset( $pv['by'][ $st['label'] ] ) ? $pv['by'][ $st['label'] ] : 0 ) + 1;
+						if ( count( $pv['samples'] ) < 12 ) {
+							$col = key( $changes );
+							list( $b, $a ) = self::diff_snip( (string) $row[ $col ], (string) $changes[ $col ] );
+							$pv['samples'][] = array( 'where' => $st['label'] . ' #' . $row['_pk'] . ' / ' . $col, 'before' => $b, 'after' => $a );
+						}
+						$s['preview'] = $pv;
+					}
 				} else {
 					$changes = MSW_Rewriter::row( $st, $row );
 					if ( $changes ) {
@@ -512,7 +626,8 @@ class MSW_Job {
 			$c['processed']++;
 			if ( is_array( $r ) ) {
 				$c['renamed']++;
-				$s['old'][ $id ] = $r['old'];
+				$s['old'][ $id ]   = $r['old'];
+				$s['pairs'][ $id ] = $r['pairs'];
 			} else {
 				$c['failed']++;
 				MSW_Util::log( "تغییر نام #$id ناموفق: $r", 'warn' );
@@ -549,6 +664,22 @@ class MSW_Job {
 		return empty( $s['items'] );
 	}
 
+	private static function phase_preview( array &$s, $deadline ) {
+		MSW_Rewriter::$table = 'pmap';
+		$k                   = $s['kind'];
+		MSW_Rewriter::$exts  = 'merge' === $k ? MSW_Extractor::EXT : ( 'rename' === $k ? 'jpe?g|png|gif|webp|avif|bmp' : 'jpe?g|png' );
+		if ( empty( $s['stages'] ) ) {
+			$s['stages'] = MSW_Sources::stages( 'rewrite' );
+			MSW_Rewriter::reset();
+		}
+		$done = self::walk_stages( $s, $deadline, 'preview' );
+		if ( $done ) {
+			MSW_DB::truncate( 'pmap' );
+			MSW_Rewriter::$table = 'map';
+		}
+		return $done;
+	}
+
 	private static function phase_optimize( array &$s, $deadline ) {
 		global $wpdb;
 		if ( ! $s['smax_ok'] ) {
@@ -575,10 +706,10 @@ class MSW_Job {
 
 	private static function phase_rewrite( array &$s, $deadline ) {
 		global $wpdb;
-		MSW_Rewriter::$exts = ( 'revert' === $s['type'] ) ? 'webp' : ( 'rename' === $s['type'] ? 'jpe?g|png|gif|webp|avif|bmp' : ( 'merge' === $s['type'] ? MSW_Extractor::EXT : 'jpe?g|png' ) );
+		MSW_Rewriter::$exts = ( 'revert' === $s['type'] ) ? 'webp' : ( in_array( $s['type'], array( 'rename', 'undo_rename' ), true ) ? 'jpe?g|png|gif|webp|avif|bmp' : ( 'merge' === $s['type'] ? MSW_Extractor::EXT : 'jpe?g|png' ) );
 		if ( ! $s['smax_ok'] && 0 === (int) $s['si'] ) {
 			MSW_Rewriter::reset();
-			$use_map = in_array( $s['type'], array( 'rename', 'merge' ), true );
+			$use_map = in_array( $s['type'], array( 'rename', 'merge', 'undo_rename' ), true );
 			$tbl     = $use_map ? MSW_Util::t( 'map' ) : MSW_Util::t( 'converted' );
 			$cond    = $use_map ? '' : " WHERE status IN ('converted','reverting')";
 			$pending = (int) $wpdb->get_var( "SELECT COUNT(*) FROM $tbl$cond" ); // phpcs:ignore
@@ -605,11 +736,23 @@ class MSW_Job {
 			MSW_Scanner::summarize();
 			return true;
 		}
+		if ( 'undo_rename' === $s['type'] ) {
+			MSW_Renamer::finalize_undo();
+			MSW_DB::truncate( 'map' );
+			MSW_Util::flush_caches();
+			return true;
+		}
 		if ( 'rename' === $s['type'] ) {
+			$keep = (int) MSW_Util::get( 'undo_days' ) > 0;
 			foreach ( (array) $s['old'] as $id => $old ) {
-				MSW_Renamer::remove_old( (int) $id, (array) $old );
+				if ( $keep && ! empty( $s['pairs'][ $id ] ) ) {
+					MSW_Renamer::keep_old( (int) $id, (array) $s['pairs'][ $id ] );
+				} else {
+					MSW_Renamer::remove_old( (int) $id, (array) $old );
+				}
 			}
-			$s['old'] = array();
+			$s['old']   = array();
+			$s['pairs'] = array();
 			MSW_DB::truncate( 'map' );
 			MSW_Util::flush_caches();
 			return true;

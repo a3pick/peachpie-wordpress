@@ -20,6 +20,7 @@ class MSW_Util {
 			'include_revisions'   => 0,
 			'deep_tables'         => 1,
 			'exclude_tables'      => '',
+			'extra_hosts'         => '',
 			'aggressive_meta'     => 0,
 			'scan_theme_files'    => 1,
 			'weak_basename'       => 1,
@@ -39,6 +40,7 @@ class MSW_Util {
 			'webp_originals'      => 1,
 			'webp_retention_days' => 7,
 			'webp_on_upload'      => 0,
+			'undo_days'           => 7,
 			// SEO.
 			'redirects_enable'    => 1,
 			// Automation.
@@ -78,6 +80,7 @@ class MSW_Util {
 					}
 					break;
 				case 'protect_patterns':
+				case 'extra_hosts':
 				case 'exclude_tables':
 					$v = sanitize_textarea_field( (string) $v );
 					break;
@@ -98,6 +101,7 @@ class MSW_Util {
 					break;
 				case 'protect_days':
 				case 'quarantine_days':
+				case 'undo_days':
 				case 'webp_retention_days':
 					$v = max( 0, min( 3650, (int) $v ) );
 					break;
@@ -260,6 +264,67 @@ class MSW_Util {
 		}
 		do_action( 'litespeed_purge_all' );
 		do_action( 'msw_flush_caches' );
+	}
+
+	/** Meta keys set by offload / CDN plugins (filterable). */
+	public static function offload_meta_keys() {
+		return apply_filters( 'msw_offload_meta_keys', array( 'amazonS3_info', '_cloudinary_v2', 'cloudinary', '_wp_offload_media', 'wpmf_awsS3_info', '_bunny_cdn_url' ) );
+	}
+
+	/** Is the attachment's file (partly) stored outside the local uploads folder? */
+	public static function is_offloaded( $id ) {
+		foreach ( self::offload_meta_keys() as $k ) {
+			if ( get_post_meta( $id, $k, true ) ) {
+				return true;
+			}
+		}
+		$url = wp_get_attachment_url( $id );
+		if ( $url ) {
+			$host = wp_parse_url( $url, PHP_URL_HOST );
+			$ok   = MSW_Extractor::allowed_hosts();
+			if ( $host && false !== $ok ) {
+				$h = preg_replace( '~^www\.~', '', strtolower( $host ) );
+				if ( ! isset( $ok[ $h ] ) ) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
+	/** Another attachment row uses the same file (multilingual media duplicates etc.). */
+	public static function shares_file( $id ) {
+		global $wpdb;
+		$rel = (string) get_post_meta( $id, '_wp_attached_file', true );
+		if ( '' === $rel ) {
+			return false;
+		}
+		return (bool) $wpdb->get_var( $wpdb->prepare( "SELECT post_id FROM {$wpdb->postmeta} WHERE meta_key = '_wp_attached_file' AND meta_value = %s AND post_id <> %d LIMIT 1", $rel, $id ) );
+	}
+
+	/**
+	 * Can the quarantine folder be fetched over HTTP? ('ok' blocked | 'exposed' | 'unknown')
+	 * Cached for 12 hours. Quarantined file names are random, so exposure of the
+	 * folder is low risk, but servers that ignore .htaccess (Nginx) should deny it.
+	 */
+	public static function quarantine_probe( $force = false ) {
+		$c = get_transient( 'msw_probe' );
+		if ( $c && ! $force ) {
+			return $c;
+		}
+		$dir = self::abs( 'msw-quarantine' );
+		if ( ! self::protected_dir( $dir ) ) {
+			return 'unknown';
+		}
+		@file_put_contents( $dir . '/probe.txt', 'msw-probe' );
+		$r   = wp_remote_get( self::baseurl() . '/msw-quarantine/probe.txt', array( 'timeout' => 5, 'sslverify' => false, 'redirection' => 0 ) );
+		$res = 'unknown';
+		if ( ! is_wp_error( $r ) ) {
+			$res = ( 200 === (int) wp_remote_retrieve_response_code( $r ) && 'msw-probe' === trim( wp_remote_retrieve_body( $r ) ) ) ? 'exposed' : 'ok';
+		}
+		@unlink( $dir . '/probe.txt' );
+		set_transient( 'msw_probe', $res, 12 * HOUR_IN_SECONDS );
+		return $res;
 	}
 
 	/** Cumulative counters for the client report (bytes freed per source). */

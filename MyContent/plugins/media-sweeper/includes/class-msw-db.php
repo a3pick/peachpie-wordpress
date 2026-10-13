@@ -44,6 +44,7 @@ class MSW_DB {
   poster_id bigint(20) unsigned NOT NULL DEFAULT 0,
   missing tinyint(1) NOT NULL DEFAULT 0,
   theme_ref tinyint(1) NOT NULL DEFAULT 0,
+  offload tinyint(1) NOT NULL DEFAULT 0,
   uploaded datetime DEFAULT NULL,
   PRIMARY KEY  (attachment_id),
   KEY status_idx (status,locked,type),
@@ -88,8 +89,17 @@ class MSW_DB {
 		$sql[] = 'CREATE TABLE ' . MSW_Util::t( 'broken' ) . " (
   rel_hash char(32) NOT NULL,
   rel_path varchar(600) NOT NULL DEFAULT '',
+  path_key varchar(191) NOT NULL DEFAULT '',
   src varchar(120) NOT NULL DEFAULT '',
-  PRIMARY KEY  (rel_hash)
+  PRIMARY KEY  (rel_hash),
+  KEY path_key (path_key)
+) $c;";
+
+		$sql[] = 'CREATE TABLE ' . MSW_Util::t( 'pmap' ) . " (
+  old_rel varchar(191) NOT NULL,
+  new_rel varchar(600) NOT NULL DEFAULT '',
+  att_id bigint(20) unsigned NOT NULL DEFAULT 0,
+  PRIMARY KEY  (old_rel)
 ) $c;";
 
 		$sql[] = 'CREATE TABLE ' . MSW_Util::t( 'redirects' ) . " (
@@ -100,6 +110,27 @@ class MSW_DB {
   created datetime DEFAULT NULL,
   PRIMARY KEY  (old_rel),
   KEY att_id (att_id)
+) $c;";
+
+		$sql[] = 'CREATE TABLE ' . MSW_Util::t( 'undo' ) . " (
+  id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  type varchar(12) NOT NULL DEFAULT '',
+  att_id bigint(20) unsigned NOT NULL DEFAULT 0,
+  payload longtext,
+  status varchar(12) NOT NULL DEFAULT 'pending',
+  created datetime DEFAULT NULL,
+  delete_after datetime DEFAULT NULL,
+  PRIMARY KEY  (id),
+  KEY att_id (att_id),
+  KEY status (type,status)
+) $c;";
+
+		$sql[] = 'CREATE TABLE ' . MSW_Util::t( 'hold' ) . " (
+  path_hash char(32) NOT NULL,
+  rel_path varchar(600) NOT NULL DEFAULT '',
+  undo_id bigint(20) unsigned NOT NULL DEFAULT 0,
+  PRIMARY KEY  (path_hash),
+  KEY undo_id (undo_id)
 ) $c;";
 
 		foreach ( $sql as $q ) {
@@ -116,7 +147,7 @@ class MSW_DB {
 
 	public static function drop() {
 		global $wpdb;
-		foreach ( array( 'refs', 'media', 'orphans', 'converted', 'map', 'broken', 'redirects' ) as $t ) {
+		foreach ( array( 'refs', 'media', 'orphans', 'converted', 'map', 'broken', 'redirects', 'undo', 'hold', 'pmap' ) as $t ) {
 			$wpdb->query( 'DROP TABLE IF EXISTS ' . MSW_Util::t( $t ) ); // phpcs:ignore WordPress.DB.PreparedSQL
 		}
 	}

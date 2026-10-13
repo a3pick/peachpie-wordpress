@@ -12,5 +12,13 @@ $WP db reset --yes
 $WP core install --url=http://localhost --title=MSW --admin_user=admin --admin_password=admin --admin_email=a@b.co --skip-email
 rm -rf "$WP_PATH/wp-content/uploads"
 ln -sfn "$PLUGIN" "$WP_PATH/wp-content/plugins/media-sweeper"
-$WP plugin activate media-sweeper
-$WP eval-file "$HERE/scenario.php"
+if [ "${MULTISITE:-0}" = "1" ]; then
+  # Run the whole scenario on sub-site #2 (uploads in uploads/sites/2, prefixed tables).
+  $WP core multisite-convert --title=MSW
+  $WP plugin activate media-sweeper --network
+  $WP site create --slug=s2 --title=S2 --email=a@b.co
+  $WP --url=http://localhost/s2 eval-file "$HERE/scenario.php"
+else
+  $WP plugin activate media-sweeper
+  $WP eval-file "$HERE/scenario.php"
+fi

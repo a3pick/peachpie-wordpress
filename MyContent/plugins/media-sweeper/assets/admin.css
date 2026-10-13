@@ -70,6 +70,10 @@
 .msw-report { background:var(--msw-bg); border:1px solid var(--msw-line); border-radius:8px; padding:24px 32px; max-width:820px; }
 .msw-report-big { text-align:center; padding:16px; margin:12px 0; background:var(--msw-soft); border-radius:8px; }
 .msw-report th { width:55%; text-align:start; }
+.msw-modal.wide { background:#fff; border-radius:8px; padding:20px 24px; width:min(900px,94vw); max-height:88vh; overflow:auto; }
+.msw-sample { margin:8px 0; }
+.msw-del, .msw-add { white-space:pre-wrap; word-break:break-all; margin:2px 0; padding:4px 8px; font-size:12px; border-radius:4px; }
+.msw-del { background:#fcf0f1; } .msw-add { background:#edfaef; }
 .msw-pager { display:flex; justify-content:center; align-items:center; gap:8px; margin:16px 0; }
 
 .msw-dupgroup { background:var(--msw-bg); border:1px solid var(--msw-line); border-radius:8px; padding:12px; margin-bottom:14px; }

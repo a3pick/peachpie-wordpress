@@ -19,6 +19,8 @@ class MSW_Rewriter {
 	public static $changed = 0;
 	/** Source extensions the rewriter looks for (regex alternation). */
 	public static $exts = 'jpe?g|png';
+	/** Map table in use: 'map' (real jobs) or 'pmap' (dry-run preview). */
+	public static $table = 'map';
 
 	/* ---------------------------------------------------------------- regex */
 
@@ -50,34 +52,44 @@ class MSW_Rewriter {
 	}
 
 	/**
-	 * Replace inside a plain (non-serialized) string.
+	 * Replace inside a plain (non-serialized) string. Only URLs that are
+	 * relative or belong to this site (see MSW_Extractor::host_ok) are touched.
 	 *
 	 * @param callable $lookup function( string $old_rel ): ?string new_rel
 	 */
 	public static function replace_plain( $s, $lookup ) {
-		return preg_replace_callback(
-			self::re(),
-			function ( $m ) use ( $lookup ) {
-				$escaped = ( '/' !== $m[1] );
-				$rel     = $escaped ? str_replace( '\\/', '/', $m[2] ) : $m[2];
-				$enc     = false !== strpos( $rel, '%' );
-				$dec     = $enc ? rawurldecode( $rel ) : $rel;
-				list( $prefix, $rest ) = self::split_prefix( $dec );
-				$new = call_user_func( $lookup, $rest . '.' . $m[3] );
-				if ( null === $new || false === $new || '' === $new ) {
-					return $m[0];
-				}
-				$new = $prefix . $new;
-				if ( $enc ) {
-					$new = implode( '/', array_map( 'rawurlencode', explode( '/', $new ) ) );
-				}
-				if ( $escaped ) {
-					$new = str_replace( '/', '\\/', $new );
-				}
-				return substr( $m[0], 0, strpos( $m[0], $m[1] ) ) . $m[1] . $new;
-			},
-			$s
-		);
+		if ( ! preg_match_all( self::re(), $s, $mm, PREG_SET_ORDER | PREG_OFFSET_CAPTURE ) ) {
+			return $s;
+		}
+		$out = '';
+		$pos = 0;
+		foreach ( $mm as $m ) {
+			$whole   = $m[0][0];
+			$start   = $m[0][1];
+			$sep     = $m[1][0];
+			$escaped = ( '/' !== $sep );
+			$rel     = $escaped ? str_replace( '\\/', '/', $m[2][0] ) : $m[2][0];
+			$enc     = false !== strpos( $rel, '%' );
+			$dec     = $enc ? rawurldecode( $rel ) : $rel;
+			list( $prefix, $rest ) = self::split_prefix( $dec );
+			$new = null;
+			if ( MSW_Extractor::host_ok( substr( $s, max( 0, $start - 400 ), min( 400, $start ) ) ) ) {
+				$new = call_user_func( $lookup, $rest . '.' . $m[3][0] );
+			}
+			if ( null === $new || false === $new || '' === $new ) {
+				continue;
+			}
+			$new = $prefix . $new;
+			if ( $enc ) {
+				$new = implode( '/', array_map( 'rawurlencode', explode( '/', $new ) ) );
+			}
+			if ( $escaped ) {
+				$new = str_replace( '/', '\\/', $new );
+			}
+			$out .= substr( $s, $pos, $start - $pos ) . substr( $whole, 0, strpos( $whole, $sep ) ) . $sep . $new;
+			$pos  = $start + strlen( $whole );
+		}
+		return $out . substr( $s, $pos );
 	}
 
 	public static function reset() {
@@ -142,7 +154,7 @@ class MSW_Rewriter {
 		}
 		foreach ( array_chunk( $need, 300 ) as $chunk ) {
 			$in   = "'" . implode( "','", array_map( 'esc_sql', $chunk ) ) . "'";
-			$rows = $wpdb->get_results( 'SELECT old_rel, new_rel FROM ' . MSW_Util::t( 'map' ) . " WHERE old_rel IN ($in)" ); // phpcs:ignore WordPress.DB.PreparedSQL
+			$rows = $wpdb->get_results( 'SELECT old_rel, new_rel FROM ' . MSW_Util::t( self::$table ) . " WHERE old_rel IN ($in)" ); // phpcs:ignore WordPress.DB.PreparedSQL
 			foreach ( $chunk as $c ) {
 				self::$cache[ $c ] = null;
 			}

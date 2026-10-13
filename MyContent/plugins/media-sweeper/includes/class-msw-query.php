@@ -403,6 +403,38 @@ class MSW_Query {
 		);
 	}
 
+	/** Undoable operations: renamed files still held and optimizations with backups. */
+	public static function undo_items() {
+		global $wpdb;
+		$ut   = MSW_Util::t( 'undo' );
+		$rows = $wpdb->get_results( "SELECT * FROM $ut WHERE type = 'rename' AND status = 'pending' ORDER BY id DESC LIMIT 100" ); // phpcs:ignore
+		$ren  = array();
+		foreach ( (array) $rows as $r ) {
+			$pay   = json_decode( (string) $r->payload, true );
+			$pairs = isset( $pay['pairs'] ) ? (array) $pay['pairs'] : array();
+			$old   = (string) key( $pairs );
+			$ren[] = array(
+				'id'    => (int) $r->id,
+				'att'   => (int) $r->att_id,
+				'title' => get_the_title( (int) $r->att_id ),
+				'old'   => $old,
+				'new'   => (string) current( $pairs ),
+				'until' => $r->delete_after ? get_date_from_gmt( $r->delete_after, 'Y/m/d' ) : '',
+			);
+		}
+		$opt  = array();
+		$bk   = $wpdb->get_results( "SELECT post_id, meta_value FROM {$wpdb->postmeta} WHERE meta_key = '_msw_opt_bak' ORDER BY meta_id DESC LIMIT 100" );
+		$days = (int) MSW_Util::get( 'undo_days' );
+		foreach ( (array) $bk as $r ) {
+			$b = maybe_unserialize( $r->meta_value );
+			if ( ! is_array( $b ) ) {
+				continue;
+			}
+			$opt[] = array( 'att' => (int) $r->post_id, 'title' => get_the_title( (int) $r->post_id ), 'until' => wp_date( 'Y/m/d', $b['time'] + $days * DAY_IN_SECONDS ) );
+		}
+		return array( 'renames' => $ren, 'optimized' => $opt );
+	}
+
 	/* ------------------------------------------------------------------ seo */
 
 	const BAD_NAME_SQL = "m.rel_path REGEXP '(^|/)(img|dsc|dscn|dscf|dji|pxl|mvimg|imgp|image|photo|pic|picture|screenshot|screen-shot|whatsapp-image|untitled|unnamed|download|copy-of)[-_ ]*[0-9(]|(^|/)[0-9_-]+[.][a-z0-9]+$|(^|/)[0-9a-f]{8}-[0-9a-f]{4}-'";
@@ -549,6 +581,7 @@ class MSW_Query {
 				'locked'       => isset( $ls['locked'] ) ? (int) $ls['locked'] : 0,
 				'missing'      => isset( $ls['missing'] ) ? (int) $ls['missing'] : 0,
 				'broken'       => isset( $ls['broken'] ) ? (int) $ls['broken'] : 0,
+				'offloaded'    => isset( $ls['offloaded'] ) ? (int) $ls['offloaded'] : 0,
 				'total_size'   => MSW_Util::size( isset( $ls['total_bytes'] ) ? $ls['total_bytes'] : 0 ),
 				'orphans'      => isset( $ls['orphans'] ) ? (int) $ls['orphans'] : 0,
 				'orphan_size'  => MSW_Util::size( isset( $ls['orphan_bytes'] ) ? $ls['orphan_bytes'] : 0 ),
@@ -560,6 +593,7 @@ class MSW_Query {
 			'quarantine'  => array( 'count' => $q['total'], 'size' => $q['total_size'] ),
 			'webp'        => array( 'count' => (int) $c['n'], 'saved' => MSW_Util::size( $c['saved'] ) ),
 			'caps'        => MSW_Converter::capabilities(),
+			'probe'       => array( 'state' => MSW_Util::quarantine_probe(), 'path' => (string) wp_parse_url( MSW_Util::baseurl(), PHP_URL_PATH ) ),
 			'free'        => false === $free ? '' : MSW_Util::size( $free ),
 			'job'         => MSW_Job::public_state(),
 		);

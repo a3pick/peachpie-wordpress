@@ -49,4 +49,15 @@ jobs:
           DB_USER: root
           DB_PASS: root
           DB_HOST: 127.0.0.1
-        run: php -d memory_limit=768M $(which wp) --version >/dev/null && bash tests/media-sweeper/integration/run.sh
+        run: bash tests/media-sweeper/integration/run.sh
+      - name: Integration test (multisite sub-site)
+        env:
+          WP_PATH: /tmp/wp-ms
+          DB_NAME: wp
+          DB_USER: root
+          DB_PASS: root
+          DB_HOST: 127.0.0.1
+          MULTISITE: '1'
+        run: |
+          wp core download --path=/tmp/wp-ms --allow-root
+          bash tests/media-sweeper/integration/run.sh

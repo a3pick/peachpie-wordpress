@@ -53,5 +53,18 @@ $new = MSW_Rewriter::replace_any( $ser, $lk );
 ok( strpos( $new, 'foo.webp' ) !== false && @unserialize( $new ) instanceof Foo, 'object private prop length' );
 // Candidate discovery.
 ok( MSW_Rewriter::candidates( 'uploads/2024/05/foo.jpg uploads\/2024\/05\/foo-300x200.jpg' ) === array( '2024/05/foo.jpg', '2024/05/foo-300x200.jpg' ), 'candidates' );
+
+// Host check: only our own / relative URLs are rewritten.
+MSW_Extractor::$hosts = array( 'mysite.com' => true, 'cdn.mysite.com' => true );
+$t = '<img src="https://mysite.com/wp-content/uploads/2024/05/foo.jpg"><img src="https://www.mysite.com/wp-content/uploads/2024/05/foo.jpg"><img src="//cdn.mysite.com/wp-content/uploads/2024/05/foo.jpg"><img src="/wp-content/uploads/2024/05/foo.jpg"><img src="https://other.com/wp-content/uploads/2024/05/foo.jpg">';
+$r = MSW_Rewriter::replace_plain( $t, $lk );
+ok( substr_count( $r, 'foo.webp' ) === 4 && strpos( $r, 'other.com/wp-content/uploads/2024/05/foo.jpg' ) !== false, 'external host untouched, own/relative/cdn rewritten' );
+$j = '{"a":"https:\\/\\/other.com\\/wp-content\\/uploads\\/2024\\/05\\/foo.jpg","b":"https:\\/\\/mysite.com\\/wp-content\\/uploads\\/2024\\/05\\/foo.jpg"}';
+$r = MSW_Rewriter::replace_plain( $j, $lk );
+ok( strpos( $r, 'other.com\\/wp-content\\/uploads\\/2024\\/05\\/foo.jpg' ) !== false && strpos( $r, 'mysite.com\\/wp-content\\/uploads\\/2024\\/05\\/foo.webp' ) !== false && null !== json_decode( $r ), 'json-escaped host check' );
+$e = MSW_Extractor::extract( '<img src="https://other.com/wp-content/uploads/2024/05/zzz.jpg"><img src="/wp-content/uploads/2024/05/yyy.jpg">' );
+ok( isset( $e['raw']['2024/05/yyy.jpg'] ) && ! isset( $e['raw']['2024/05/zzz.jpg'] ) && isset( $e['paths']['2024/05/zzz'] ), 'foreign path not checked for broken-ness but still counts as reference' );
+MSW_Extractor::$hosts = false;
+
 echo $fail ? "\n$fail FAILED\n" : "\nALL PASSED\n";
 exit( $fail ? 1 : 0 );

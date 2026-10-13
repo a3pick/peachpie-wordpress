@@ -400,6 +400,39 @@
 		return h('div', { class: 'msw-stat ' + (cls || '') }, h('div', { class: 'msw-stat-v' }, value), h('div', { class: 'msw-stat-l' }, label), sub ? h('div', { class: 'msw-stat-s' }, sub) : null);
 	}
 
+	/** Dry-run: shows which database rows a rename / merge / conversion would change. */
+	function previewModal(kind, opts) {
+		var body = h('div', { class: 'msw-prev' });
+		var ov = h('div', { class: 'msw-overlay' }, h('div', { class: 'msw-modal wide' },
+			h('h3', null, 'پیش‌نمایش تغییرات (هیچ چیز اعمال نمی‌شود)'), body,
+			h('p', null, h('button', { class: 'button', onClick: function () { ov.remove(); } }, 'بستن'))));
+		document.body.appendChild(ov);
+		var jb = jobBox({ title: 'در حال محاسبه…', onDone: function () {
+			api('job_status').then(function (st) {
+				var pv = st.preview;
+				clear(body);
+				if (!pv) { body.appendChild(h('p', { class: 'warn' }, 'نتیجه‌ای دریافت نشد.')); return; }
+				body.appendChild(h('p', null, num(pv.items) + ' مورد، ' + num(pv.files) + ' فایل → ', h('strong', null, num(pv.rows) + ' ردیف دیتابیس تغییر می‌کند.'), pv.sampled ? ' (فقط ۴۰۰ تصویر اول نمونه‌گیری شد)' : ''));
+				var by = Object.keys(pv.by || {});
+				if (by.length) { body.appendChild(h('table', { class: 'widefat striped' }, h('tbody', null, by.map(function (k) { return h('tr', null, h('th', null, k), h('td', null, num(pv.by[k]))); })))); }
+				if (pv.samples && pv.samples.length) {
+					body.appendChild(h('h4', null, 'نمونه‌ها'));
+					pv.samples.forEach(function (x) {
+						body.appendChild(h('div', { class: 'msw-sample' }, h('div', { class: 'description' }, x.where),
+							h('pre', { class: 'msw-del', dir: 'ltr' }, R('− ' + x.before)), h('pre', { class: 'msw-add', dir: 'ltr' }, R('+ ' + x.after))));
+					});
+				}
+				if (pv.errors && pv.errors.length) {
+					body.appendChild(h('h4', null, 'موارد ردشده'));
+					body.appendChild(h('ul', null, pv.errors.map(function (e) { return h('li', null, R(e)); })));
+				}
+				if (!pv.rows) { body.appendChild(h('p', { class: 'ok' }, 'هیچ ردیفی تغییر نمی‌کند (فقط خود فایل‌ها).')); }
+			});
+		} });
+		clear(body).appendChild(jb);
+		api('job_start', { type: 'preview', opts: Object.assign({ kind: kind }, opts) }).then(function (st) { jb.start(st); }).catch(function (e) { ov.remove(); toast(e.message, 'err'); });
+	}
+
 	function sparkCard(hist) {
 		var W = 640, H = 90, P = 6, ns = 'http://www.w3.org/2000/svg';
 		var max = Math.max.apply(null, hist.map(function (x) { return x.total; })) || 1;
@@ -455,6 +488,11 @@
 					h('p', null, s.time ? 'آخرین اسکن: ' + s.time + ' (' + s.ago + ' پیش، ' + s.duration + ' ثانیه)' : 'هنوز اسکنی انجام نشده است. ابتدا اسکن را اجرا کنید.')),
 				box));
 			warn.forEach(function (w) { el.appendChild(h('div', { class: 'msw-notice warn' }, w)); });
+			if (d.probe && d.probe.state === 'exposed') {
+				el.appendChild(h('div', { class: 'msw-notice warn' }, h('p', null, 'پوشهٔ قرنطینه از اینترنت قابل دریافت است (سرور فایل .htaccess را نادیده می‌گیرد، مثلاً Nginx). نام فایل‌ها تصادفی است ولی بهتر است دسترسی را ببندید. در کانفیگ Nginx اضافه کنید:'),
+					h('pre', { dir: 'ltr' }, R('location ^~ ' + d.probe.path + '/msw-quarantine/ { deny all; return 403; }\nlocation ^~ ' + d.probe.path + '/msw-backup/ { deny all; return 403; }'))));
+			}
+			if (s.offloaded) { el.appendChild(h('div', { class: 'msw-notice' }, num(s.offloaded) + ' پیوست روی ذخیره‌ساز خارجی (آفلود/CDN) است؛ قرنطینه، تغییر نام، تبدیل و ادغام روی آن‌ها انجام نمی‌شود.')); }
 			if (s.time) {
 				if (d.history && d.history.length > 1) { el.appendChild(sparkCard(d.history)); }
 				el.appendChild(h('div', { class: 'msw-stats' },
@@ -589,6 +627,9 @@
 							if (!confirmT(unused.length + ' نسخهٔ بدون استفاده به قرنطینه برود؟')) { return; }
 							runOp('quarantine', unused.map(function (x) { return x.id; }), load);
 						} }, '📦 قرنطینهٔ نسخه‌های بدون استفاده (' + unused.length + ')') : null,
+						h('button', { class: 'button', onClick: function () {
+							previewModal('merge', { pairs: g.items.filter(function (i) { return i.id !== keeper; }).map(function (i) { return { d: i.id, k: keeper }; }) });
+						} }, '👁 پیش‌نمایش'),
 						h('button', { class: 'button button-primary', title: 'ارجاع به فایل کپی‌ها به نسخهٔ «نگه‌دار» منتقل و کپی‌ها قرنطینه می‌شوند. کپی‌هایی که با شناسهٔ پیوست (تصویر شاخص، گالری…) استفاده شده‌اند ادغام نمی‌شوند.', onClick: function () {
 							var pairs = g.items.filter(function (i) { return i.id !== keeper; }).map(function (i) { return { d: i.id, k: keeper }; });
 							if (!confirmT('ادغام شود؟ ' + pairs.length + ' کپی به نسخهٔ نگه‌دار ادغام و قرنطینه می‌شود (قابل بازگردانی از قرنطینه، اما لینک‌های اصلاح‌شده برنمی‌گردند).')) { return; }
@@ -643,10 +684,15 @@
 			if (!n) { toast('Alt تغییری نکرده است.', 'warn'); return; }
 			api('act', { op: 'set_alt', alts: alts }).then(function (r) { toast(r.ok + ' Alt ذخیره شد.', 'ok'); load(); }).catch(function (e) { toast(e.message, 'err'); });
 		}
-		function renameSel() {
+		function collectRename() {
 			var items = {}, n = 0;
 			Object.keys(rows).forEach(function (id) { var v = rows[id].name.value.trim(); if (rows[id].cb.checked && v) { items[id] = v; n++; } });
-			if (!n) { toast('برای تصاویر انتخاب‌شده نام جدید وارد کنید.', 'warn'); return; }
+			if (!n) { toast('برای تصاویر انتخاب‌شده نام جدید وارد کنید.', 'warn'); return null; }
+			return items;
+		}
+		function renameSel() {
+			var items = collectRename(), n = items ? Object.keys(items).length : 0;
+			if (!items) { return; }
 			if (!confirmT(n + ' فایل تغییر نام یابد؟\n\n• فایل‌ها ابتدا کپی می‌شوند، سپس تمام لینک‌ها در دیتابیس اصلاح می‌شوند.\n• آدرس‌های قدیمی با ریدایرکت ۳۰۱ به جدید می‌روند.\n• فایل‌های قدیمی بعد از اصلاح حذف می‌شوند.\n\nبک‌آپ دارید؟')) { return; }
 			clear(jobArea);
 			var jb = jobBox({ title: 'تغییر نام فایل‌ها', onDone: function () { load(); loadRedirects(1); } });
@@ -668,6 +714,29 @@
 				}
 			});
 		}
+		var undoBox = h('div');
+		function loadUndo() {
+			api('list', { tab: 'undo' }).then(function (d) {
+				clear(undoBox);
+				if (!d.renames.length) { return; }
+				undoBox.appendChild(h('h3', null, 'تغییر نام‌های قابل بازگردانی (' + num(d.renames.length) + ')'));
+				var body = h('tbody');
+				d.renames.forEach(function (it) {
+					body.appendChild(h('tr', null, h('td', null, R(it.title || ('#' + it.att))), h('td', { dir: 'ltr', style: 'text-align:start' }, R(it.old + ' → ' + it.new)), h('td', null, it.until),
+						h('td', null, h('button', { class: 'button', onClick: function () { runUndo([it.id]); } }, '↩ بازگردانی'))));
+				});
+				undoBox.appendChild(h('table', { class: 'widefat striped msw-table' }, h('thead', null, h('tr', null, ['تصویر', 'تغییر', 'نگه‌داری تا', ''].map(function (x) { return h('th', null, x); }))), body));
+				undoBox.appendChild(h('p', null, h('button', { class: 'button', onClick: function () { runUndo(d.renames.map(function (x) { return x.id; })); } }, '↩ بازگردانی همه'),
+					' ', h('button', { class: 'button-link', onClick: function () { if (!confirmT('فایل‌های قبلی همین حالا برای همیشه حذف شوند؟')) { return; } api('act', { op: 'purge_undo' }).then(function () { loadUndo(); }); } }, 'حذف فایل‌های قبلی همین حالا')));
+			});
+		}
+		function runUndo(ids) {
+			if (!confirmT('تغییر نام این فایل‌ها بازگردانده و لینک‌ها اصلاح شوند؟')) { return; }
+			clear(jobArea);
+			var jb = jobBox({ title: 'بازگردانی تغییر نام', onDone: function () { load(); loadUndo(); loadRedirects(1); } });
+			jobArea.appendChild(jb);
+			api('job_start', { type: 'undo_rename', opts: { ids: ids } }).then(function (st) { jb.start(st); }).catch(function (e) { clear(jobArea); toast(e.message, 'err'); });
+		}
 		clear(el);
 		el.appendChild(h('div', { class: 'msw-notice' }, 'فقط تصاویر «در حال استفاده» (بر اساس آخرین اسکن) نمایش داده می‌شوند. Alt را خودتان بنویسید یا از عنوان پر کنید و بازبینی کنید؛ Alt مناسب باید محتوای تصویر را توصیف کند، نه کلمهٔ کلیدی انبوه. توجه: تغییر Alt پیوست، روی تصاویر قبلاً درج‌شده در متن (که Alt خودشان را دارند) اثر ندارد؛ برای تصویر شاخص، بلوک‌ها و درج‌های بعدی اثر می‌گذارد.'));
 		el.appendChild(h('div', { class: 'msw-filters' },
@@ -675,9 +744,10 @@
 			h('input', { type: 'search', placeholder: 'جست‌وجو…', onInput: debounce(function (e) { f.q = e.target.value; f.page = 1; load(); }, 400) }),
 			h('button', { class: 'button', onClick: function () { Object.keys(rows).forEach(function (id) { if (!rows[id].alt.value.trim() && rows[id].title) { rows[id].alt.value = rows[id].title; } }); } }, 'پر کردن Alt خالی‌ها با عنوان (پیش‌نویس)'),
 			h('button', { class: 'button button-primary', onClick: saveAlts }, '💾 ذخیرهٔ Altها'),
+			h('button', { class: 'button', onClick: function () { var it = collectRename(); if (it) { previewModal('rename', { items: it }); } } }, '👁 پیش‌نمایش تغییر نام'),
 			h('button', { class: 'button msw-danger', onClick: renameSel }, '✏️ تغییر نام انتخاب‌شده‌ها + ۳۰۱')));
-		el.appendChild(jobArea); el.appendChild(tableBox); el.appendChild(redirBox);
-		load(); loadRedirects(1);
+		el.appendChild(jobArea); el.appendChild(tableBox); el.appendChild(undoBox); el.appendChild(redirBox);
+		load(); loadUndo(); loadRedirects(1);
 	}
 
 	function tabReport(el) {
@@ -787,6 +857,7 @@
 						h('label', null, h('input', { type: 'radio', name: 'msw-scope', checked: scope === 'all', onChange: function () { scope = 'all'; } }), ' همهٔ عکس‌های کتابخانه')),
 					h('button', { class: 'button button-primary button-hero', disabled: !caps.engine, onClick: function () { start(false); } }, '⚡ شروع تبدیل'),
 					h('button', { class: 'button', disabled: !caps.engine, onClick: function () { start(true); } }, 'تلاش دوباره برای ناموفق/ردشده‌ها'),
+					h('button', { class: 'button', disabled: !caps.engine, onClick: function () { previewModal('convert', { scope: scope }); } }, '👁 پیش‌نمایش تغییرات دیتابیس'),
 					h('button', { class: 'button', disabled: !caps.engine, onClick: function () {
 						clear(simArea).appendChild(h('em', null, 'در حال آزمایش روی چند تصویر نمونه (بدون تغییر در سایت)…'));
 						api('sim').then(function (r) {
@@ -815,6 +886,23 @@
 					api('job_start', { type: 'optimize', opts: { max_px: maxpx.value, drop_original: dropOrig.checked } }).then(function (st) { jb.start(st); }).catch(function (e) { clear(optArea); toast(e.message, 'err'); });
 				} }, '📉 اجرا')));
 			el.appendChild(optArea);
+			var optUndo = h('div');
+			el.appendChild(optUndo);
+			function loadOptUndo() {
+				api('list', { tab: 'undo' }).then(function (d) {
+					clear(optUndo);
+					if (!d.optimized.length) { return; }
+					optUndo.appendChild(h('div', { class: 'msw-notice' }, num(d.optimized.length) + ' تصویر کوچک‌سازی‌شده با پشتیبان قابل بازگردانی است (تا ' + d.optimized[0].until + ' و بعد پشتیبان‌ها خودکار حذف می‌شوند).',
+						' ', h('button', { class: 'button', onClick: function () {
+							if (!confirmT('همهٔ کوچک‌سازی‌های دارای پشتیبان بازگردانده شوند؟')) { return; }
+							runOp('undo_optimize', d.optimized.map(function (x) { return x.att; }), loadOptUndo);
+						} }, '↩ بازگردانی همه'), ' ', h('button', { class: 'button-link', onClick: function () {
+							if (!confirmT('پشتیبان‌ها همین حالا حذف شوند؟ بعد از آن بازگشت ممکن نیست.')) { return; }
+							api('act', { op: 'purge_undo' }).then(function () { loadOptUndo(); });
+						} }, 'حذف پشتیبان‌ها همین حالا')));
+				});
+			}
+			loadOptUndo();
 			el.appendChild(h('div', { class: 'msw-notice' }, 'امنیت: هر فایل جدید ابتدا ساخته و اعتبارسنجی می‌شود؛ تا پایان اصلاح لینک‌ها فایل اصلی دست‌نخورده می‌ماند؛ تصاویری که WebP آن‌ها کوچک‌تر نشود، متحرک باشند، روی ذخیره‌ساز خارجی باشند یا در فایل‌های قالب لینک مستقیم داشته باشند، رد می‌شوند. کیفیت و سایر گزینه‌ها در «تنظیمات».'));
 			el.appendChild(jobArea);
 			if (d.job && d.job.status === 'running' && d.job.type === 'convert') {
@@ -858,6 +946,8 @@
 			['webp_on_upload', 'bool', 'تصاویر جدید هنگام آپلود خودکار WebP شوند']
 		]],
 		['سئو', [
+			['extra_hosts', 'textarea', 'دامنه‌های اضافه که «همین سایت» حساب شوند (CDN؛ هر خط یک دامنه)', 'فقط آدرس‌های نسبی، همین سایت و این دامنه‌ها در تبدیل/تغییر نام/ادغام بازنویسی می‌شوند؛ لینک تصاویر سایت‌های دیگر دست‌نخورده می‌ماند.'],
+			['undo_days', 'number', 'مدت نگه‌داری برای بازگردانی تغییر نام و کوچک‌سازی (روز)', '۰ = پشتیبان‌گیری نشود (فایل‌های قبلی فوراً حذف شوند)'],
 			['redirects_enable', 'bool', 'ریدایرکت ۳۰۱ خودکار برای آدرس‌های قدیمی تصاویر (تغییر نام/تبدیل WebP)', 'فقط وقتی فایل قدیمی دیگر وجود ندارد و صفحه ۴۰۴ می‌شود فعال می‌شود']
 		]],
 		['خودکارسازی', [

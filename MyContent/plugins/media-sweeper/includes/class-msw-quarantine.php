@@ -96,29 +96,40 @@ class MSW_Quarantine {
 		if ( self::STATUS === $post->post_status ) {
 			return true;
 		}
+		if ( MSW_Util::is_offloaded( $id ) ) {
+			return 'فایل روی ذخیره‌ساز خارجی (آفلود) است؛ قرنطینه فقط فایل محلی را جابه‌جا می‌کند. از حذف دائمی یا خود افزونهٔ آفلود استفاده کنید.';
+		}
+		if ( MSW_Util::shares_file( $id ) ) {
+			return 'پیوست دیگری (مثلاً ترجمهٔ چندزبانه) از همین فایل استفاده می‌کند؛ رد شد.';
+		}
 		if ( ! MSW_Util::protected_dir( self::dir() ) ) {
 			return 'ساخت پوشه قرنطینه ممکن نیست (مجوز نوشتن).';
 		}
 		$files = self::attachment_files( $id );
 		$moved = array();
+		$map   = array();
 		$bytes = 0;
 		foreach ( $files as $rel ) {
 			$src = MSW_Util::abs( $rel );
 			if ( ! is_file( $src ) ) {
 				continue;
 			}
-			$dst = self::dir() . '/' . (int) $id . '/' . $rel;
+			// Random, extension-less names: nothing guessable even if the web server exposes the folder.
+			$tok = strtolower( wp_generate_password( 24, false, false ) ) . '.q';
+			$dst = self::dir() . '/' . (int) $id . '/' . $tok;
 			$sz  = (int) filesize( $src );
 			if ( ! self::move( $src, $dst ) ) {
 				foreach ( array_reverse( $moved ) as $r ) { // Roll back.
-					self::move( self::dir() . '/' . (int) $id . '/' . $r, MSW_Util::abs( $r ) );
+					self::move( self::dir() . '/' . (int) $id . '/' . $map[ $r ], MSW_Util::abs( $r ) );
 				}
 				return 'انتقال فایل ناموفق بود: ' . $rel;
 			}
-			$moved[] = $rel;
-			$bytes  += $sz;
+			$moved[]     = $rel;
+			$map[ $rel ] = $tok;
+			$bytes      += $sz;
 		}
 		update_post_meta( $id, '_msw_q_files', $moved );
+		update_post_meta( $id, '_msw_q_map', $map );
 		update_post_meta( $id, '_msw_q_prev_status', $post->post_status );
 		update_post_meta( $id, '_msw_q_time', time() );
 		update_post_meta( $id, '_msw_q_bytes', $bytes );
@@ -138,12 +149,13 @@ class MSW_Quarantine {
 			return 'این مورد در قرنطینه نیست.';
 		}
 		$files = (array) get_post_meta( $id, '_msw_q_files', true );
+		$map   = (array) get_post_meta( $id, '_msw_q_map', true );
 		$done  = array();
 		foreach ( $files as $rel ) {
 			if ( ! MSW_Util::safe_rel( $rel ) ) {
 				continue;
 			}
-			$src = self::dir() . '/' . (int) $id . '/' . $rel;
+			$src = self::dir() . '/' . (int) $id . '/' . ( isset( $map[ $rel ] ) && preg_match( '~^[a-z0-9]+\.q$~', $map[ $rel ] ) ? $map[ $rel ] : $rel );
 			$dst = MSW_Util::abs( $rel );
 			if ( ! is_file( $src ) ) {
 				continue;
@@ -151,13 +163,13 @@ class MSW_Quarantine {
 			if ( file_exists( $dst ) ) {
 				// Something new took the name; refuse to overwrite.
 				foreach ( array_reverse( $done ) as $r ) {
-					self::move( MSW_Util::abs( $r ), self::dir() . '/' . (int) $id . '/' . $r );
+					self::move( MSW_Util::abs( $r ), self::dir() . '/' . (int) $id . '/' . ( isset( $map[ $r ] ) ? $map[ $r ] : $r ) );
 				}
 				return 'فایلی با همین نام وجود دارد: ' . $rel;
 			}
 			if ( ! self::move( $src, $dst ) ) {
 				foreach ( array_reverse( $done ) as $r ) {
-					self::move( MSW_Util::abs( $r ), self::dir() . '/' . (int) $id . '/' . $r );
+					self::move( MSW_Util::abs( $r ), self::dir() . '/' . (int) $id . '/' . ( isset( $map[ $r ] ) ? $map[ $r ] : $r ) );
 				}
 				return 'بازگردانی فایل ناموفق بود: ' . $rel;
 			}
@@ -165,7 +177,7 @@ class MSW_Quarantine {
 		}
 		$prev = (string) get_post_meta( $id, '_msw_q_prev_status', true );
 		$wpdb->update( $wpdb->posts, array( 'post_status' => $prev ? $prev : 'inherit' ), array( 'ID' => $id ) );
-		foreach ( array( '_msw_q_files', '_msw_q_prev_status', '_msw_q_time', '_msw_q_bytes' ) as $k ) {
+		foreach ( array( '_msw_q_files', '_msw_q_map', '_msw_q_prev_status', '_msw_q_time', '_msw_q_bytes' ) as $k ) {
 			delete_post_meta( $id, $k );
 		}
 		clean_post_cache( $id );
@@ -193,6 +205,9 @@ class MSW_Quarantine {
 		}
 		if ( get_post_meta( $id, '_msw_protected', true ) ) {
 			return 'این مورد محافظت‌شده است.';
+		}
+		if ( MSW_Util::shares_file( $id ) ) {
+			return 'پیوست دیگری (مثلاً ترجمهٔ چندزبانه) از همین فایل استفاده می‌کند؛ حذف فایل آن را خراب می‌کند.';
 		}
 		$ok = wp_delete_attachment( $id, true );
 		if ( ! $ok ) {
@@ -269,7 +284,7 @@ class MSW_Quarantine {
 			return 'ساخت پوشه قرنطینه ممکن نیست.';
 		}
 		$abs = MSW_Util::abs( $row->rel_path );
-		$dst = self::dir() . '/_orphans/' . $row->rel_path;
+		$dst = self::dir() . '/_orphans/' . $row->path_hash . '.q';
 		if ( is_file( $abs ) && ! self::move( $abs, $dst ) ) {
 			return 'انتقال فایل ناموفق بود.';
 		}
@@ -284,7 +299,7 @@ class MSW_Quarantine {
 		if ( ! $row || ! MSW_Util::safe_rel( $row->rel_path ) ) {
 			return 'فایل یافت نشد.';
 		}
-		$src = self::dir() . '/_orphans/' . $row->rel_path;
+		$src = self::dir() . '/_orphans/' . $row->path_hash . '.q';
 		$dst = MSW_Util::abs( $row->rel_path );
 		if ( file_exists( $dst ) ) {
 			return 'فایلی با همین نام وجود دارد.';
@@ -303,7 +318,7 @@ class MSW_Quarantine {
 		if ( ! $row || ! MSW_Util::safe_rel( $row->rel_path ) ) {
 			return 'فایل یافت نشد.';
 		}
-		$src = self::dir() . '/_orphans/' . $row->rel_path;
+		$src = self::dir() . '/_orphans/' . $row->path_hash . '.q';
 		if ( is_file( $src ) ) {
 			@unlink( $src );
 		}

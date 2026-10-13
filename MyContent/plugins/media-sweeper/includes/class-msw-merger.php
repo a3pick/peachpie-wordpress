@@ -32,8 +32,12 @@ class MSW_Merger {
 		return $out;
 	}
 
-	/** @return array|string pair info or an error message. */
-	public static function merge_one( $dup, $keep ) {
+	/**
+	 * Validate a merge and compute old => new file paths (no changes made).
+	 *
+	 * @return array|string [ 'pairs' => [...] ] or an error message.
+	 */
+	public static function plan( $dup, $keep ) {
 		global $wpdb;
 		if ( $dup === $keep || ! $dup || ! $keep ) {
 			return 'جفت نامعتبر';
@@ -46,6 +50,12 @@ class MSW_Merger {
 		}
 		if ( get_post_meta( $dup, '_msw_protected', true ) ) {
 			return 'کپی محافظت‌شده است';
+		}
+		if ( MSW_Util::is_offloaded( $dup ) || MSW_Util::is_offloaded( $keep ) ) {
+			return 'فایل روی ذخیره‌ساز خارجی است';
+		}
+		if ( MSW_Util::shares_file( $dup ) ) {
+			return 'پیوست دیگری از همین فایل استفاده می‌کند';
 		}
 		$d = self::files( $dup );
 		$k = self::files( $keep );
@@ -75,7 +85,18 @@ class MSW_Merger {
 				$pairs[ $s[0] ] = isset( $by_dim[ $s[1] ] ) ? $by_dim[ $s[1] ] : $k['main'];
 			}
 		}
-		$mt = MSW_Util::t( 'map' );
+		return array( 'pairs' => $pairs );
+	}
+
+	/** @return array|string pair info or an error message. */
+	public static function merge_one( $dup, $keep ) {
+		global $wpdb;
+		$pl = self::plan( $dup, $keep );
+		if ( is_string( $pl ) ) {
+			return $pl;
+		}
+		$pairs = $pl['pairs'];
+		$mt    = MSW_Util::t( 'map' );
 		foreach ( $pairs as $old => $new ) {
 			if ( $old === $new || strlen( $old ) > 185 ) {
 				continue;

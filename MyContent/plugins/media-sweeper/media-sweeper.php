@@ -16,7 +16,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 define( 'MSW_VERSION', '1.0.0' );
-define( 'MSW_DB_VERSION', '3' );
+define( 'MSW_DB_VERSION', '6' );
 define( 'MSW_FILE', __FILE__ );
 define( 'MSW_DIR', plugin_dir_path( __FILE__ ) );
 define( 'MSW_URL', plugin_dir_url( __FILE__ ) );

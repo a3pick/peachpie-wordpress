@@ -26,11 +26,11 @@ class MSW_Scanner {
 		if ( self::$broken ) {
 			$vals = array();
 			foreach ( self::$broken as $rel => $src ) {
-				$vals[] = $wpdb->prepare( '(%s,%s,%s)', md5( $rel ), $rel, substr( $src, 0, 120 ) );
+				$vals[] = $wpdb->prepare( '(%s,%s,%s,%s)', md5( $rel ), $rel, MSW_Extractor::path_key( $rel ), substr( $src, 0, 120 ) );
 			}
 			self::$broken = array();
 			foreach ( array_chunk( $vals, 200 ) as $chunk ) {
-				$wpdb->query( 'INSERT IGNORE INTO ' . MSW_Util::t( 'broken' ) . ' (rel_hash,rel_path,src) VALUES ' . implode( ',', $chunk ) ); // phpcs:ignore
+				$wpdb->query( 'INSERT IGNORE INTO ' . MSW_Util::t( 'broken' ) . ' (rel_hash,rel_path,path_key,src) VALUES ' . implode( ',', $chunk ) ); // phpcs:ignore
 			}
 		}
 		if ( ! self::$buf ) {
@@ -211,6 +211,7 @@ class MSW_Scanner {
 			$type = self::type_of( (string) $r->post_mime_type );
 			$bytes = 0;
 			$miss  = 0;
+			$off   = MSW_Util::is_offloaded( $id ) ? 1 : 0;
 			$w     = isset( $meta['width'] ) ? (int) $meta['width'] : 0;
 			$h     = isset( $meta['height'] ) ? (int) $meta['height'] : 0;
 
@@ -252,10 +253,13 @@ class MSW_Scanner {
 			} elseif ( $protect && $r->post_date_gmt && '0000-00-00 00:00:00' !== $r->post_date_gmt && ( $now - strtotime( $r->post_date_gmt . ' UTC' ) ) < $protect ) {
 				$locked = 'recent';
 			}
+			if ( $off ) {
+				$miss = 0; // The file may legitimately live on the remote storage only.
+			}
 			$poster = (int) get_post_meta( $id, '_thumbnail_id', true );
 
 			$vals[] = $wpdb->prepare(
-				'(%d,%s,%s,%s,%s,%s,%d,%d,%d,%s,%s,%d,%d,%d,%s)',
+				'(%d,%s,%s,%s,%s,%s,%d,%d,%d,%s,%s,%d,%d,%d,%d,%s)',
 				$id,
 				$type,
 				(string) $r->post_mime_type,
@@ -270,11 +274,12 @@ class MSW_Scanner {
 				(int) $r->post_parent,
 				$poster,
 				$miss,
+				$off,
 				'0000-00-00' === substr( (string) $r->post_date_gmt, 0, 10 ) ? gmdate( 'Y-m-d H:i:s' ) : (string) $r->post_date_gmt
 			);
 		}
 		$wpdb->query(
-			'REPLACE INTO ' . MSW_Util::t( 'media' ) . ' (attachment_id,type,mime,rel_path,path_key,base_key,bytes,width,height,status,locked,parent_id,poster_id,missing,uploaded) VALUES ' . implode( ',', $vals ) // phpcs:ignore WordPress.DB.PreparedSQL
+			'REPLACE INTO ' . MSW_Util::t( 'media' ) . ' (attachment_id,type,mime,rel_path,path_key,base_key,bytes,width,height,status,locked,parent_id,poster_id,missing,offload,uploaded) VALUES ' . implode( ',', $vals ) // phpcs:ignore WordPress.DB.PreparedSQL
 		);
 		return (int) end( $ids );
 	}
@@ -317,7 +322,8 @@ class MSW_Scanner {
 		$wpdb->query( "UPDATE $m m INNER JOIN $r r ON r.ref = CONCAT('f:', m.path_key) SET m.theme_ref = 1 WHERE m.path_key <> ''" ); // phpcs:ignore
 		// Poster images follow their video / audio.
 		$wpdb->query( "UPDATE $m a INNER JOIN $m v ON v.poster_id = a.attachment_id SET a.status = 'used', a.used_in = CONCAT('poster:', v.attachment_id) WHERE a.status = 'unused' AND v.status = 'used' AND v.poster_id > 0" ); // phpcs:ignore
-		// Attachments missing on disk have nothing to free.
+		// References to files that live on remote storage are not broken.
+		$wpdb->query( 'DELETE b FROM ' . MSW_Util::t( 'broken' ) . " b INNER JOIN $m m ON m.path_key = b.path_key WHERE m.offload = 1" ); // phpcs:ignore
 		self::summarize();
 	}
 
@@ -331,6 +337,8 @@ class MSW_Scanner {
 			        SUM(status='used') used,
 			        SUM(status='unused' AND locked<>'') locked,
 			        SUM(missing=1) missing,
+			        SUM(offload=1) offloaded,
+			        SUM(offload=1) offloaded,
 			        SUM(bytes) total_bytes
 			 FROM $m", // phpcs:ignore
 			ARRAY_A
@@ -348,6 +356,7 @@ class MSW_Scanner {
 				'used'          => (int) $row['used'],
 				'locked'        => (int) $row['locked'],
 				'missing'       => (int) $row['missing'],
+				'offloaded'     => (int) $row['offloaded'],
 				'broken'        => $brk,
 				'total_bytes'   => (int) $row['total_bytes'],
 				'orphans'       => (int) $orph['c'],
@@ -429,6 +438,7 @@ class MSW_Scanner {
 				$keys[ MSW_Extractor::path_key( $rel ) ][] = array( $rel, $p );
 			}
 			$known = array();
+			$held  = array();
 			$kl    = array_keys( $keys );
 			foreach ( array_chunk( $kl, 400 ) as $chunk ) {
 				$in = "'" . implode( "','", array_map( 'esc_sql', $chunk ) ) . "'";
@@ -440,12 +450,27 @@ class MSW_Scanner {
 					$known[ strtolower( substr( $k, 2 ) ) ] = true;
 				}
 			}
+			$hashes = array();
+			foreach ( $keys as $entries ) {
+				foreach ( $entries as $e ) {
+					$hashes[] = md5( $e[0] );
+				}
+			}
+			foreach ( array_chunk( $hashes, 400 ) as $chunk ) {
+				$hin = "'" . implode( "','", array_map( 'esc_sql', $chunk ) ) . "'";
+				foreach ( (array) $wpdb->get_col( 'SELECT path_hash FROM ' . MSW_Util::t( 'hold' ) . " WHERE path_hash IN ($hin)" ) as $hh ) { // phpcs:ignore
+					$held[ $hh ] = true;
+				}
+			}
 			$vals = array();
 			foreach ( $keys as $k => $entries ) {
 				if ( isset( $known[ strtolower( $k ) ] ) ) {
 					continue;
 				}
 				foreach ( $entries as $e ) {
+					if ( isset( $held[ md5( $e[0] ) ] ) ) {
+						continue;
+					}
 					$vals[] = $wpdb->prepare( '(%s,%s,%d,%d)', md5( $e[0] ), $e[0], (int) @filesize( $e[1] ), (int) @filemtime( $e[1] ) );
 				}
 			}

@@ -283,8 +283,11 @@ class MSW_Converter {
 		if ( ! in_array( $mime, array( 'image/jpeg', 'image/png' ), true ) ) {
 			return array( 'status' => 'skipped', 'reason' => 'نوع فایل پشتیبانی نمی‌شود' );
 		}
-		if ( get_post_meta( $id, 'amazonS3_info', true ) || get_post_meta( $id, '_wp_offload_media', true ) ) {
+		if ( MSW_Util::is_offloaded( $id ) ) {
 			return array( 'status' => 'skipped', 'reason' => 'فایل روی ذخیره‌ساز خارجی (آفلود) است' );
+		}
+		if ( 'upload' !== $mode && MSW_Util::shares_file( $id ) ) {
+			return array( 'status' => 'skipped', 'reason' => 'پیوست دیگری از همین فایل استفاده می‌کند' );
 		}
 		$rel = (string) get_post_meta( $id, '_wp_attached_file', true );
 		if ( '' === $rel || ! MSW_Util::safe_rel( $rel ) ) {
@@ -487,6 +490,34 @@ class MSW_Converter {
 			return $r['meta'];
 		}
 		return $meta;
+	}
+
+	/** Approximate old => new names for a dry-run (extension swap; no files touched). */
+	public static function plan_pairs( $id ) {
+		$rel  = (string) get_post_meta( $id, '_wp_attached_file', true );
+		if ( '' === $rel || ! preg_match( '~\.(jpe?g|png)$~i', $rel ) ) {
+			return array();
+		}
+		$meta = get_post_meta( $id, '_wp_attachment_metadata', true );
+		$dir  = ( false === strpos( $rel, '/' ) ) ? '' : dirname( $rel ) . '/';
+		$olds = array( $rel );
+		if ( is_array( $meta ) ) {
+			if ( MSW_Util::get( 'webp_originals' ) && ! empty( $meta['original_image'] ) ) {
+				$olds[] = $dir . $meta['original_image'];
+			}
+			foreach ( (array) ( isset( $meta['sizes'] ) ? $meta['sizes'] : array() ) as $sz ) {
+				if ( ! empty( $sz['file'] ) ) {
+					$olds[] = $dir . $sz['file'];
+				}
+			}
+		}
+		$out = array();
+		foreach ( array_unique( $olds ) as $o ) {
+			if ( preg_match( '~\.(jpe?g|png)$~i', $o ) && strlen( $o ) <= 185 ) {
+				$out[ $o ] = preg_replace( '~\.(jpe?g|png)$~i', '.webp', $o );
+			}
+		}
+		return $out;
 	}
 
 	/* ------------------------------------------------------ job helpers */

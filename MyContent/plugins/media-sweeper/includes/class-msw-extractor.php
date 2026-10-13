@@ -20,6 +20,65 @@ class MSW_Extractor {
 	/** Directory name that precedes media paths in URLs (normally "uploads"). */
 	public static $marker = 'uploads';
 
+	/**
+	 * Hosts that count as "this site" (lower-case, without www.). null = compute
+	 * from WordPress on first use; false = every host is accepted (unit tests).
+	 */
+	public static $hosts = null;
+
+	private static function norm_host( $h ) {
+		$h = strtolower( (string) $h );
+		$h = preg_replace( '~^.*@~', '', $h );
+		return preg_replace( '~^www\.~', '', $h );
+	}
+
+	public static function allowed_hosts() {
+		if ( null === self::$hosts ) {
+			if ( ! function_exists( 'home_url' ) ) {
+				self::$hosts = false;
+				return false;
+			}
+			$list = array( home_url(), site_url(), function_exists( 'wp_upload_dir' ) ? wp_upload_dir( null, false )['baseurl'] : '' );
+			$out  = array();
+			foreach ( $list as $u ) {
+				$host = wp_parse_url( $u, PHP_URL_HOST );
+				if ( $host ) {
+					$port = wp_parse_url( $u, PHP_URL_PORT );
+					$out[ self::norm_host( $host ) ] = true;
+					if ( $port ) {
+						$out[ self::norm_host( $host ) . ':' . $port ] = true;
+					}
+				}
+			}
+			$extra = class_exists( 'MSW_Util' ) ? (string) MSW_Util::get( 'extra_hosts' ) : '';
+			foreach ( preg_split( '~[\s,]+~', $extra ) as $x ) {
+				$x = self::norm_host( preg_replace( '~^https?://~i', '', trim( $x ) ) );
+				if ( '' !== $x ) {
+					$out[ rtrim( $x, '/' ) ] = true;
+				}
+			}
+			self::$hosts = $out;
+		}
+		return self::$hosts;
+	}
+
+	/**
+	 * Is the URL that ends right before the upload marker one of ours?
+	 * $prefix is the text before the marker, e.g. 'src="https://cdn.x.com/wp-content/'.
+	 * Relative URLs (no host) are always ours.
+	 */
+	public static function host_ok( $prefix ) {
+		$hosts = self::allowed_hosts();
+		if ( false === $hosts ) {
+			return true;
+		}
+		$prefix = substr( $prefix, -400 );
+		if ( ! preg_match( '~(?:https?:)?\\\\?/\\\\?/([^\s"\'<>()\\\\|,;/\\\\]+)(?:\\\\?/[^\s"\'<>()\\\\|,;/\\\\]*)*$~i', $prefix, $m ) ) {
+			return true;
+		}
+		return isset( $hosts[ self::norm_host( $m[1] ) ] );
+	}
+
 	/* ----------------------------------------------------------------- keys */
 
 	/** Shorten very long keys so they fit an indexed column. */
@@ -109,11 +168,15 @@ class MSW_Extractor {
 		/* Paths below the uploads directory. */
 		if ( false !== stripos( $t, self::$marker . '/' ) ) {
 			$re = '~' . preg_quote( self::$marker, '~' ) . '/([^\s"\'<>()\\\\|,;{}\[\]]+?\.(?:' . self::EXT . '))(?![a-z0-9_])~i';
-			if ( preg_match_all( $re, $t, $m ) ) {
-				foreach ( $m[1] as $rel ) {
+			if ( preg_match_all( $re, $t, $m, PREG_OFFSET_CAPTURE ) ) {
+				foreach ( $m[1] as $i => $hit ) {
+					$rel = $hit[0];
 					$out['paths'][ self::path_key( $rel ) ] = true;
-					$raw = preg_replace( '~^sites/\d+/~', '', false !== strpos( $rel, '%' ) ? rawurldecode( $rel ) : $rel );
-					$out['raw'][ $raw ] = true;
+					$start = $m[0][ $i ][1];
+					if ( self::host_ok( substr( $t, max( 0, $start - 400 ), min( 400, $start ) ) ) ) {
+						$raw                = preg_replace( '~^sites/\d+/~', '', false !== strpos( $rel, '%' ) ? rawurldecode( $rel ) : $rel );
+						$out['raw'][ $raw ] = true;
+					}
 				}
 			}
 		}

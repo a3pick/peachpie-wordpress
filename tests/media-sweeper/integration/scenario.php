@@ -87,6 +87,19 @@ $p4 = wp_insert_post( array( 'post_title' => 'Dup', 'post_status' => 'publish', 
 $p5 = wp_insert_post( array( 'post_title' => 'Dup id', 'post_status' => 'publish', 'post_content' => 'x' ) );
 set_post_thumbnail( $p5, $I['dup-byid.jpg'] );
 $p6 = wp_insert_post( array( 'post_title' => 'SEO', 'post_status' => 'publish', 'post_content' => '<img class="wp-image-' . $I['IMG_2045.jpg'] . '" src="' . $img( $I['IMG_2045.jpg'] ) . '"><img src="' . $img( $I['huge.jpg'], 'full' ) . '"><img src="' . MSW_Util::baseurl() . '/2019/01/ghost-image.jpg">' ) );
+$rel_ic = get_post_meta( $I['in-content.jpg'], '_wp_attached_file', true );
+$p7 = wp_insert_post( array( 'post_title' => 'Hotlink', 'post_status' => 'publish', 'post_content' => '<img src="https://external.example/wp-content/uploads/' . $rel_ic . '"><img src="' . MSW_Util::baseurl() . '/' . $rel_ic . '">' ) );
+$I['prev.jpg'] = imp( 'prev.jpg', 31 );
+$p8 = wp_insert_post( array( 'post_title' => 'Prev A', 'post_status' => 'publish', 'post_content' => '<img src="' . $img( $I['prev.jpg'] ) . '"> <img src="' . $img( $I['prev.jpg'], 'full' ) . '">' ) );
+$p9 = wp_insert_post( array( 'post_title' => 'Prev B', 'post_status' => 'publish', 'post_content' => 'x' ) );
+update_post_meta( $p9, '_x_blob', wp_slash( wp_json_encode( array( 'u' => $img( $I['prev.jpg'], 'full' ) ) ) ) );
+$I['off.jpg'] = imp( 'off.jpg', 41 );
+$p10 = wp_insert_post( array( 'post_title' => 'Offloaded', 'post_status' => 'publish', 'post_content' => '<img src="' . $img( $I['off.jpg'], 'full' ) . '">' ) );
+$off_rel = get_post_meta( $I['off.jpg'], '_wp_attached_file', true );
+update_post_meta( $I['off.jpg'], 'amazonS3_info', array( 'bucket' => 'b', 'key' => 'k' ) );
+foreach ( glob( dirname( get_attached_file( $I['off.jpg'] ) ) . '/off*' ) as $f ) { unlink( $f ); }
+$I['alpha.jpg'] = imp( 'alpha-src.jpg', 51 );
+$p11 = wp_insert_post( array( 'post_title' => 'Alpha', 'post_status' => 'publish', 'post_content' => '<img src="' . $img( $I['alpha.jpg'] ) . '">' ) );
 $u = wp_upload_dir();
 wp_mkdir_p( $u['basedir'] . '/2020/01' );
 copy( mkjpg( 'orph.jpg', 400, 300, 99 ), $u['basedir'] . '/2020/01/orphan.jpg' );
@@ -108,12 +121,25 @@ t( 'protected locked', 'protected' === $status( $I['protected.jpg'] )['locked'] 
 t( 'theme ref flagged', 1 === (int) $status( $I['theme-hard.jpg'] )['theme_ref'] );
 $o = MSW_Query::orphans( array() );
 t( 'one orphan, companion ignored', 1 === $o['total'] && 'orphan.jpg' === $o['items'][0]['file'] );
-t( 'broken link found', 1 === (int) $wpdb->get_var( 'SELECT COUNT(*) FROM ' . MSW_Util::t( 'broken' ) ) );
+t( 'broken link found (offloaded file not counted)', 1 === (int) $wpdb->get_var( 'SELECT COUNT(*) FROM ' . MSW_Util::t( 'broken' ) ) );
+$offrow = $wpdb->get_row( $wpdb->prepare( 'SELECT status, missing, offload FROM ' . MSW_Util::t( 'media' ) . ' WHERE attachment_id = %d', $I['off.jpg'] ), ARRAY_A );
+t( 'offloaded: used, not missing, flagged', 'used' === $offrow['status'] && 0 === (int) $offrow['missing'] && 1 === (int) $offrow['offload'] );
+t( 'offloaded attachment refuses quarantine', is_string( MSW_Quarantine::quarantine( $I['off.jpg'] ) ) );
 $d = MSW_Query::duplicates( array() );
 t( 'duplicate group of 3', 1 === $d['total'] && 3 === $d['groups'][0]['count'] );
 
 echo "== quarantine / restore / delete\n";
+// Multilingual-style duplicate row sharing the same file.
+$sh = wp_insert_attachment( array( 'post_title' => 'shared copy', 'post_mime_type' => 'image/jpeg', 'post_status' => 'inherit' ), $file( $I['unused-one.jpg'] ) );
+t( 'shared-file attachment refuses quarantine and delete', true === MSW_Util::shares_file( $I['unused-one.jpg'] ) && is_string( MSW_Quarantine::quarantine( $I['unused-one.jpg'] ) ) && is_string( MSW_Quarantine::delete_now( $I['unused-one.jpg'] ) ) );
+// Remove the fake row WITHOUT touching the shared file (wp_delete_post would unlink it).
+$wpdb->delete( $wpdb->posts, array( 'ID' => $sh ) );
+$wpdb->delete( $wpdb->postmeta, array( 'post_id' => $sh ) );
+clean_post_cache( $sh );
 t( 'quarantine', true === MSW_Quarantine::quarantine( $I['unused-one.jpg'] ) && 'msw_quarantine' === get_post( $I['unused-one.jpg'] )->post_status && ! is_file( $file( $I['unused-one.jpg'] ) ) );
+$qfiles = glob( MSW_Util::abs( 'msw-quarantine/' . $I['unused-one.jpg'] . '/*' ) );
+t( 'quarantined files have random names', $qfiles && 0 === count( preg_grep( '~unused|\.jpg$~i', array_map( 'basename', $qfiles ) ) ) );
+t( 'quarantine probe returns a state', in_array( MSW_Util::quarantine_probe( true ), array( 'ok', 'exposed', 'unknown' ), true ) );
 t( 'restore', true === MSW_Quarantine::restore( $I['unused-one.jpg'] ) && is_file( $file( $I['unused-one.jpg'] ) ) );
 t( 'delete_now', true === MSW_Quarantine::delete_now( $I['unused-two.png'] ) && ! get_post( $I['unused-two.png'] ) );
 t( 'protected refuses delete', is_string( MSW_Quarantine::delete_now( $I['protected.jpg'] ) ) );
@@ -123,10 +149,12 @@ t( 'orphan quarantine/restore/delete', true === MSW_Quarantine::orphan_quarantin
 echo "== webp convert / revert\n";
 $ids = array( $I['in-content.jpg'], $I['featured.jpg'], $I['elementor.jpg'], $I['gallery-a.jpg'], $I['gallery-b.jpg'], $I['logo-mod.png'] );
 $st = run_job( 'convert', array( 'scope' => 'used' ) );
-t( 'convert done ' . json_encode( $st['counts'] ), 'done' === $st['status'] && $st['counts']['converted'] >= 6 );
+echo 'STATUS ' . $st['status'] . ' ' . $st['msg'] . "\n"; t( 'convert done ' . json_encode( $st['counts'] ), 'done' === $st['status'] && $st['counts']['converted'] >= 6 );
 t( 'theme-ref image skipped', 'image/jpeg' === get_post_mime_type( $I['theme-hard.jpg'] ) );
 $c = get_post_field( 'post_content', $p1 );
 t( 'html rewritten', false !== strpos( $c, 'in-content-300x' ) && false !== strpos( $c, '.webp' ) && false === strpos( $c, 'in-content.jpg' ) );
+$c7 = get_post_field( 'post_content', $p7 );
+t( 'external-host URL untouched, own URL rewritten', false !== strpos( $c7, 'external.example/wp-content/uploads/' . $rel_ic . '"' ) && false !== strpos( $c7, MSW_Util::baseurl() . '/' . preg_replace( '~\.jpg$~', '.webp', $rel_ic ) ) );
 $j = get_post_meta( $p3, '_elementor_data', true );
 t( 'elementor json rewritten + valid', false !== strpos( $j, 'elementor.webp' ) && null !== json_decode( $j ) );
 t( 'serialized widget rewritten', false !== strpos( wp_json_encode( get_option( 'widget_text' ) ), 'elementor.webp' ) );
@@ -149,11 +177,39 @@ $st = run_job( 'optimize', array( 'max_px' => 1600, 'drop_original' => true ) );
 $m = wp_get_attachment_metadata( $I['huge.jpg'] );
 t( 'optimize resized + dropped original', 'done' === $st['status'] && $m['width'] <= 1600 && empty( $m['original_image'] ) && filesize( $file( $I['huge.jpg'] ) ) < $before );
 
+t( 'optimize left an undo backup', is_array( get_post_meta( $I['huge.jpg'], '_msw_opt_bak', true ) ) && glob( MSW_Util::abs( 'msw-backup/' . $I['huge.jpg'] . '/*' ) ) );
+t( 'optimize undo', true === MSW_Optimizer::undo( $I['huge.jpg'] ) && wp_get_attachment_metadata( $I['huge.jpg'] )['width'] > 1600 && ! empty( wp_get_attachment_metadata( $I['huge.jpg'] )['original_image'] ) && filesize( $file( $I['huge.jpg'] ) ) > ( $before / 2 ) );
+$st = run_job( 'optimize', array( 'max_px' => 1600, 'drop_original' => true ) );
+t( 'optimize again + purge backups', 'done' === $st['status'] && MSW_Optimizer::purge_backups( true ) >= 1 && ! get_post_meta( $I['huge.jpg'], '_msw_opt_bak', true ) );
+
+echo "== dry-run preview equals real run\n";
+$pv = run_job( 'preview', array( 'kind' => 'rename', 'items' => array( $I['prev.jpg'] => 'Preview Target' ) ) );
+t( 'preview finished with rows ' . ( isset( $pv['preview']['rows'] ) ? $pv['preview']['rows'] : '?' ), 'done' === $pv['status'] && $pv['preview']['rows'] >= 2 );
+t( 'preview changed nothing', false === strpos( get_post_field( 'post_content', $p8 ), 'preview-target' ) && 0 === (int) $wpdb->get_var( 'SELECT COUNT(*) FROM ' . MSW_Util::t( 'pmap' ) ) );
+$real = run_job( 'rename', array( 'items' => array( $I['prev.jpg'] => 'Preview Target' ) ) );
+t( 'real rename rewrote the same number of rows', 'done' === $real['status'] && (int) $real['counts']['rewritten'] === (int) $pv['preview']['rows'] );
+
+echo "== rename undo\n";
+$pre_old = get_post_meta( $I['alpha.jpg'], '_wp_attached_file', true );
+$st = run_job( 'rename', array( 'items' => array( $I['alpha.jpg'] => 'alpha-renamed' ) ) );
+$after = get_post_meta( $I['alpha.jpg'], '_wp_attached_file', true );
+t( 'renamed; old files kept for undo', 'done' === $st['status'] && 'alpha-renamed' === pathinfo( $after, PATHINFO_FILENAME ) && is_file( MSW_Util::abs( $pre_old ) ) );
+$st = run_job( 'scan', array() );
+t( 'held old files are not reported as orphans', 0 === (int) MSW_Query::orphans( array() )['total'] );
+$st = run_job( 'undo_rename', array() );
+t( 'undo done', 'done' === $st['status'] );
+t( 'undo restored file name + content + removed copies', $pre_old === get_post_meta( $I['alpha.jpg'], '_wp_attached_file', true ) && false !== strpos( get_post_field( 'post_content', $p11 ), 'alpha-src' ) && ! is_file( MSW_Util::abs( $after ) ) );
+t( 'undo removed redirects of the restored names', null === MSW_Redirects::resolve( wp_parse_url( MSW_Util::url( $after ), PHP_URL_PATH ) ) );
+$st = run_job( 'rename', array( 'items' => array( $I['alpha.jpg'] => 'alpha-final' ) ) );
+t( 'purge_undo removes old files', MSW_Renamer::purge_undo( true ) >= 1 && ! is_file( MSW_Util::abs( $pre_old ) ) );
+
 echo "== rename + redirect\n";
 $old = get_post_meta( $I['IMG_2045.jpg'], '_wp_attached_file', true );
 $st  = run_job( 'rename', array( 'items' => array( $I['IMG_2045.jpg'] => 'Eiffel Tower at Night' ) ) );
 $new = get_post_meta( $I['IMG_2045.jpg'], '_wp_attached_file', true );
-t( 'rename done', 'done' === $st['status'] && 'eiffel-tower-at-night' === pathinfo( $new, PATHINFO_FILENAME ) && is_file( MSW_Util::abs( $new ) ) && ! is_file( MSW_Util::abs( $old ) ) );
+t( 'rename done; old files held for undo', 'done' === $st['status'] && 'eiffel-tower-at-night' === pathinfo( $new, PATHINFO_FILENAME ) && is_file( MSW_Util::abs( $new ) ) && is_file( MSW_Util::abs( $old ) ) );
+MSW_Renamer::purge_undo( true );
+t( 'old files removed after undo period', ! is_file( MSW_Util::abs( $old ) ) && ! glob( MSW_Util::abs( dirname( $old ) . '/IMG_2045*' ) ) );
 t( 'content rewritten after rename', false !== strpos( get_post_field( 'post_content', $p6 ), 'eiffel-tower-at-night' ) && false === strpos( get_post_field( 'post_content', $p6 ), 'IMG_2045' ) );
 $to = MSW_Redirects::resolve( wp_parse_url( MSW_Util::url( $old ), PHP_URL_PATH ) );
 t( '301 target resolves', $to && false !== strpos( $to, 'eiffel-tower-at-night.' ) );

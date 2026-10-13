@@ -44,6 +44,8 @@ class MSW_Cron {
 	public static function daily() {
 		MSW_Quarantine::purge_expired();
 		MSW_Converter::purge_originals( false );
+		MSW_Renamer::purge_undo( false );
+		MSW_Optimizer::purge_backups( false );
 	}
 
 	public static function scheduled_scan() {
