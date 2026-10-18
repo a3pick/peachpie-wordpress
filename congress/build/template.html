@@ -1,0 +1,2013 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light dark">
+    <script>
+        // Apply saved theme before first paint (default: light) to avoid a dark flash
+        (function () {
+            var t = "light";
+            try { t = localStorage.getItem("ophtho2026_theme") || "light"; } catch (e) {}
+            if (t === "dark") document.documentElement.classList.add("dark");
+        })();
+    </script>
+    <title>Ophthalmology Congress 2026 | Scientific Program</title>
+    <style>
+/*INLINE_CSS*/
+
+        html { -webkit-text-size-adjust: 100%; }
+        body { overflow-x: hidden; }
+        .no-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        * {
+            scrollbar-width: thin;
+            scrollbar-color: rgba(156, 163, 175, 0.5) transparent;
+        }
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background-color: rgba(156, 163, 175, 0.4);
+            border-radius: 20px;
+        }
+        .glass-header {
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+        }
+        .card-enter {
+            animation: cardFadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        @keyframes cardFadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(12px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        mark.highlight {
+            background-color: rgba(250, 204, 21, 0.35);
+            color: inherit;
+            padding: 0 2px;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+        .dark mark.highlight {
+            background-color: rgba(250, 204, 21, 0.25);
+            color: #fef08a;
+        }
+        @media (max-width: 639px) {
+            .talks-table, .talks-table tbody, .talks-table tr, .talks-table td { display: block; width: 100%; }
+            .talks-table thead { display: none; }
+            .talks-table tr { padding: 0.65rem 0.9rem; }
+            .talks-table td { padding: 0.1rem 0 !important; word-break: break-word; overflow-wrap: anywhere; }
+        }
+        @media print {
+            .no-print {
+                display: none !important;
+            }
+            body {
+                background: white !important;
+                color: black !important;
+            }
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100 min-h-screen transition-colors duration-300 selection:bg-blue-500 selection:text-white">
+
+    <!-- Background Decorative Gradients -->
+    <div class="fixed inset-0 overflow-hidden pointer-events-none z-0 no-print">
+        <div class="absolute -top-40 -right-40 w-96 h-96 bg-blue-500/10 dark:bg-blue-500/15 rounded-full blur-3xl"></div>
+        <div class="absolute top-60 -left-40 w-96 h-96 bg-teal-500/10 dark:bg-teal-500/15 rounded-full blur-3xl"></div>
+        <div class="absolute bottom-10 right-1/4 w-96 h-96 bg-purple-500/10 dark:bg-purple-500/10 rounded-full blur-3xl"></div>
+    </div>
+
+    <!-- Top Header -->
+    <header class="relative z-20 border-b border-slate-200/80 dark:border-slate-800/80 bg-white/75 dark:bg-slate-900/75 glass-header sticky top-0 transition-colors duration-300">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16 sm:h-20 gap-2 sm:gap-4">
+                <!-- Logo & Title -->
+                <div class="flex items-center gap-2.5 sm:gap-3.5 min-w-0">
+                    <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-gradient-to-br from-blue-600 to-teal-500 flex items-center justify-center text-white shadow-lg shadow-blue-500/25 shrink-0">
+                        <i class="ph-duotone ph-eye text-2xl"></i>
+                    </div>
+                    <div class="min-w-0">
+                        <div class="flex items-center gap-2">
+                            <span class="px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wider rounded-full bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-300 border border-blue-200 dark:border-blue-500/30">
+                                27–30 Oct 2026
+                            </span>
+                            <span class="hidden sm:inline-flex items-center gap-1 text-xs text-slate-500 dark:text-slate-400 font-medium">
+                                <i class="ph-fill ph-sparkle text-amber-500"></i> Scientific Schedule
+                            </span>
+                        </div>
+                        <h1 class="text-sm sm:text-xl truncate font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-slate-900 via-slate-800 to-slate-600 dark:from-white dark:via-slate-100 dark:to-slate-400">
+                            Ophthalmology Annual Congress 2026
+                        </h1>
+                    </div>
+                </div>
+
+                <!-- Right Actions: Saved Schedule, Print, Theme Toggle -->
+                <div class="flex items-center gap-1.5 sm:gap-3 shrink-0 no-print">
+                    <!-- My Schedule Filter Toggle -->
+                    <button id="myScheduleBtn" onclick="toggleMySchedule()" class="relative inline-flex items-center gap-2 px-2.5 sm:px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 transition-all shadow-sm">
+                        <i id="bookmarkHeaderIcon" class="ph ph-bookmark-simple text-lg text-amber-500"></i>
+                        <span class="hidden md:inline">My Schedule</span>
+                        <span id="savedCountBadge" class="px-1.5 py-0.2 rounded-full text-[11px] bg-amber-500/15 text-amber-600 dark:text-amber-400 font-bold">0</span>
+                    </button>
+
+                    <!-- Print Button -->
+                    <button onclick="window.print()" title="Print Schedule" class="p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-all shadow-sm hidden sm:flex items-center justify-center">
+                        <i class="ph ph-printer text-lg"></i>
+                    </button>
+
+                    <!-- Dark / Light Mode Toggle -->
+                    <button id="themeToggle" onclick="toggleTheme()" aria-label="Toggle Theme" class="flex items-center gap-2 px-2.5 sm:px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-800/90 hover:bg-slate-200/70 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-100 transition-all shadow-sm font-medium text-xs sm:text-sm">
+                        <i id="themeIcon" class="ph-fill ph-moon text-indigo-600 text-lg"></i>
+                        <span id="themeText" class="hidden sm:inline">Dark Mode</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+        
+        <!-- Quick Stats Banner -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-6 no-print">
+            <div class="p-4 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200/80 dark:border-slate-800/80 shadow-sm flex items-center gap-3.5">
+                <div class="w-10 h-10 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
+                    <i class="ph-duotone ph-calendar-check text-xl"></i>
+                </div>
+                <div>
+                    <div class="text-xs text-slate-500 dark:text-slate-400 font-medium">Duration</div>
+                    <div class="text-sm sm:text-base font-bold">4 Full Days</div>
+                </div>
+            </div>
+            <div class="p-4 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200/80 dark:border-slate-800/80 shadow-sm flex items-center gap-3.5">
+                <div class="w-10 h-10 rounded-xl bg-teal-500/10 text-teal-600 dark:text-teal-400 flex items-center justify-center shrink-0">
+                    <i class="ph-duotone ph-presentation-chart text-xl"></i>
+                </div>
+                <div>
+                    <div class="text-xs text-slate-500 dark:text-slate-400 font-medium">Total Sessions</div>
+                    <div class="text-sm sm:text-base font-bold" id="statSessions">45+ Sessions</div>
+                </div>
+            </div>
+            <div class="p-4 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200/80 dark:border-slate-800/80 shadow-sm flex items-center gap-3.5">
+                <div class="w-10 h-10 rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0">
+                    <i class="ph-duotone ph-microphone-stage text-xl"></i>
+                </div>
+                <div>
+                    <div class="text-xs text-slate-500 dark:text-slate-400 font-medium">Presentations</div>
+                    <div class="text-sm sm:text-base font-bold" id="statTalks">220+ Topics</div>
+                </div>
+            </div>
+            <div class="p-4 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200/80 dark:border-slate-800/80 shadow-sm flex items-center gap-3.5">
+                <div class="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
+                    <i class="ph-duotone ph-buildings text-xl"></i>
+                </div>
+                <div>
+                    <div class="text-xs text-slate-500 dark:text-slate-400 font-medium">Venues</div>
+                    <div class="text-sm sm:text-base font-bold">Main Hall + Halls 2–6</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Control Panel (Days + Search + Filters) -->
+        <div class="bg-white dark:bg-slate-900/95 border border-slate-200/90 dark:border-slate-800 rounded-3xl p-4 sm:p-6 shadow-sm mb-8 no-print">
+            
+            <!-- Day Selector Tabs -->
+            <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-5 border-b border-slate-100 dark:border-slate-800/80">
+                <div class="grid grid-cols-2 sm:grid-cols-5 gap-2 w-full lg:w-auto" id="dayTabsContainer">
+                    <button onclick="setDayFilter('ALL')" data-day="ALL" class="day-tab px-4 py-2.5 rounded-2xl text-xs sm:text-sm font-bold transition-all flex flex-col items-center sm:items-start justify-center border">
+                        <span class="text-[10px] uppercase tracking-wider opacity-75">Overview</span>
+                        <span>All 4 Days</span>
+                    </button>
+                    <button onclick="setDayFilter('2026-10-27')" data-day="2026-10-27" class="day-tab px-4 py-2.5 rounded-2xl text-xs sm:text-sm font-bold transition-all flex flex-col items-center sm:items-start justify-center border">
+                        <span class="text-[10px] uppercase tracking-wider opacity-75">Tuesday</span>
+                        <span>27 Oct 2026</span>
+                    </button>
+                    <button onclick="setDayFilter('2026-10-28')" data-day="2026-10-28" class="day-tab px-4 py-2.5 rounded-2xl text-xs sm:text-sm font-bold transition-all flex flex-col items-center sm:items-start justify-center border">
+                        <span class="text-[10px] uppercase tracking-wider opacity-75">Wednesday</span>
+                        <span>28 Oct 2026</span>
+                    </button>
+                    <button onclick="setDayFilter('2026-10-29')" data-day="2026-10-29" class="day-tab px-4 py-2.5 rounded-2xl text-xs sm:text-sm font-bold transition-all flex flex-col items-center sm:items-start justify-center border">
+                        <span class="text-[10px] uppercase tracking-wider opacity-75">Thursday</span>
+                        <span>29 Oct 2026</span>
+                    </button>
+                    <button onclick="setDayFilter('2026-10-30')" data-day="2026-10-30" class="day-tab col-span-2 sm:col-span-1 px-4 py-2.5 rounded-2xl text-xs sm:text-sm font-bold transition-all flex flex-col items-center sm:items-start justify-center border">
+                        <span class="text-[10px] uppercase tracking-wider opacity-75">Friday</span>
+                        <span>30 Oct 2026</span>
+                    </button>
+                </div>
+
+                <!-- Live Search Input -->
+                <div class="relative flex-1 lg:max-w-md w-full min-w-0">
+                    <i class="ph ph-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-lg"></i>
+                    <input 
+                        type="text" 
+                        id="searchInput" 
+                        oninput="handleSearch(this.value)"
+                        placeholder="Search name, topic, CXL, OCT..." 
+                        class="w-full pl-10 pr-9 py-2.5 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all"
+                    >
+                    <button id="clearSearchBtn" onclick="clearSearch()" class="hidden absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+                        <i class="ph-fill ph-x-circle text-lg"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Specialty & Hall Filter Pills -->
+            <div class="pt-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <!-- Subspecialty Pills -->
+                <div class="flex items-center gap-1.5 overflow-x-auto pb-2 sm:pb-0 no-scrollbar min-w-0 max-w-full" id="specialtyPills">
+                    <!-- Populated dynamically via JS -->
+                </div>
+
+                <!-- Hall Dropdown & Expand/Collapse -->
+                <div class="flex items-center gap-2 shrink-0 self-stretch sm:self-auto justify-between sm:justify-end">
+                    <div class="relative">
+                        <select id="hallSelect" onchange="setHallFilter(this.value)" class="appearance-none pl-3.5 pr-8 py-2 rounded-xl text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer">
+                            <option value="ALL">All Halls (Main + 2–6)</option>
+                            <option value="Main Hall">Main Hall</option>
+                            <option value="Hall 2">Hall 2</option>
+                            <option value="Hall 3">Hall 3</option>
+                            <option value="Hall 4">Hall 4</option>
+                            <option value="Hall 5">Hall 5</option>
+                            <option value="Hall 6">Hall 6</option>
+                        </select>
+                        <i class="ph-bold ph-caret-down absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-xs text-slate-400"></i>
+                    </div>
+
+                    <button onclick="toggleAllAccordions()" id="expandAllBtn" class="px-3 py-2 rounded-xl text-xs font-semibold bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 transition-all flex items-center gap-1.5">
+                        <i class="ph ph-arrows-out-line-vertical"></i>
+                        <span id="expandAllText">Collapse All</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Active Filter Summary Bar -->
+        <div id="filterStatusBar" class="hidden items-center justify-between px-4 py-2.5 mb-6 rounded-2xl bg-blue-500/10 border border-blue-500/20 text-blue-700 dark:text-blue-300 text-xs sm:text-sm">
+            <div class="flex items-center gap-2">
+                <i class="ph-fill ph-funnel text-base"></i>
+                <span id="filterStatusText">Showing filtered sessions</span>
+            </div>
+            <button onclick="resetAllFilters()" class="font-bold underline hover:opacity-80">Reset All Filters</button>
+        </div>
+
+        <!-- Schedule Timeline Container -->
+        <div id="scheduleContainer" class="space-y-8">
+            <!-- Rendered via JavaScript -->
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="relative z-10 border-t border-slate-200/80 dark:border-slate-800/80 mt-16 py-8 bg-white/50 dark:bg-slate-900/50 no-print">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500 dark:text-slate-400">
+            <div class="flex items-center gap-2">
+                <i class="ph-fill ph-eye text-blue-500 text-base"></i>
+                <span class="font-semibold text-slate-700 dark:text-slate-300">Ophthalmology Congress 2026</span>
+                <span>— Complete Scientific Program (27–30 October 2026)</span>
+            </div>
+            <div class="flex items-center gap-4">
+                <span>Registration opens Tuesday 07:30</span>
+                <span>•</span>
+                <span>Prayer & Lunch: 12:30–14:00</span>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        const congressData = [
+            // ==========================================
+            // TUESDAY - 27 OCTOBER 2026
+            // ==========================================
+            {
+                id: "tue-reg",
+                date: "2026-10-27",
+                dayName: "Tuesday",
+                time: "07:30-08:00",
+                hall: "Main Hall",
+                specialty: "GENERAL",
+                type: "Registration",
+                title: "Congress Registration & Welcome",
+                moderators: [],
+                talks: []
+            },
+            {
+                id: "tue-ant-1",
+                date: "2026-10-27",
+                dayName: "Tuesday",
+                time: "08:00-10:00",
+                hall: "Main Hall",
+                specialty: "ANTERIOR SEGMENT",
+                type: "Subspecialty Day",
+                title: "Anterior Segment Subspecialty Day: Ocular surface optimization: from stem cell graft to before surgery",
+                moderators: ["Firouze Rahimi, MD", "Hamed Ghassemi, MD", "Hossein Aghaei, MD", "Sepehr Feizi, MD", "Mehran Zarei Ghanavati, MD"],
+                talks: [
+                    { subject: "From Stem Cells to a Functional Ocular Surface: What Really Works in 2026?", speaker: "Mehran Zarei Ghanavati, MD", time: "08:00-08:20" },
+                    { subject: "When the Ocular Surface Is Not Healing: A Step-by-Step Clinical Approach", speaker: "Sepehr Feizi, MD", time: "08:20-08:40" },
+                    { subject: "Ocular Surface Optimization Before Cataract Surgery: When Is the Eye Ready?", speaker: "Ahmad Masoumi, MD", time: "08:40-09:00" },
+                    { subject: "Before You Ablate: Optimizing the Ocular Surface for Refractive Surgery", speaker: "Hossein Aghaei, MD", time: "09:00-09:20" },
+                    { subject: "Panel Discussion", speaker: "Panelists", time: "09:20-10:00" }
+                ]
+            },
+            {
+                id: "tue-post-1",
+                date: "2026-10-27",
+                dayName: "Tuesday",
+                time: "08:00-10:00",
+                hall: "Hall 2",
+                specialty: "POSTERIOR SEGMENT",
+                jointSpecialty: "UVEITIS",
+                type: "Joint Subspecialty Day",
+                title: "Posterior Segment & Uveitis Subspecialty Day: Uveitis in Daily Practice: Common Cases and Clinical Decisions (Joint Meeting)",
+                moderators: ["Nazanin Ebrahimi-Adib, MD", "Alireza Hedayatfar, MD", "Mohammad Zarei, MD"],
+                talks: [
+                    { subject: "VKH (Vogt-Koyanagi-Harada)", speaker: "Pasha Anvari, MD", time: "08:00-08:20" },
+                    { subject: "MS-associated uveitis", speaker: "Zahra Mahdizad, MD", time: "08:20-08:40" },
+                    { subject: "Behcet uveitis", speaker: "Sahba Fekri, MD", time: "08:40-09:00" },
+                    { subject: "Fuchs uveitis syndrome", speaker: "Ahmad Reza Baghi, MD", time: "09:00-09:20" },
+                    { subject: "Viral uveitis", speaker: "Arash Mirzaei, MD", time: "09:20-09:40" },
+                    { subject: "Discussion", speaker: "Panelists", time: "09:40-10:00" }
+                ]
+            },
+            {
+                id: "tue-strab-1",
+                date: "2026-10-27",
+                dayName: "Tuesday",
+                time: "08:00-10:00",
+                hall: "Hall 3",
+                specialty: "STRABISMUS",
+                type: "Subspecialty Day",
+                title: "Strabismus Subspecialty Day: Challenging cases in strabismus and neuro-ophthalmology",
+                moderators: ["Zhale Rajavi, MD", "Alireza Keshtkar Jafari, MD", "Reza Asadi, MD"],
+                talks: [
+                    { subject: "Case Presentation", speaker: "Abbas Attarzadeh, MD", time: "08:00-08:08" },
+                    { subject: "Case Presentation", speaker: "Azadeh Farahi, MD", time: "08:08-08:16" },
+                    { subject: "Case Presentation", speaker: "Sepideh Tavakolizadeh, MD", time: "08:16-08:24" },
+                    { subject: "Case Presentation", speaker: "Reza Asadi, MD", time: "08:24-08:32" },
+                    { subject: "Case Presentation", speaker: "Maryam Najafi, MD", time: "08:32-09:00" },
+                    { subject: "Case Presentation", speaker: "Ahmad Ameri, MD", time: "09:00-09:08" },
+                    { subject: "Case Presentation", speaker: "Setareh Shomali, MD", time: "09:08-09:16" },
+                    { subject: "Case Presentation", speaker: "Zhale Rajavi, MD", time: "09:16-09:24" },
+                    { subject: "Case Presentation", speaker: "Alireza Keshtkar Jafari, MD", time: "09:24-09:32" },
+                    { subject: "Discussion", speaker: "Panelists", time: "09:32-10:00" }
+                ]
+            },
+            {
+                id: "tue-glauc-1",
+                date: "2026-10-27",
+                dayName: "Tuesday",
+                time: "08:00-10:00",
+                hall: "Hall 4",
+                specialty: "GLAUCOMA",
+                type: "Subspecialty Day",
+                title: "Glaucoma Subspecialty Day: Glaucoma beyond IOP",
+                moderators: ["Maryam Yadgari, MD", "Mona Safizadeh, MD", "Hamed Radmehr, MD"],
+                talks: [
+                    { subject: "The IOP Paradox: When Pressure Doesn't Explain Glaucoma", speaker: "Seyed Mehdi Tabatabaei, MD", time: "08:00-08:15" },
+                    { subject: "Ocular Perfusion & Vascular Dysregulation in Glaucoma", speaker: "Mohammad Mehdi Hatami, MD", time: "08:15-08:30" },
+                    { subject: "Biomechanics of the Optic Nerve Head", speaker: "Hamid Reza Heidarzadeh, MD", time: "08:30-08:45" },
+                    { subject: "Glaucoma as a Neurodegenerative Disease", speaker: "Ali Izadi, MD", time: "08:45-09:00" },
+                    { subject: "Glaucoma Biomarkers Beyond IOP", speaker: "Hamed Radmehr, MD", time: "09:00-09:15" },
+                    { subject: "Genetic & Systemic Risk Factors in Glaucoma", speaker: "Mahdi Mortazavi, MD", time: "09:15-09:30" },
+                    { subject: "Discussion", speaker: "Panelists", time: "09:30-10:00" }
+                ]
+            },
+            {
+                id: "tue-plast-1",
+                date: "2026-10-27",
+                dayName: "Tuesday",
+                time: "08:00-10:00",
+                hall: "Hall 5",
+                specialty: "OPHTHALMIC PLASTIC",
+                type: "Subspecialty Day",
+                title: "Ophthalmic Plastic Subspecialty Day: Updates in Oculoplastic and Orbital Disorders",
+                moderators: ["Mohammad Abrishami, MD", "Seyed Mohsen Rafizadeh, MD", "Gholamhossein Aghai, MD"],
+                talks: [
+                    { subject: "A Review of Recent Literature, Emerging Evidence and Practice-Changing Advances", speaker: "Mohammad Yaser Kiaroudi, MD", time: "08:00-08:15" },
+                    { subject: "Emerging Techniques in Ptosis Surgery: Modified MMCR Plus Levatorplication", speaker: "Amirhossein Aghajani, MD", time: "08:15-08:30" },
+                    { subject: "Advances in Orbital Reconstruction: Modern Surgical Techniques, 3D Printing, and Patient-Specific Implant", speaker: "Zahra PourSayed, MD", time: "08:30-08:45" },
+                    { subject: "Thyroid Eye Disease: Current Advances in Medical and Surgical Management", speaker: "Elham Rahmanikhah, MD", time: "08:45-09:00" },
+                    { subject: "Artificial Intelligence in Oculofacial Surgery: Current Applications and Future Perspectives", speaker: "Amin Zand, MD", time: "09:00-09:15" },
+                    { subject: "Discussion", speaker: "Panelists", time: "09:15-10:00" }
+                ]
+            },
+            {
+                id: "tue-ant-2",
+                date: "2026-10-27",
+                dayName: "Tuesday",
+                time: "10:30-12:30",
+                hall: "Main Hall",
+                specialty: "ANTERIOR SEGMENT",
+                type: "Subspecialty Day",
+                title: "Anterior Segment Subspecialty Day: Corneal Reshaping by Allogenic Implants",
+                moderators: ["Seyed Mohammad Ghoreishi, MD", "Hasan Hashemi, MD", "Ramin Salouti, MD", "Khosrow Jadidi, MD", "Seyed Javad Hashemian, MD"],
+                talks: [
+                    { subject: "Overview of Corneal Implants", speaker: "Seyed Mohammad Ghoreishi, MD", time: "10:30-10:45" },
+                    { subject: "CAIRS Outcomes, 1 year F/U My Technique and Nomogram", speaker: "Seyed Javad Hashemian, MD", time: "10:45-11:00" },
+                    { subject: "Donor tissue preparation", speaker: "Kazem Amanzadeh, MD", time: "11:00-11:15" },
+                    { subject: "Customized Femto Assisted ECO CAIRS", speaker: "Ramin Salouti, MD", time: "11:15-11:30" },
+                    { subject: "Combined Corneal Implant Cell Therapy", speaker: "Khosrow Jadidi, MD", time: "11:30-11:45" },
+                    { subject: "Case presentations and panel discussion", speaker: "Hasan Hashemi, MD, Mahmood Jabbarvand, MD, Mohammad Reza Jafarinasab, MD, Mehrdad Mohammadpour, MD", time: "11:45-12:30" }
+                ]
+            },
+            {
+                id: "tue-post-2",
+                date: "2026-10-27",
+                dayName: "Tuesday",
+                time: "10:30-12:30",
+                hall: "Hall 2",
+                specialty: "POSTERIOR SEGMENT",
+                type: "Subspecialty Day",
+                title: "Posterior Segment Subspecialty Day: The Cutting Edge of Medical Retina: Translation of Innovation into Practice",
+                moderators: ["Nasser Shoeibi, MD", "Hamid Ahmadieh, MD", "Reza Karkhaneh, MD", "Mehdi Modarres-zadeh, MD", "Ahmad Mirshahi, MD", "Hamid Riazi, MD"],
+                talks: [
+                    { subject: "Gene-agnostic and bionic vision restoration strategies", speaker: "Mohammad Hossein Nowroozzadeh, MD", time: "10:30-10:45" },
+                    { subject: "Breaking resistance: Multitarget strategies for the anti-VEGF non-responders", speaker: "Mojtaba Abrishami, MD", time: "10:45-11:00" },
+                    { subject: "Muller cell protection and updates on MacTel-2 management", speaker: "Mohammad Malekahmadi, MD", time: "11:00-11:15" },
+                    { subject: "Light therapy reimagined: Micropulse laser and photobiomodulation in 2026", speaker: "Fatemeh Bazvand, MD", time: "11:15-11:30" },
+                    { subject: "GLP-1 receptor agonists and the retina; friend or foe? Interaction between systemic medications and local ocular outcomes", speaker: "Mohammadreza Badie, MD", time: "11:30-11:45" },
+                    { subject: "Artificial intelligence/imaging-guided retinal care", speaker: "Elias Khalili Pour, MD", time: "11:45-12:00" },
+                    { subject: "Discussion", speaker: "Panelists", time: "12:00-12:30" }
+                ]
+            },
+            {
+                id: "tue-strab-2",
+                date: "2026-10-27",
+                dayName: "Tuesday",
+                time: "10:30-12:30",
+                hall: "Hall 3",
+                specialty: "STRABISMUS",
+                type: "Subspecialty Day",
+                title: "Strabismus Subspecialty Day: Update in strabismus",
+                moderators: ["Ahmad Ameri, MD", "Amirreza Veisi, MD"],
+                talks: [
+                    { subject: "Modern Devices for Pediatric Refraction: Accuracy, Limitations and Clinical Applications", speaker: "Arash Mir Mohammad Sadeghi, MD", time: "10:30-10:45" },
+                    { subject: "DIMS and HAL Spectacle Lenses for Myopia Control: Evidence and Clinical Application", speaker: "Narges Karrabi, MD", time: "10:45-11:00" },
+                    { subject: "Beyond Patching: Binocular and Digital Therapies for Amblyopia", speaker: "Motahhareh Sadeghi, MD", time: "11:00-11:15" },
+                    { subject: "Rectus Muscle Plication in Strabismus Surgery: Indications, Dose–Response and Outcomes", speaker: "Zhale Rajavi, MD", time: "11:15-11:30" },
+                    { subject: "Dose–Response in Horizontal and Vertical Rectus Surgery: How Predictable Are Our Surgical Tables?", speaker: "Majid Farvardin Jahromi, MD", time: "11:30-11:45" },
+                    { subject: "Partial Tenotomy in Strabismus Surgery: How Much, When, and for Whom?", speaker: "Reza Nabie, MD", time: "11:45-12:00" },
+                    { subject: "Discussion", speaker: "Panelists", time: "12:00-12:30" }
+                ]
+            },
+            {
+                id: "tue-glauc-2",
+                date: "2026-10-27",
+                dayName: "Tuesday",
+                time: "10:30-12:30",
+                hall: "Hall 4",
+                specialty: "GLAUCOMA",
+                type: "Subspecialty Day",
+                title: "Glaucoma Subspecialty Day: A Fresh Perspective on Glaucoma Diagnostics",
+                moderators: ["Mohammad Mehdi Hatami, MD", "Seyed Mehdi Tabatabaei, MD", "Mahdi Mortazavi, MD"],
+                talks: [
+                    { subject: "Conventional OCT in Glaucoma Diagnosis: Current Applications and Limitations", speaker: "Ayeh Honar Amooz, MD", time: "10:30-10:45" },
+                    { subject: "Emerging and Future OCT Modalities in Glaucoma", speaker: "Mandana Esfahani, MD", time: "10:45-11:00" },
+                    { subject: "OCTA in Glaucoma: From Microvascular Imaging to Clinical Decision-Making", speaker: "Maryam Yadgari, MD", time: "11:00-11:15" },
+                    { subject: "Beyond Standard Perimetry: New Approaches to Detecting Functional Glaucoma", speaker: "Fereshteh Tayebi, MD", time: "11:15-11:30" },
+                    { subject: "Artificial Intelligence in Glaucoma Diagnosis", speaker: "Shabnam Ansari, MD", time: "11:30-11:45" },
+                    { subject: "Multimodal Approach to Glaucoma Diagnosis", speaker: "Shahin Yazdani, MD", time: "11:45-12:00" }
+                ]
+            },
+            {
+                id: "tue-plast-2",
+                date: "2026-10-27",
+                dayName: "Tuesday",
+                time: "10:30-12:30",
+                hall: "Hall 5",
+                specialty: "OPHTHALMIC PLASTIC",
+                type: "Subspecialty Day",
+                title: "Ophthalmic Plastic Subspecialty Day: Challenging Case Video Presentation",
+                moderators: ["Seyed Ziaeddin Tabatabaie Mohammadi, MD", "Mansoreh Jamshidian Tehrani, MD", "Mohaddesh Feizi, MD"],
+                talks: [
+                    { subject: "Case Presentation", speaker: "Mohammad Etezad-Razavi, MD", time: "10:30-10:37" },
+                    { subject: "Case Presentation", speaker: "Behzad Khademi, MD", time: "10:37-10:44" },
+                    { subject: "Case Presentation", speaker: "Amir Reza Veisi, MD", time: "10:44-10:51" },
+                    { subject: "Case Presentation", speaker: "Elham Rahmanikhah, MD", time: "10:51-10:58" },
+                    { subject: "Case Presentation", speaker: "Hossein Ghahvehchian, MD", time: "10:58-11:05" },
+                    { subject: "Case Presentation", speaker: "Reza Sadeghi, MD", time: "11:05-11:12" },
+                    { subject: "Case Presentation", speaker: "Zahra PourSayed, MD", time: "11:12-11:19" },
+                    { subject: "Case Presentation", speaker: "Afsaneh Malekpour, MD", time: "11:19-11:26" },
+                    { subject: "Case Presentation", speaker: "Maryam Fakhri, MD", time: "11:26-11:33" },
+                    { subject: "Case Presentation", speaker: "Mohammad-Yaser Kiaroudi, MD", time: "11:33-11:40" },
+                    { subject: "Case Presentation", speaker: "Reza Jafari, MD", time: "11:40-11:47" },
+                    { subject: "Case Presentation", speaker: "Atefeh Mahdian Rad, MD", time: "11:47-11:54" },
+                    { subject: "Case Presentation", speaker: "Zahra Zia, MD", time: "11:54-12:01" },
+                    { subject: "Case Presentation", speaker: "Amin Zand, MD", time: "12:01-12:08" },
+                    { subject: "Case Presentation", speaker: "Alireza Nezam Eslami, MD", time: "12:08-12:15" },
+                    { subject: "Case Presentation", speaker: "Abolfazl Rahimi, MD", time: "12:15-12:22" }
+                ]
+            },
+            {
+                id: "tue-ant-3",
+                date: "2026-10-27",
+                dayName: "Tuesday",
+                time: "14:30-16:00",
+                hall: "Main Hall",
+                specialty: "ANTERIOR SEGMENT",
+                type: "Subspecialty Day",
+                title: "Anterior Segment Subspecialty Day: Cataract surgery in corneal pathology",
+                moderators: ["Mohammad Ali Javadi, MD", "Hasan Hashemi, MD", "Mohammad Reza Sedaghat, MD", "Mohammad Reza Shoja, MD", "Seyed Farzad Mohammadi, MD"],
+                talks: [
+                    { subject: "Fuchs Endothelial Corneal Dystrophy", speaker: "Mohammad Reza Sedaghat, MD", time: "14:30-14:45" },
+                    { subject: "Keratoconus", speaker: "Seyed Hashem Daryabari, MD", time: "14:45-15:00" },
+                    { subject: "After Corneal Refractive Surgery", speaker: "Javad Sadeghi, MD", time: "15:00-15:15" },
+                    { subject: "Corneal Graft Patients", speaker: "Seyed Farzad Mohammadi, MD", time: "15:15-15:30" },
+                    { subject: "Herpetic Corneal Disease", speaker: "Nazli Taheri, MD", time: "15:30-15:45" },
+                    { subject: "Epithelial and Stromal Corneal Dystrophies", speaker: "Hesam Hashemian, MD", time: "15:45-16:00" }
+                ]
+            },
+            {
+                id: "tue-post-3",
+                date: "2026-10-27",
+                dayName: "Tuesday",
+                time: "14:30-16:00",
+                hall: "Hall 2",
+                specialty: "POSTERIOR SEGMENT",
+                type: "Subspecialty Day",
+                title: "Posterior Segment Subspecialty Day: Update on Surgical Retina",
+                moderators: ["Alireza Ramezani, MD", "Houshang Faghihi, MD", "Mohammad Mehdi Parvaresh, MD", "Masood Nasripour, MD", "Alireza Khodabandeh, MD", "Khalil Ghasemi Falavarjani, MD"],
+                talks: [
+                    { subject: "Submacular hemorrhage: Intravitreal injection vs surgery", speaker: "Nasser Shoeibi, MD", time: "14:30-14:40" },
+                    { subject: "Failed macular hole surgery", speaker: "Ramin Nourinia, MD", time: "14:40-14:50" },
+                    { subject: "Diabetic retinopathy surgery; is there a paradigm shift?", speaker: "Alireza Khodabandeh, MD", time: "14:50-15:00" },
+                    { subject: "Tamponade of choice for RRD surgery", speaker: "Alireza Ramezani, MD", time: "15:00-15:10" },
+                    { subject: "Surgery for myopic macular traction", speaker: "Khalil Ghasemi Falavarjani, MD", time: "15:10-15:20" },
+                    { subject: "Surgical management of geographic atrophy and gene therapy", speaker: "Masood Naseripour, MD", time: "15:20-15:30" },
+                    { subject: "Discussion", speaker: "Panelists", time: "15:30-16:00" }
+                ]
+            },
+            {
+                id: "tue-yo-1",
+                date: "2026-10-27",
+                dayName: "Tuesday",
+                time: "14:30-16:00",
+                hall: "Hall 3",
+                specialty: "YOUNG OPHTHALMOLOGIST",
+                type: "Symposium",
+                title: "Multimodal Imaging in Daily Ophthalmic Practice",
+                moderators: ["Kaveh Abri Aghdam, MD", "Farideh Sharifipour, MD"],
+                talks: [
+                    { subject: "Pentacam Essentials", speaker: "Yasaman Hadi, MD", time: "14:30-14:45" },
+                    { subject: "Anterior Segment OCTA", speaker: "Asieh Eshaghi, MD", time: "14:45-15:00" },
+                    { subject: "Interpreting Optic Nerve Head and Macular Ganglion Parameters", speaker: "Farideh Sharifipour, MD", time: "15:00-15:15" },
+                    { subject: "Macular OCT-A Interpretation", speaker: "Mohammadreza Fazel, MD", time: "15:15-15:30" },
+                    { subject: "Interpreting Visual Field Reports", speaker: "Maryam Yadegari, MD", time: "15:30-15:45" },
+                    { subject: "Q&A and Panel Discussion", speaker: "Panelists", time: "15:45-16:00" }
+                ]
+            },
+            {
+                id: "tue-ant-4",
+                date: "2026-10-27",
+                dayName: "Tuesday",
+                time: "16:30-18:00",
+                hall: "Main Hall",
+                specialty: "ANTERIOR SEGMENT",
+                type: "Subspecialty Day",
+                title: "Anterior Segment Subspecialty Day: Video Case Presentations and Panel Discussion",
+                moderators: ["Farid Karimian, MD", "Firouze Rahimi, MD", "Mohammad Nasser Hashemian, MD", "Leila Ghiasian, MD", "Hesam Hashemian, MD"],
+                talks: [
+                    { subject: "Interactive Video Case Presentations and Panel Discussion", speaker: "Farid Karimian, MD, Firouze Rahimi, MD, Mohammad Nasser Hashemian, MD, Leila Ghiasian, MD, Hesam Hashemian, MD", time: "16:30-18:00" }
+                ]
+            },
+            {
+                id: "tue-post-4",
+                date: "2026-10-27",
+                dayName: "Tuesday",
+                time: "16:30-18:00",
+                hall: "Hall 2",
+                specialty: "POSTERIOR SEGMENT",
+                type: "Subspecialty Day",
+                title: "Posterior Segment Subspecialty Day: Challenging and Interesting Cases",
+                moderators: ["Mohammad Hossein Nowroozzadeh, MD", "Mostafa Feghhi, MD", "Alireza Dehghani, MD", "Mohammad Hossein Ahoor, MD", "Masoud Reza Manaviat, MD", "Sahba Fekri, MD"],
+                talks: [
+                    { subject: "Challenging and Interesting Posterior Segment Case Discussions", speaker: "Panelists & Moderators", time: "16:30-18:00" }
+                ]
+            },
+            {
+                id: "tue-yo-2",
+                date: "2026-10-27",
+                dayName: "Tuesday",
+                time: "16:30-18:00",
+                hall: "Hall 3",
+                specialty: "YOUNG OPHTHALMOLOGIST",
+                type: "Symposium",
+                title: "Phacoemulsification Survival Guide for Young Ophthalmologists",
+                moderators: ["Mahmoudreza Panahi, MD"],
+                talks: [
+                    { subject: "Small Pupil and IFIS: Surgical Strategies", speaker: "Alireza Eslampoor, MD", time: "16:30-16:45" },
+                    { subject: "Management of Posterior Capsule Rupture", speaker: "Alireza Peyman, MD", time: "16:45-17:00" },
+                    { subject: "Biometry Challenges: Post-Refractive Surgeries and Extreme Axial Lengths", speaker: "Shahram Bamdad, MD", time: "17:00-17:15" },
+                    { subject: "IOL Fixation Options in the Absence of Capsular Support", speaker: "Javad Rezaee, MD", time: "17:15-17:30" },
+                    { subject: "Surgical Video Review & Complication Management", speaker: "Panelists", time: "17:30-18:00" }
+                ]
+            },
+
+            //            // ==========================================
+            // WEDNESDAY - 28 OCTOBER 2026
+            // ==========================================
+            {
+                id: "wed-ant-1",
+                date: "2026-10-28",
+                dayName: "Wednesday",
+                time: "08:00-09:30",
+                hall: "Main Hall",
+                specialty: "ANTERIOR SEGMENT",
+                type: "Symposium",
+                title: "Symposium: Update on Keratoconus Management",
+                moderators: ["Nader Nasiri, MD", "Seyed Javad Hashemian, MD", "Afshin Lotfi Sadigh, MD", "Siamak Zarei-Ghanavati, MD", "Sepehr Feizi, MD"],
+                talks: [
+                    { subject: "Contact Lenses for KCN", speaker: "Fateme Alipour, MD", time: "08:00-08:15" },
+                    { subject: "CXL: When and Which Protocol", speaker: "Siamak Zarei-Ghanavati, MD", time: "08:15-08:30" },
+                    { subject: "Phakic IOL: Indications and Type of IOL", speaker: "Asieh Eshaghi, MD", time: "08:30-08:45" },
+                    { subject: "Synthetic Implants: Indications and Types", speaker: "Hasan Ghavami, MD", time: "08:45-09:00" },
+                    { subject: "Corneal Transplantations: When and Technique", speaker: "Farid Karimian, MD", time: "09:00-09:15" }
+                ]
+            },
+            {
+                id: "wed-glauc-1",
+                date: "2026-10-28",
+                dayName: "Wednesday",
+                time: "08:00-09:30",
+                hall: "Hall 2",
+                specialty: "GLAUCOMA",
+                type: "Symposium",
+                title: "Symposium: Glaucoma Mimickers",
+                moderators: ["Shahin Yazdani, MD", "Ghasem Fakhrae, MD", "Naveed Nilforoushan, MD"],
+                talks: [
+                    { subject: "Congenital Optic Nerve Head Anomalies and Anatomical Variations", speaker: "Azadeh Doozandeh, MD", time: "08:00-08:15" },
+                    { subject: "Non-glaucomatous Optic Neuropathies", speaker: "Kaveh Abri Aghdam, MD", time: "08:15-08:30" },
+                    { subject: "Neurological Disorders with Optic Nerve Manifestations", speaker: "Ali Azimi, MD", time: "08:30-08:45" },
+                    { subject: "Clinical and Diagnostic Challenges in Glaucoma and Myopia", speaker: "Mahmood Ghassami, MD", time: "08:45-09:00" },
+                    { subject: "Case Presentation and Panel Discussion", speaker: "Mohammad Ghoreishi, MD, Hassan Hashemi, MD, Azadeh Doozandeh, MD, Kaveh Abri Aghdam, MD, Ali Azimi, MD, Mahmood Ghassami, MD", time: "09:00-09:15" },
+                    { subject: "Discussion", speaker: "Panelists", time: "09:15-09:30" }
+                ]
+            },
+            {
+                id: "wed-strab-1",
+                date: "2026-10-28",
+                dayName: "Wednesday",
+                time: "08:00-09:30",
+                hall: "Hall 4",
+                specialty: "STRABISMUS",
+                type: "Workshop",
+                title: "Workshop: Mobile Applications and Digital Devices in Diagnosis and Management of Strabismus",
+                moderators: ["Arash Mir Mohammad Sadeghi, MD", "Mohammad Yaser Kiarudi, MD"],
+                talks: [
+                    { subject: "Interactive Discussion & Digital Demonstrations", speaker: "Arash Mir Mohammad Sadeghi, MD, Mohammad Yaser Kiarudi, MD, Mohammadreza Peyman, MD, Mohammad Mehrpour, MD", time: "08:00-09:30" }
+                ]
+            },
+            {
+                id: "wed-post-1",
+                date: "2026-10-28",
+                dayName: "Wednesday",
+                time: "08:00-09:30",
+                hall: "Hall 5",
+                specialty: "POSTERIOR SEGMENT",
+                type: "Workshop",
+                title: "Workshop: Pediatric Retina",
+                moderators: ["Fatemeh Bazvand, MD", "Reza Karkhaneh, MD", "Mohsen Farvardin, MD", "Mohammad Mehdi Parvaresh, MD", "Alireza Ramezani, MD", "Fariba Ghassemi, MD", "Fatemeh Abdi, MD"],
+                talks: [
+                    { subject: "ROP in 2026; what has been changed in screening and treatment?", speaker: "Nasser Shoeibi, MD", time: "08:00-08:15" },
+                    { subject: "FEVR: New insights into wide-field FA, OCTA, genetics and genotype-phenotype correlation", speaker: "Hamid Safi, MD", time: "08:15-08:30" },
+                    { subject: "Coats disease: From laser and anti-VEGF injections to surgical rescue", speaker: "Amir Eftekhari Milani, MD", time: "08:30-08:45" },
+                    { subject: "Inherited retinal diseases in 2026; imaging, genetics and treatment", speaker: "Tahmineh Motevasseli, MD", time: "08:45-09:00" },
+                    { subject: "Beyond clinical examination: AI, wide-field imaging and quantitative analysis in pediatric retina", speaker: "Kiana Hassanpoor, MD", time: "09:00-09:15" },
+                    { subject: "Case Presentation", speaker: "Panelists", time: "09:15-09:30" }
+                ]
+            },
+            {
+                id: "wed-plast-1",
+                date: "2026-10-28",
+                dayName: "Wednesday",
+                time: "08:00-09:30",
+                hall: "Hall 6",
+                specialty: "OPHTHALMIC PLASTIC",
+                type: "Workshop",
+                title: "Workshop: Approach to Orbital Tumors",
+                moderators: ["Ali Sadeghi-Tari, MD", "Mohammad Etezad-Razavi, MD", "Behzad Khademi, MD"],
+                talks: [
+                    { subject: "Orbital Tumors: From Clinical Presentation to Diagnosis", speaker: "Behzad Khademi, MD", time: "08:00-08:15" },
+                    { subject: "Orbital Tumors: Current Concepts in Non-Surgical and Multidisciplinary Management", speaker: "Atefeh Mahdian-Rad, MD", time: "08:15-08:30" },
+                    { subject: "Surgical Approach to Orbital Tumors", speaker: "Mohammad Etezad-Razavi, MD", time: "08:30-08:45" },
+                    { subject: "Approach to Orbital Vascular Tumors", speaker: "Seyed Mohsen Rafizadeh, MD", time: "08:45-09:00" },
+                    { subject: "Approach to Lacrimal Gland Tumors", speaker: "Aliakbar Saber-Moghadam, MD", time: "09:00-09:15" },
+                    { subject: "Panel Discussion", speaker: "Panelists", time: "09:15-09:30" }
+                ]
+            },
+            {
+                id: "wed-nurs-1",
+                date: "2026-10-28",
+                dayName: "Wednesday",
+                time: "08:30-12:00",
+                hall: "Hall 3",
+                specialty: "NURSING PROGRAM",
+                type: "Symposium",
+                title: "Nursing Care in Ocular Surface Disorders (Panels I & II)",
+                moderators: ["Dr. Ahmad Masoumi", "Dr. Zahra Abbasi", "Dr. Mahdi Aminizadeh", "Dr. Yasaman Hadi", "Saeedeh Khoshnezhad", "Dr. Fatemeh Alipour", "Dr. Mahdi Nabi Foodani", "Dr. Parvin Mokhtari", "Shadi Rezaei"],
+                talks: [
+                    { subject: "Panel I: Nursing Care for Patients with Dry Eye Disease", speaker: "Zahra Mirzaei (MSc in Medical Education)", time: "08:30-08:50" },
+                    { subject: "Panel I: Care and Management of Meibomian Gland Dysfunction (MGD) and Blepharitis", speaker: "Dr. Mahdi Aminizadeh (TUMS)", time: "08:50-09:30" },
+                    { subject: "Panel I: Nursing Care in Pterygium Surgery", speaker: "Hadi Rais Abdollahi (MSc Health Services Management)", time: "09:30-09:50" },
+                    { subject: "Panel I: Acute-Phase Management of Ocular Surface Burns", speaker: "Dr. Zahra Abbasi (School of Nursing)", time: "09:50-10:10" },
+                    { subject: "Break", speaker: "", time: "10:00-10:30" },
+                    { subject: "Panel II: Types of Contact Lenses and Clinical Applications", speaker: "Dr. Parvin Mokhtari (PhD in Optometry)", time: "10:30-11:10" },
+                    { subject: "Panel II: Contact Lens-Related Complications and Infections", speaker: "Shadi Rezaei (MSc in Nursing)", time: "11:10-11:30" },
+                    { subject: "Panel II: Contact Lens Care: Patient Education and Complication Prevention", speaker: "Dr. Mahdi Nabi Foodani (Assistant Professor, PhD in Nursing)", time: "11:30-12:00" }
+                ]
+            },
+            {
+                id: "wed-open",
+                date: "2026-10-28",
+                dayName: "Wednesday",
+                time: "09:30-10:00",
+                hall: "Main Hall",
+                specialty: "GENERAL",
+                type: "Ceremony",
+                title: "Official Congress Opening Ceremony",
+                moderators: [],
+                talks: [
+                    { subject: "Opening Ceremony & Welcome Addresses", speaker: "Congress Committee", time: "09:30-10:00" }
+                ]
+            },
+            {
+                id: "wed-post-2",
+                date: "2026-10-28",
+                dayName: "Wednesday",
+                time: "10:00-12:00",
+                hall: "Hall 4",
+                specialty: "POSTERIOR SEGMENT",
+                type: "Workshop",
+                title: "Workshop: Multimodal Imaging",
+                moderators: ["Yousef Alizadeh, MD", "Mohsen Azarmina, MD", "Aminollah Nikeghbali, MD", "Mohammadreza Akhlaghi, MD", "Ali Salehi, MD", "Farideh Mousavi, MD", "Mohammadreza Niyousha, MD", "Esmaeil Asaadi Khameneh, MD"],
+                talks: [
+                    { subject: "Which Imaging Modalities are Suitable for My Patient?", speaker: "Maryam Dourandeesh, MD", time: "10:00-10:35" },
+                    { subject: "Biomarkers in OCT and Their Roles in Diagnosis and Treatment", speaker: "Esmaeil Asadi Khameneh, MD", time: "10:35-10:40" },
+                    { subject: "OCT Angiography (OCTA): Time, Application and Interpretation", speaker: "Mohammadreza Niyousha, MD", time: "10:40-10:45" },
+                    { subject: "Artifacts in OCT and OCTA", speaker: "Mohammad Sadegh Dehghani Firouzabadi, MD", time: "10:45-10:50" },
+                    { subject: "The Role of FAF, FA and ICGA in Diagnosis of Retinal Diseases", speaker: "Arash Amizadeh, MD", time: "10:50-10:55" },
+                    { subject: "Multimodal Imaging in AMD", speaker: "Elias Khalili Pour, MD", time: "10:55-11:00" },
+                    { subject: "Multimodal Imaging in Diabetic Retinopathy and RVO", speaker: "Mohammad Hossein Ahoor, MD", time: "11:00-11:05" },
+                    { subject: "Multimodal Imaging in Pachychoroid Spectrum", speaker: "Bahram Bohrani, MD", time: "11:05-11:10" },
+                    { subject: "Multimodal Imaging in Hereditary Retinal Diseases", speaker: "Arash Omidtabrizi, MD", time: "11:15-11:20" },
+                    { subject: "Case Presentation", speaker: "Panelists", time: "11:20-12:00" }
+                ]
+            },
+            {
+                id: "wed-ant-key",
+                date: "2026-10-28",
+                dayName: "Wednesday",
+                time: "10:30-11:30",
+                hall: "Main Hall",
+                specialty: "ANTERIOR SEGMENT",
+                type: "Keynote Lectures",
+                title: "Keynote Lectures (Anterior Segment)",
+                moderators: [],
+                talks: [
+                    { subject: "The management of corneal melting", speaker: "Sajjad Ahmad, MD", time: "10:30-10:50" },
+                    { subject: "Questions and Answers", speaker: "", time: "10:50-11:00" },
+                    { subject: "From one protocol to personalized CXL: 23 years of transformation", speaker: "Farhad Hafezi, MD", time: "11:00-11:20" },
+                    { subject: "Questions and Answers", speaker: "", time: "11:20-11:30" }
+                ]
+            },
+            {
+                id: "wed-strab-2",
+                date: "2026-10-28",
+                dayName: "Wednesday",
+                time: "10:30-12:30",
+                hall: "Hall 2",
+                specialty: "STRABISMUS",
+                type: "Symposium",
+                title: "Symposium: Non-Surgical treatments of Strabismus",
+                moderators: ["Mohammadreza Akbari, MD", "Dima Andalib, MD", "Mohammadreza Talebnejad, MD"],
+                talks: [
+                    { subject: "Panel Discussion: Non-Surgical Treatments of Strabismus", speaker: "Mohammadreza Akbari, MD, Dima Andalib, MD, Mohammadreza Talebnejad, MD, Ali Akbar Saber Moghaddam, MD, Mostafa Soltan Sanjari, MD, Masood Aghsaie Fard, MD", time: "10:30-12:30" }
+                ]
+            },
+            {
+                id: "wed-ant-2",
+                date: "2026-10-28",
+                dayName: "Wednesday",
+                time: "10:30-12:30",
+                hall: "Hall 5",
+                specialty: "ANTERIOR SEGMENT",
+                type: "Workshop",
+                title: "Workshop: Phakic IOL",
+                moderators: ["Farid Karimian, MD", "Seyed Mohammad Ghoreishi, MD", "Ramin Salouti, MD", "Alireza Peyman, MD", "Hamed Ghasemi, MD"],
+                talks: [
+                    { subject: "Indications: Classic and New", speaker: "Javad Sadeghi, MD", time: "10:30-10:45" },
+                    { subject: "Patient selection: Which patient? Which lens", speaker: "Alireza Eslampoor, MD", time: "10:45-11:00" },
+                    { subject: "Artisan & Artiflex: Brothers but different", speaker: "Nader Nasiri, MD", time: "11:00-11:15" },
+                    { subject: "Measurement and ordering ICL", speaker: "Ramin Salouti, MD", time: "11:15-11:30" },
+                    { subject: "ICL: Still unique", speaker: "Alireza Peyman, MD", time: "11:30-11:45" },
+                    { subject: "ICL Complications", speaker: "Leila Ghiasian, MD", time: "11:45-12:00" },
+                    { subject: "Q&A (Phakic IOL)", speaker: "Farid Karimian, MD", time: "12:00-12:30" }
+                ]
+            },
+            {
+                id: "wed-glauc-2",
+                date: "2026-10-28",
+                dayName: "Wednesday",
+                time: "10:30-12:30",
+                hall: "Hall 6",
+                specialty: "GLAUCOMA",
+                type: "Workshop",
+                title: "Workshop: Secondary Glaucoma",
+                moderators: ["Maryam Hajizadeh, MD", "Zakieh Vahedian, MD", "Mehrnoosh Ghasemi Jirdeh, MD"],
+                talks: [
+                    { subject: "LENS-RELATED GLAUCOMA", speaker: "Mahdi Sharifzadeh, MD", time: "10:30-10:50" },
+                    { subject: "NEOVASCULAR GLAUCOMA", speaker: "Farhad Najafzadeh, MD", time: "10:50-11:10" },
+                    { subject: "POST-VITREORETINAL SURGERY GLAUCOMA", speaker: "Maryam Yadgari, MD", time: "11:10-11:30" },
+                    { subject: "Secondary Angle Closure Glaucoma", speaker: "Neda Einollahi, MD", time: "11:30-11:50" },
+                    { subject: "STEROID INDUCED GLAUCOMA", speaker: "Neda Safazadeh Haghighi, MD", time: "11:50-12:10" },
+                    { subject: "Discussion", speaker: "Panelists", time: "12:10-12:30" }
+                ]
+            },
+            {
+                id: "wed-post-key",
+                date: "2026-10-28",
+                dayName: "Wednesday",
+                time: "11:20-12:00",
+                hall: "Main Hall",
+                specialty: "POSTERIOR SEGMENT",
+                type: "Keynote Lectures",
+                title: "Keynote Lectures (Posterior Segment)",
+                moderators: [],
+                talks: [
+                    { subject: "Choroidal melanoma", speaker: "Jens Folke Kiilgaard, MD", time: "11:20-11:30" },
+                    { subject: "Questions and Answers", speaker: "", time: "11:30-12:00" }
+                ]
+            },
+            {
+                id: "wed-post-3",
+                date: "2026-10-28",
+                dayName: "Wednesday",
+                time: "14:00-16:00",
+                hall: "Main Hall",
+                specialty: "POSTERIOR SEGMENT",
+                type: "Symposium",
+                title: "Symposium: Update on Diabetic Retinopathy",
+                moderators: ["Fariba Ghassemi, MD", "Heshmatollah Ghanbari, MD", "Fereydoun Farrahi, MD", "Masood Nasripour, MD", "Morsal Mehryar, MD", "Farhad Fazel, MD", "Ramin Nourinia, MD", "Mohammad Zarei, MD", "Homayoun Nikkhah, MD"],
+                talks: [
+                    { subject: "Imaging biomarkers in diabetic retinopathy", speaker: "Mohammad Reza Niusha, MD", time: "14:00-14:15" },
+                    { subject: "Trends in the management of diabetic macular edema", speaker: "Fariba Ghasemi, MD", time: "14:15-14:30" },
+                    { subject: "Trends in the management of proliferative diabetic retinopathy", speaker: "Morsal Mehryar, MD", time: "14:30-14:45" },
+                    { subject: "Considerations in intravitreal injections (combined treatments, contraindications, role of steroids)", speaker: "Farhad Fazel, MD", time: "14:45-15:00" },
+                    { subject: "Vitrectomy and diabetic retinopathy", speaker: "Ehsan Namvar, MD", time: "15:00-15:15" },
+                    { subject: "Intraocular lens selection in diabetic patients undergoing cataract surgery", speaker: "Mohammad Zarei, MD", time: "15:15-15:30" },
+                    { subject: "Discussion", speaker: "Panelists", time: "15:30-16:00" }
+                ]
+            },
+            {
+                id: "wed-ant-3",
+                date: "2026-10-28",
+                dayName: "Wednesday",
+                time: "14:00-16:00",
+                hall: "Hall 2",
+                specialty: "ANTERIOR SEGMENT",
+                type: "Workshop",
+                title: "Workshop: DALK in 2026: From Surgical Techniques to Postoperative Management and Long-Term Outcomes",
+                moderators: ["Bahram Einollahi, MD", "Mohammad Reza Jafarinasab, MD", "Mohammad Reza Sedaghat, MD", "Mehran Zarei Ghanavati, MD", "Seyed Hashem Daryabari, MD"],
+                talks: [
+                    { subject: "Patient Selection", speaker: "Mohammad Reza Jafarinasab, MD", time: "14:00-14:20" },
+                    { subject: "Big-Bubble DALK", speaker: "Mohammad Reza Sedaghat, MD", time: "14:20-14:40" },
+                    { subject: "Big Bubble: Melles Vs Manual layer by layer technique", speaker: "Ramin Salouti, MD", time: "14:40-15:00" },
+                    { subject: "FALK", speaker: "Bahram Einollahi, MD", time: "15:00-15:20" },
+                    { subject: "DALK in Difficult Corneas", speaker: "Mehran Zarei Ghanavati, MD", time: "15:20-15:40" },
+                    { subject: "Post-DALK Complications", speaker: "Seyed Hashem Daryabari, MD", time: "15:40-16:00" }
+                ]
+            },
+            {
+                id: "wed-strab-3",
+                date: "2026-10-28",
+                dayName: "Wednesday",
+                time: "14:00-16:00",
+                hall: "Hall 3",
+                specialty: "STRABISMUS",
+                type: "Symposium",
+                title: "Symposium: Diagnostic Challenges in Optic Disc Swelling",
+                moderators: ["Mostafa Soltan Sanjari, MD", "Mohammed Areesh, MD", "Masood Aghsaie Fard, MD"],
+                talks: [
+                    { subject: "Unilateral Optic Disc Swelling", speaker: "Ali Sadeghi, MD", time: "14:00-14:15" },
+                    { subject: "Bilateral Disc Swelling", speaker: "Ali Aghajani, MD", time: "14:15-14:30" },
+                    { subject: "Optic Disc Swelling in Children", speaker: "Motahhareh Sadeghi, MD", time: "14:30-14:45" },
+                    { subject: "Ocular and Retinal Mimickers of Disc Swelling", speaker: "Pasha Anvari, MD", time: "14:45-15:00" },
+                    { subject: "A Neurologist’s Algorithmic Approach to Optic Disc Swelling", speaker: "Samira Yadegari, MD", time: "15:00-15:15" },
+                    { subject: "Discussion", speaker: "Panelists", time: "15:15-16:00" }
+                ]
+            },
+            {
+                id: "wed-ant-4",
+                date: "2026-10-28",
+                dayName: "Wednesday",
+                time: "14:00-16:00",
+                hall: "Hall 5",
+                specialty: "ANTERIOR SEGMENT",
+                type: "Workshop",
+                title: "Workshop: IOL Calculation",
+                moderators: ["Mehdi Hoseini Tehrani, MD", "Hosein MohammadRabie, MD", "Akbar Derakhshan, MD", "Alireza Peyman, MD", "Mehdi Khodaparast, MD"],
+                talks: [
+                    { subject: "Basic of IOL calculation", speaker: "Mehdi Hoseini Tehrani, MD", time: "14:00-14:15" },
+                    { subject: "Virgin Cornea and Normal Eyes", speaker: "Mehdi Khodaparast, MD", time: "14:15-14:30" },
+                    { subject: "Pediatric patients", speaker: "Parisa Abdi, MD", time: "14:30-14:45" },
+                    { subject: "Post Keratoplasty and irregular cornea", speaker: "Hosein MohammadRabie, MD", time: "14:45-15:00" },
+                    { subject: "Short and long eyes", speaker: "Mohsen Pourazizi, MD", time: "15:00-15:15" },
+                    { subject: "Patient with Phakic IOL and Abnormal Anterior Segment (thick Lens, Shallow AC)", speaker: "Akbar Derakhshan, MD", time: "15:15-15:30" },
+                    { subject: "Post Refractive Surgery Myopic and Hyperopic", speaker: "Alireza Peyman, MD", time: "15:30-15:45" },
+                    { subject: "RK history", speaker: "Mehdi Hoseini Tehrani, MD", time: "15:45-16:00" }
+                ]
+            },
+            {
+                id: "wed-plast-2",
+                date: "2026-10-28",
+                dayName: "Wednesday",
+                time: "14:00-16:00",
+                hall: "Hall 6",
+                specialty: "OPHTHALMIC PLASTIC",
+                type: "Workshop",
+                title: "Workshop: Thyroid Eye Disease",
+                moderators: ["Gholamreza Khataminia, MD", "Amirhossein Aghajani, MD", "Maryam Ale-Taha, MD"],
+                talks: [
+                    { subject: "Thyroid Eye Disease in 2027: From Diagnosis to Disease Staging and Treatment Planning", speaker: "Nasser Karimi, MD", time: "14:00-14:15" },
+                    { subject: "Modern Medical Therapy for Thyroid Eye Disease: What Should an Ophthalmologist Know", speaker: "Hossein Ghahvehchian, MD", time: "14:15-14:30" },
+                    { subject: "The Orbit in Thyroid Eye Disease: A Practical Approach to Orbital Decompression", speaker: "Mohammad Taher Rajabi, MD", time: "14:30-14:45" },
+                    { subject: "Rehabilitative Surgery in Thyroid Eye Disease: Eyelid Retraction, Ptosis, and Strabismus", speaker: "Mohammad Etezad-Razavi, MD", time: "14:45-15:00" },
+                    { subject: "Thyroid Eye Disease: Case Presentation", speaker: "Panel Discussion", time: "15:00-16:00" }
+                ]
+            },
+            {
+                id: "wed-plast-3",
+                date: "2026-10-28",
+                dayName: "Wednesday",
+                time: "16:30-18:00",
+                hall: "Main Hall",
+                specialty: "OPHTHALMIC PLASTIC",
+                type: "Symposium",
+                title: "Symposium: Periorbital Rejuvenation",
+                moderators: ["Soltanhossein Salour, MD", "Mohammad-Taher Rajabi, MD", "Habibollah Zanjani, MD", "Mansour Shahriari, MD"],
+                talks: [
+                    { subject: "Patient selection and indications", speaker: "Seyed Mohsen Rafizadeh, MD", time: "16:30-16:45" },
+                    { subject: "Preoperative assessment and precautions", speaker: "Behzad Khademi, MD", time: "16:45-17:00" },
+                    { subject: "Management of complications", speaker: "Mansour Shahriari, MD", time: "17:10-17:15" },
+                    { subject: "What Not to do in cosmetic eyelid surgery", speaker: "Mohammad-Taher Rajabi, MD", time: "17:15-17:30" },
+                    { subject: "Panel Discussion", speaker: "Panelists", time: "17:30-18:00" }
+                ]
+            },
+            {
+                id: "wed-post-4",
+                date: "2026-10-28",
+                dayName: "Wednesday",
+                time: "16:30-18:00",
+                hall: "Hall 2",
+                specialty: "POSTERIOR SEGMENT",
+                type: "Workshop",
+                title: "Workshop: OCT and OCTA Case-based Interpretation",
+                moderators: ["Khalil Ghasemi Falavarjani, MD", "Maryam Hosseini, MD", "Sahba Fekri, MD", "Elias Khalili Pour, MD", "Mohammadreza Mehrabi Bahar, MD", "Arjang Gordiz, MD"],
+                talks: [
+                    { subject: "OCT/OCTA in AMD", speaker: "Mohammadreza Ansari Astaneh, MD", time: "16:30-16:45" },
+                    { subject: "OCT/OCTA in Diabetic Retinopathy", speaker: "Narges Hassanpoor, MD", time: "16:45-17:00" },
+                    { subject: "OCT/OCTA in Pachychoroid", speaker: "Arjang Gordiz, MD", time: "17:00-17:15" },
+                    { subject: "OCT/OCTA in Uveitis", speaker: "Sahba Fekri, MD", time: "17:15-17:30" },
+                    { subject: "OCT/OCTA in Retinovascular Diseases", speaker: "Hossein Abtahi, MD", time: "17:30-17:45" },
+                    { subject: "OCT/OCTA in Miscellaneous Cases", speaker: "Elias Khalili Pour, MD", time: "17:45-18:00" }
+                ]
+            },
+            {
+                id: "wed-uve-1",
+                date: "2026-10-28",
+                dayName: "Wednesday",
+                time: "16:30-18:00",
+                hall: "Hall 3",
+                specialty: "UVEITIS",
+                type: "Symposium",
+                title: "Symposium: Where Uveitis and Neuro-Ophthalmology Meet",
+                moderators: ["Pasha Anvari, MD", "Alireza Hedayatfar, MD", "Mostafa Soltan Sanjari, MD"],
+                talks: [
+                    { subject: "The Optic Disc in Uveitis", speaker: "Alireza Hedayatfar, MD", time: "16:30-16:45" },
+                    { subject: "Uveitic Entities with Prominent Optic Disc Involvement", speaker: "Pasha Anvari, MD", time: "16:45-17:00" },
+                    { subject: "Neuroretinitis: Diagnostic Challenges and Management", speaker: "Farideh Mousavi, MD", time: "17:00-17:15" },
+                    { subject: "Papillitis, Papilledema, and Pseudopapilledema", speaker: "Masood Aghsaie Fard, MD", time: "17:15-17:30" },
+                    { subject: "Questions and Answers", speaker: "Panelists", time: "17:30-18:00" }
+                ]
+            },
+            {
+                id: "wed-clin-1",
+                date: "2026-10-28",
+                dayName: "Wednesday",
+                time: "16:30-18:00",
+                hall: "Hall 4",
+                specialty: "CLINICAL REASONING",
+                type: "Symposium",
+                title: "Clinical Reasoning (استدلال بالینی در چشم پزشکی)",
+                moderators: ["Aliakbar Saber Moghaddam, MD", "Mostafa Soltansanjari, MD"],
+                talks: [
+                    { subject: "Clinical Reasoning and AI", speaker: "Aliakbar Saber Moghaddam, MD", time: "16:30-16:45" },
+                    { subject: "Case Presentation", speaker: "Siamak Zarei, MD", time: "16:45-17:00" },
+                    { subject: "Case Presentation", speaker: "Arash Mirmohammadsadeghi, MD", time: "17:00-17:15" },
+                    { subject: "Case Presentation", speaker: "Mostafa Soltansanjari, MD", time: "17:15-17:30" },
+                    { subject: "Case Presentation", speaker: "Naser Shoeibi, MD", time: "17:30-17:45" },
+                    { subject: "Panel Discussion", speaker: "Panelists", time: "17:45-18:00" }
+                ]
+            },
+            {
+                id: "wed-ant-5",
+                date: "2026-10-28",
+                dayName: "Wednesday",
+                time: "16:30-18:00",
+                hall: "Hall 5",
+                specialty: "ANTERIOR SEGMENT",
+                type: "Workshop",
+                title: "Workshop: Endothelial keratoplasty",
+                moderators: ["Mohammad Mahdi Sadoughi, MD", "Siamak Zarei-Ghanavati, MD", "Shahram Bamdad, MD", "Alireza Eslampoor, MD"],
+                talks: [
+                    { subject: "DSAEK versus DMEK versus PKP", speaker: "Yasaman Hadi, MD", time: "16:30-16:40" },
+                    { subject: "DSAEK Surgery; Indication and Techniques", speaker: "Alireza Eslampoor, MD", time: "16:40-16:50" },
+                    { subject: "DMEK Surgery; Indications and Techniques", speaker: "Siamak Zarei-Ghanavati, MD", time: "16:50-17:00" },
+                    { subject: "Complication of DSAEK and DMEK surgeries", speaker: "Rahim Saffari, MD", time: "17:10-17:20" },
+                    { subject: "New Advancements in Endothelial keratoplasty", speaker: "Mohammad Mahdi Sadoughi, MD", time: "17:20-17:30" },
+                    { subject: "Discussion", speaker: "Panelists", time: "17:30-18:00" }
+                ]
+            },
+            {
+                id: "wed-ant-6",
+                date: "2026-10-28",
+                dayName: "Wednesday",
+                time: "16:30-18:00",
+                hall: "Hall 6",
+                specialty: "ANTERIOR SEGMENT",
+                type: "Workshop",
+                title: "Workshop: Pterygium surgery",
+                moderators: ["Hossein Aghaei, MD", "Parisa Abdi, MD", "Kiana Hasanpour, MD", "Zahra Karjoo, MD"],
+                talks: [
+                    { subject: "To Operate or Not to Operate? Indications, Timing, and Patient Selection", speaker: "Mohammad Hassan Jalalpour, MD", time: "16:30-16:45" },
+                    { subject: "Primary Pterygium: How I Do It — Surgical Technique and Key Surgical Pearls", speaker: "Kiana Hasanpour, MD", time: "16:45-17:00" },
+                    { subject: "The Recurrent Pterygium: Why It Recurs and How to Approach It Differently", speaker: "Ahmad Masoumi, MD", time: "17:00-17:15" },
+                    { subject: "Managing Surgical Complications: Graft Retraction, Granuloma, Dellen, Symblepharon, and Persistent Inflammation", speaker: "Zahra Karjoo, MD", time: "17:15-17:30" },
+                    { subject: "Literature reviews clinical points (systematic reviews)", speaker: "Parisa Abdi, MD", time: "17:30-17:45" },
+                    { subject: "Interactive Case-Based Panel Discussion", speaker: "Panelists", time: "17:45-18:00" }
+                ]
+            },
+
+            //            // ==========================================
+            // THURSDAY - 29 OCTOBER 2026
+            // ==========================================
+            {
+                id: "thu-mem-1",
+                date: "2026-10-29",
+                dayName: "Thursday",
+                time: "08:00-09:30",
+                hall: "Main Hall",
+                specialty: "GENERAL",
+                type: "Memorial Lectures",
+                title: "Named Memorial Lectures (Chams, Sajjadi, Khodadoust)",
+                moderators: [],
+                talks: [
+                    { subject: "Chams Lecture: Pitfalls in IOL Calculation", speaker: "Mahdi Hosseini Tehrani, MD", time: "08:00-08:30" },
+                    { subject: "Sajjadi Lecture: Corneal Graft Rejection", speaker: "Dr. Mohammadali Javadi, MD", time: "08:30-09:00" },
+                    { subject: "Khodadoust Lecture: Points on Macular Degeneration. Serous PED. Signs of Regression on OCT.B and OCT.A", speaker: "Morsal Mehriar, MD", time: "09:00-09:30" }
+                ]
+            },
+            {
+                id: "thu-post-1",
+                date: "2026-10-29",
+                dayName: "Thursday",
+                time: "08:00-10:00",
+                hall: "Hall 2",
+                specialty: "POSTERIOR SEGMENT",
+                type: "Workshop",
+                title: "Workshop: Ocular Oncology",
+                moderators: ["Masood Naseripour, MD", "Saeed Karimi, MD", "Mojtaba Abrishami, MD", "Mehdi Mazloumi, MD", "Mohammadreza Mehrabi Bahar, MD", "Reza Mirshahi, MD"],
+                talks: [
+                    { subject: "The Pigmented Fundus Lesion: Nevus, Melanoma, or Something else?", speaker: "Saeed Karimi, MD", time: "08:00-08:15" },
+                    { subject: "Retinoblastoma: The Red Flag Every Ophthalmologist Should Recognize", speaker: "Fariba Ghasemi, MD", time: "08:15-08:30" },
+                    { subject: "Retinal Hemangioblastoma: When an Ocular Finding is a Systemic Diagnosis", speaker: "Masood Naseripour, MD", time: "08:30-08:45" },
+                    { subject: "Uveal Melanoma in 2026: From Local Eye Treatment to Systemic Risk", speaker: "Mojtaba Abrishami, MD", time: "08:45-09:00" },
+                    { subject: "Metastasis, Lymphoma and Masqueraders: When the Eye is the First Clue to Cancer", speaker: "Mehdi Mazloumi, MD", time: "09:00-09:15" },
+                    { subject: "Ocular Oncology Imaging: What Every Ophthalmologist Should See", speaker: "Mohammadreza Mehrabi Bahar, MD", time: "09:15-09:30" },
+                    { subject: "Discussion", speaker: "Panelists", time: "09:30-10:00" }
+                ]
+            },
+            {
+                id: "thu-ant-1",
+                date: "2026-10-29",
+                dayName: "Thursday",
+                time: "08:00-10:00",
+                hall: "Hall 3",
+                specialty: "ANTERIOR SEGMENT",
+                type: "Workshop",
+                title: "Workshop: CXL (Corneal Cross-Linking)",
+                moderators: ["Ramin Salouti, MD", "Mohammad Mahdi Sadoughi, MD", "Hamid Gharaee, MD", "Javad Rezaei, MD"],
+                talks: [
+                    { subject: "Innovation in CXL", speaker: "Kiana Hasanpour, MD", time: "08:00-08:20" },
+                    { subject: "Standard vs Accelerated CXL", speaker: "Javad Rezaei, MD", time: "08:20-08:40" },
+                    { subject: "CXL in Pediatric", speaker: "Mohammad Reza Shoja, MD", time: "08:40-09:00" },
+                    { subject: "CXL in Thin Cornea & Customized CXL", speaker: "Hossein Jamali, MD", time: "09:00-09:20" },
+                    { subject: "Complications", speaker: "Mahdi Aminizadeh, MD", time: "09:20-10:00" }
+                ]
+            },
+            {
+                id: "thu-glauc-1",
+                date: "2026-10-29",
+                dayName: "Thursday",
+                time: "08:00-10:00",
+                hall: "Hall 4",
+                specialty: "GLAUCOMA",
+                type: "Workshop",
+                title: "Workshop: Failed glaucoma surgery; what to do next",
+                moderators: ["Azadeh Doozandeh Tabarestani, MD", "Azadeh Samaeili, MD", "Neda Einollahi, MD"],
+                talks: [
+                    { subject: "Failure Analysis in Glaucoma Surgery", speaker: "Azadeh Doozandeh, MD", time: "08:00-08:20" },
+                    { subject: "Salvage of Failed Filtering Surgery", speaker: "Navid Nilforushan, MD", time: "08:20-08:40" },
+                    { subject: "Salvage of Failed Glaucoma Drainage Devices", speaker: "Neda Einollahi, MD", time: "08:40-09:00" },
+                    { subject: "Failed MIGS and Other Glaucoma Surgical Procedures", speaker: "Azadeh Samaeili, MD", time: "09:00-09:20" },
+                    { subject: "Failed Surgery in Primary Congenital Glaucoma", speaker: "Masoomeh Sadat Masoumpour, MD", time: "09:20-09:40" },
+                    { subject: "Discussion", speaker: "Panelists", time: "09:40-10:00" }
+                ]
+            },
+            {
+                id: "thu-plast-1",
+                date: "2026-10-29",
+                dayName: "Thursday",
+                time: "08:00-10:00",
+                hall: "Hall 5",
+                specialty: "OPHTHALMIC PLASTIC",
+                type: "Workshop",
+                title: "Workshop: Common Eyelid Disorders",
+                moderators: ["Abolfazl Kasaei, MD", "Nasser Karimi, MD", "Hossein Ghahvehchian, MD"],
+                talks: [
+                    { subject: "Infantile Hemangioma: Management", speaker: "Bahareh Kermani, MD", time: "08:00-08:15" },
+                    { subject: "Facial Nerve Palsy: Oculoplastic Care", speaker: "Mansoureh Jamshidian, MD", time: "08:15-08:30" },
+                    { subject: "Dermoid Cyst Excision: Complication Management", speaker: "Nasser Karimi, MD", time: "08:30-08:45" },
+                    { subject: "Ptosis: Surgery with Poor Levator Function", speaker: "Hossein Ghahvehchian, MD", time: "08:45-09:00" },
+                    { subject: "Eyelid Malignancies: Targeted therapy", speaker: "Amirhossein Aghajani, MD", time: "09:00-09:15" },
+                    { subject: "Panel Discussion", speaker: "Panelists", time: "09:15-09:30" }
+                ]
+            },
+            {
+                id: "thu-strab-1",
+                date: "2026-10-29",
+                dayName: "Thursday",
+                time: "08:00-10:00",
+                hall: "Hall 6",
+                specialty: "STRABISMUS",
+                type: "Workshop",
+                title: "Workshop: Adult-onset strabismus",
+                moderators: ["Aliakbar Saber Moghaddam, MD", "Reza Nabiei, MD", "Mohaddeseh Feizi, MD"],
+                talks: [
+                    { subject: "Neurogenic Strabismus", speaker: "Farid Shekarchian, MD", time: "08:00-08:15" },
+                    { subject: "Graves’ ophthalmopathy and strabismus", speaker: "Mohammad Reza Akbari, MD", time: "08:15-08:30" },
+                    { subject: "Refractive Surgery and strabismus", speaker: "Mohaddeseh Feizi, MD", time: "08:30-08:45" },
+                    { subject: "Orbital trauma and strabismus", speaker: "Reza Nabiei, MD", time: "08:45-09:00" },
+                    { subject: "Aging and strabismus", speaker: "Aliakbar Saber Moghaddam, MD", time: "09:15-09:30" },
+                    { subject: "Discussion", speaker: "Panelists", time: "09:30-10:00" }
+                ]
+            },
+            {
+                id: "thu-ant-2",
+                date: "2026-10-29",
+                dayName: "Thursday",
+                time: "14:00-16:00",
+                hall: "Main Hall",
+                specialty: "ANTERIOR SEGMENT",
+                type: "Symposium",
+                title: "Symposium: Management of Corneal Refractive Surgery Complications (PRK-FemtoLASIK-SMILE)",
+                moderators: ["Bahram Einollahi, MD", "Farid Karimian, MD", "Seyed Mohammad Ghoreishi, MD", "Hasan Hashemi, MD", "Ahmad Shojaei Baghini, MD"],
+                talks: [
+                    { subject: "PRK Complications", speaker: "Mehdi Khodaparast, MD", time: "14:00-14:20" },
+                    { subject: "Femto Lasik Complications", speaker: "Javad Rezaei, MD", time: "14:20-14:40" },
+                    { subject: "SMILE Complications", speaker: "Hesam Hashemian, MD", time: "14:40-15:00" },
+                    { subject: "Late Onset Complications of Refractive Surgery", speaker: "Mohammad Mahdi Sadoughi, MD", time: "15:00-15:20" },
+                    { subject: "Discussion", speaker: "Panelists", time: "15:20-16:00" }
+                ]
+            },
+            {
+                id: "thu-ant-3",
+                date: "2026-10-29",
+                dayName: "Thursday",
+                time: "14:00-16:00",
+                hall: "Hall 2",
+                specialty: "ANTERIOR SEGMENT",
+                type: "Symposium",
+                title: "Symposium: Infectious Keratitis",
+                moderators: ["Mohammadali Javadi, MD", "Hossein Mohammad Rabei, MD", "Seyed Hashem Daryabari, MD", "Kiana Hasanpour, MD"],
+                talks: [
+                    { subject: "Bacterial Keratitis", speaker: "Asieh Aslani, MD", time: "14:00-14:15" },
+                    { subject: "Fungal Keratitis", speaker: "Mehdi AminiZadeh, MD", time: "14:15-14:30" },
+                    { subject: "Acanthamoeba Keratitis", speaker: "Amir Khosravi, MD", time: "14:30-14:45" },
+                    { subject: "Herpetic Keratitis", speaker: "Mehrnaz Atighechian, MD", time: "14:45-15:00" },
+                    { subject: "Surgical Treatment of Keratitis", speaker: "Sepehr Feizi, MD", time: "15:00-15:15" },
+                    { subject: "Discussion", speaker: "Panelists", time: "15:15-16:00" }
+                ]
+            },
+            {
+                id: "thu-post-2",
+                date: "2026-10-29",
+                dayName: "Thursday",
+                time: "14:00-16:00",
+                hall: "Hall 3",
+                specialty: "POSTERIOR SEGMENT",
+                type: "Symposium",
+                title: "Symposium: Posterior Segment Considerations in Cataract Surgery",
+                moderators: ["Siamak Moradian, MD", "Morteza Entezari, MD", "Alireza Javadzadeh, MD", "Hossein Ashraf, MD", "Mehrdad Afarid, MD", "Pasha Anvari, MD"],
+                talks: [
+                    { subject: "Cataract Surgery in Eyes with Macular Edema; Treatment or Surgery First?", speaker: "Siamak Moradian, MD", time: "14:00-14:15" },
+                    { subject: "Cataract Surgery in Anti-VEGF Treated Eyes; Injection and Operation Time", speaker: "Morteza Entezari, MD", time: "14:15-14:30" },
+                    { subject: "Lattice Degeneration, Retinal Breaks, and Cataract Surgery: When Should a Treatment be Used?", speaker: "Hamid Aryaeitabar, MD", time: "14:30-14:45" },
+                    { subject: "Cataract Surgery in AMD: Visual Potential, Timing, and Retinal Considerations", speaker: "Mohammad Karim Johari, MD", time: "14:45-15:00" },
+                    { subject: "Routine OCT before Cataract Surgery: An Essential Standard or an Expensive Habit?", speaker: "Alireza Javadzadeh, MD", time: "15:00-15:15" },
+                    { subject: "Retina after Phaco: Predictable Problems and Unpredictable Outcomes", speaker: "Mohammad Reza Mehrabi Bahar, MD", time: "15:15-15:30" },
+                    { subject: "Discussion", speaker: "Panelists", time: "15:30-16:00" }
+                ]
+            },
+            {
+                id: "thu-glauc-2",
+                date: "2026-10-29",
+                dayName: "Thursday",
+                time: "14:00-16:00",
+                hall: "Hall 4",
+                specialty: "GLAUCOMA",
+                type: "Workshop",
+                title: "Workshop: Stepwise Management of Primary Glaucoma",
+                moderators: ["Zohreh Behroozi, MD", "Reza Zarei, MD", "Farideh Sharifipour, MD"],
+                talks: [
+                    { subject: "Initial evaluation of glaucoma patient and risk stratification", speaker: "Farideh Sharifipour, MD", time: "14:00-14:15" },
+                    { subject: "Role of SLT and alternative medicine in our current practice", speaker: "Alireza Esmaeili, MD", time: "14:15-14:30" },
+                    { subject: "Surgical management of POAG", speaker: "Maryam Hajizadeh, MD", time: "14:30-14:45" },
+                    { subject: "Management of angle closure glaucoma", speaker: "Mohammad Banifatemi, MD", time: "14:45-15:00" },
+                    { subject: "Role of AI in glaucoma management", speaker: "Navid Abolfathzadeh, MD", time: "15:00-15:15" },
+                    { subject: "Discussion", speaker: "Panelists", time: "15:15-16:00" }
+                ]
+            },
+            {
+                id: "thu-strab-2",
+                date: "2026-10-29",
+                dayName: "Thursday",
+                time: "14:00-16:00",
+                hall: "Hall 6",
+                specialty: "STRABISMUS",
+                type: "Workshop",
+                title: "Workshop: Diagnostic Paradigms in Neuro-Ophthalmology",
+                moderators: ["Mohamadreza Khalili, MD", "Motahhareh Sadeghi, MD", "Ali Aghajani, MD"],
+                talks: [
+                    { subject: "Atypical Optic Neuritis", speaker: "Masood Aghsaie Fard, MD", time: "14:00-14:15" },
+                    { subject: "Transient Monocular Visual Loss", speaker: "Mohammed Areesh, MD", time: "14:15-14:30" },
+                    { subject: "OCT and OCTA Biomarkers in Neuro-Ophthalmic Diseases", speaker: "Ali Aghajani, MD", time: "14:30-14:45" },
+                    { subject: "Mitochondrial Optic Neuropathies", speaker: "Ali Sadeghi, MD", time: "14:45-15:00" },
+                    { subject: "Non-Organic Visual Loss", speaker: "Mohamadreza Khalili, MD", time: "15:00-15:15" },
+                    { subject: "Discussion", speaker: "Panelists", time: "15:15-16:00" }
+                ]
+            },
+            {
+                id: "thu-uve-1",
+                date: "2026-10-29",
+                dayName: "Thursday",
+                time: "14:30-16:00",
+                hall: "Hall 5",
+                specialty: "UVEITIS",
+                type: "Workshop",
+                title: "Workshop: Pitfalls and Misconceptions in Uveitis: A Case-Based Workshop",
+                moderators: ["Sahba Fekri, MD", "Zahra Mahdizad, MD"],
+                talks: [
+                    { subject: "TB or Not TB? Diagnostic and Therapeutic Pitfalls in Ocular Tuberculosis", speaker: "Zahra Mahdizad, MD", time: "14:30-14:45" },
+                    { subject: "Uveitic Entities with Prominent Optic Disc Involvement", speaker: "Mohammad Zarei, MD", time: "14:45-15:00" },
+                    { subject: "Infectious or Noninfectious? When Corticosteroids May Do More Harm Than Good", speaker: "Sahba Fekri, MD", time: "15:00-15:15" },
+                    { subject: "When Overlooking the Medical History Leads to a Missed Diagnosis", speaker: "Mohammadkarim Johari, MD", time: "15:15-15:30" },
+                    { subject: "Questions and Answers", speaker: "Panelists", time: "15:30-16:00" }
+                ]
+            },
+            {
+                id: "thu-fest",
+                date: "2026-10-29",
+                dayName: "Thursday",
+                time: "16:30-18:00",
+                hall: "Main Hall",
+                specialty: "GENERAL",
+                type: "Festival",
+                title: "Film and Photo Festival",
+                moderators: [],
+                talks: [
+                    { subject: "Ophthalmic Film and Photography Festival & Awards", speaker: "Main Hall", time: "16:30-18:00" }
+                ]
+            },
+            {
+                id: "thu-post-key",
+                date: "2026-10-29",
+                dayName: "Thursday",
+                time: "16:30-18:00",
+                hall: "Hall 2",
+                specialty: "POSTERIOR SEGMENT",
+                type: "Keynote Lectures",
+                title: "Keynote Lectures",
+                moderators: [],
+                talks: [
+                    { subject: "IOL power after corneal refractive surgery / melanoma", speaker: "Giacomo Savini, MD", time: "16:30-16:50" },
+                    { subject: "Questions and Answers", speaker: "", time: "16:50-17:00" },
+                    { subject: "A Decade of Artificial Intelligence in Ophthalmology: From Promise to Clinical Utilization", speaker: "Siamak Yousefi, MD", time: "17:00-17:20" },
+                    { subject: "Questions and Answers", speaker: "", time: "17:20-17:30" },
+                    { subject: "New and emerging ocular imaging technologies and recent advances in multimodal imaging", speaker: "Cristina Savastano", time: "17:30-17:50" },
+                    { subject: "Questions and Answers", speaker: "", time: "17:50-18:00" }
+                ]
+            },
+            {
+                id: "thu-ant-4",
+                date: "2026-10-29",
+                dayName: "Thursday",
+                time: "16:30-18:00",
+                hall: "Hall 3",
+                specialty: "ANTERIOR SEGMENT",
+                type: "Workshop",
+                title: "Workshop: Contact Lens",
+                moderators: ["Parviz Zarinbakhsh, MD", "Fatemeh Alipour, MD", "Yasaman Hadi, MD"],
+                talks: [
+                    { subject: "Contact Lenses in Children", speaker: "Yasaman Hadi, MD", time: "16:30-16:50" },
+                    { subject: "Optical Indications of Scleral Lenses", speaker: "Paria Abdolalizadeh, MD", time: "16:50-17:10" },
+                    { subject: "Case based panel discussion", speaker: "Panelists", time: "17:10-17:30" },
+                    { subject: "Hands-on Workshop", speaker: "Instructors", time: "17:30-18:00" }
+                ]
+            },
+            {
+                id: "thu-ant-5",
+                date: "2026-10-29",
+                dayName: "Thursday",
+                time: "16:30-18:00",
+                hall: "Hall 4",
+                specialty: "ANTERIOR SEGMENT",
+                type: "Workshop",
+                title: "Workshop: Challenging Case in Cataract Surgery",
+                moderators: ["Mostafa Naderi, MD", "Hamed Ghassemi, MD", "Khosrow Jadidi, MD", "Hossein Jamali, MD"],
+                talks: [
+                    { subject: "Opening", speaker: "Khosrow Jadidi, MD", time: "16:30-16:35" },
+                    { subject: "Zonular Weakness / Subluxated Lens", speaker: "Hossein Aghaei, MD", time: "16:35-16:40" },
+                    { subject: "White / Intumescent Cataract", speaker: "Hossein Jamali, MD", time: "16:45-16:50" },
+                    { subject: "Posterior Polar Cataract", speaker: "Abbas Abolhasani, MD", time: "16:55-17:00" },
+                    { subject: "Posterior Capsule Rupture Management", speaker: "Ahmad Chavoshi, MD", time: "17:05-17:10" },
+                    { subject: "IOL Problem / No Capsular Support", speaker: "Rana Daei Sorkhabi, MD", time: "17:10-17:15" },
+                    { subject: "Traumatic Cataract", speaker: "Zahra Karjoo, MD", time: "17:20-17:25" },
+                    { subject: "Discussion", speaker: "Panelists", time: "17:25-18:00" }
+                ]
+            },
+
+            // ==========================================
+            // FRIDAY - 30 OCTOBER 2026
+            // ==========================================
+            {
+                id: "fri-ai-1",
+                date: "2026-10-30",
+                dayName: "Friday",
+                time: "08:00-10:00",
+                hall: "Main Hall",
+                specialty: "AI WORKSHOP",
+                type: "Workshop",
+                title: "Workshop: AI WORKSHOP — THREAT, ILLUSION, OR OPPORTUNITY?",
+                moderators: ["Farhad Nejat, MD", "Seyed-Farzad Mohammadi, MD"],
+                talks: [
+                    { subject: "Interrogating the Prime Suspect: ChatGPT-6 on the Hot Seat", speaker: "ChatGPT-6 (Video)", time: "08:00-08:05" },
+                    { subject: "Philosophy, Mathematics & Extra-Human Intelligence", speaker: "Seyed-Farzad Mohammadi, MD", time: "08:05-08:15" },
+                    { subject: "Look Closer: AI Is Everywhere! ESCRS & ASCRS 2026 Highlights", speaker: "Farhad Nejat, MD", time: "08:15-08:25" },
+                    { subject: "Business Models in Smart Ophthalmology", speaker: "Dr. Mehdi Falah (Founder & Academic Director, MBA Program, University of Tehran)", time: "08:25-08:40" },
+                    { subject: "Speak AI: The Art of Prompting (Three Levels)", speaker: "Danial Dargi", time: "08:40-09:05" },
+                    { subject: "AI in Ophthalmology: Beyond Diagnosis – Rapid Review", speaker: "Soheil Adib-Moghaddam, MD", time: "09:05-09:15" },
+                    { subject: "The Final Verdict: Who Is Really in Control? (proposed)", speaker: "Farhad Nejat, MD", time: "09:15-09:30" }
+                ]
+            },
+            {
+                id: "fri-ant-1",
+                date: "2026-10-30",
+                dayName: "Friday",
+                time: "08:00-10:00",
+                hall: "Hall 2",
+                specialty: "ANTERIOR SEGMENT",
+                type: "Workshop",
+                title: "Workshop: Modern lenticule refractive surgery (optimization and new dissection)",
+                moderators: ["Seyed Mohammad Ghoreishi, MD", "Hasan Hashemi, MD", "Mahmood Jabbarvand, MD", "Mohammad Reza Sedaghat, MD", "Mostafa Naderi, MD", "Siamak Zarei-Ghanavati, MD"],
+                talks: [
+                    { subject: "Opening: Where Are We Now in KLEx", speaker: "Hasan Hashemi, MD", time: "08:00-08:15" },
+                    { subject: "Keys for successful patient selection and surgery setting", speaker: "Alireza Peyman, MD", time: "08:15-08:30" },
+                    { subject: "Surgical Techniques: Pearls; Pitfalls & Difficult Dissection", speaker: "Afshin Lotfi Sadigh, MD", time: "08:30-08:45" },
+                    { subject: "KLEx in borderline corneas: what would you do", speaker: "Seyed Mohammad Miraftab, MD", time: "08:45-09:00" },
+                    { subject: "Prevention and management of complication", speaker: "Seyed Javad Hashemian, MD", time: "09:00-09:15" },
+                    { subject: "The Future: Hyperopia & New Applications", speaker: "Ali Hadavandkhani, MD", time: "09:15-09:30" },
+                    { subject: "Panel Discussion", speaker: "Panelists", time: "09:30-10:00" }
+                ]
+            },
+            {
+                id: "fri-post-1",
+                date: "2026-10-30",
+                dayName: "Friday",
+                time: "08:00-10:00",
+                hall: "Hall 3",
+                specialty: "POSTERIOR SEGMENT",
+                type: "Symposium",
+                title: "Symposium: Age-related Macular Degeneration and Pachychoroid Spectrum",
+                moderators: ["Masood Elias Khalili Pour, MD", "Alireza Lashay, MD", "Majid Abrishami, MD", "Mohsen Farvardin, MD", "Saeed Karimi, MD", "Reza Mirshahi, MD"],
+                talks: [
+                    { subject: "From clinical history to multimodal imaging; a guide to mimickers of central serous chorioretinopathy (CSC)", speaker: "Kaveh Fadakar, MD", time: "08:00-08:15" },
+                    { subject: "Evidence-based management of acute and chronic CSC", speaker: "Esmaeil Asadi Khameneh, MD", time: "08:15-08:30" },
+                    { subject: "Red flags and long-term complications in CSC", speaker: "Yousef Alizadeh, MD", time: "08:30-08:45" },
+                    { subject: "OCT-driven classification of AMD in daily practice", speaker: "Mohammadreza Ansari Astaneh, MD", time: "08:45-09:00" },
+                    { subject: "Clinical management of neovascular AMD", speaker: "Pasha Anvari, MD", time: "09:00-09:15" },
+                    { subject: "Late-stage macular changes in AMD", speaker: "Mohsen Farvardin, MD", time: "09:15-09:30" },
+                    { subject: "Discussion", speaker: "Panelists", time: "09:30-10:00" }
+                ]
+            },
+            {
+                id: "fri-strab-1",
+                date: "2026-10-30",
+                dayName: "Friday",
+                time: "08:00-10:00",
+                hall: "Hall 5",
+                specialty: "STRABISMUS",
+                type: "Workshop",
+                title: "Workshop: Diagnosis and Management of SO Palsy",
+                moderators: ["Majid Farvardin Jahromi, MD", "Kaveh Abri Aghdam, MD", "Mohammad Sharifi, MD"],
+                talks: [
+                    { subject: "Clinical examination and objective measurements", speaker: "Mohammad Sharifi, MD", time: "08:00-08:20" },
+                    { subject: "Congenital vs. acquired SO palsy: red flags and neuroimaging", speaker: "Kaveh Abri Aghdam, MD", time: "08:20-08:40" },
+                    { subject: "Management algorithms", speaker: "Majid Farvardin Jahromi, MD", time: "08:40-09:00" },
+                    { subject: "Case-based panel discussion", speaker: "Panelists", time: "09:00-09:30" }
+                ]
+            },
+            {
+                id: "fri-glauc-1",
+                date: "2026-10-30",
+                dayName: "Friday",
+                time: "08:00-10:00",
+                hall: "Hall 6",
+                specialty: "GLAUCOMA",
+                type: "Workshop",
+                title: "Workshop: Updates and Innovations in Glaucoma Surgery",
+                moderators: ["Yadollah Eslami, MD", "Masoomeh Sadat Masoumpour, MD", "Ali Azimi, MD"],
+                talks: [
+                    { subject: "Minimally Invasive Bleb Surgery (MiBS): The New Frontier of Glaucoma Surgery", speaker: "Seyed Mahdi Tabatabaei, MD", time: "08:00-08:20" },
+                    { subject: "GATT & Canal-Based Surgery", speaker: "Ali Azimi, MD", time: "08:20-08:40" },
+                    { subject: "Updates on Glaucoma Drainage Devices", speaker: "Amin Ahmadi, MD", time: "08:40-09:00" },
+                    { subject: "Non-Penetrating Glaucoma Surgery: Modern Innovations", speaker: "Mehrnoush Ghasemi Jirdeh, MD", time: "09:00-09:20" },
+                    { subject: "The Future of Glaucoma Surgery: What Comes Next?", speaker: "Samira Salimpour, MD", time: "09:20-09:40" },
+                    { subject: "Discussion", speaker: "Panelists", time: "09:40-10:00" }
+                ]
+            },
+            {
+                id: "fri-ant-2",
+                date: "2026-10-30",
+                dayName: "Friday",
+                time: "10:30-12:00",
+                hall: "Main Hall",
+                specialty: "ANTERIOR SEGMENT",
+                type: "Symposium",
+                title: "Symposium: Imaging Techniques in Anterior Segment",
+                moderators: ["Mehrdad Mohammadpour, MD", "Afshin Lotfi Sadigh, MD", "Leila Ghiasian, MD", "Mehdi Khodaparast, MD"],
+                talks: [
+                    { subject: "Case Presentation & Interactive Imaging Discussion", speaker: "Panelists", time: "10:30-12:00" }
+                ]
+            },
+            {
+                id: "fri-ant-3",
+                date: "2026-10-30",
+                dayName: "Friday",
+                time: "10:30-12:00",
+                hall: "Hall 2",
+                specialty: "ANTERIOR SEGMENT",
+                type: "Workshop",
+                title: "Workshop: Refractive Cataract Surgery",
+                moderators: ["Seyed Javad Hashemian, MD", "Seyed Farzad Mohammadi, MD", "Alireza Eslampoor, MD", "Shahram Bamdad, MD"],
+                talks: [
+                    { subject: "LRI & Femto-AK Role in Mild Toricity", speaker: "Pirouzeh Farsi, MD", time: "10:30-10:40" },
+                    { subject: "The Decision to Re-align the Toric; When & How much?", speaker: "Mehdi Khanlari, MD", time: "10:40-10:50" },
+                    { subject: "Let us ask it otherwise: who is not a candidate for Multifocals?!", speaker: "Alireza Yazdani, MD", time: "10:50-11:00" },
+                    { subject: "EDOFs: Mutant Monos or Re-purposed Multies!", speaker: "Leila Ghiasian, MD", time: "11:00-11:10" },
+                    { subject: "Brands Talk", speaker: "Hanieh Fakhredin", time: "11:10-11:20" },
+                    { subject: "Exchange back-&-forth!", speaker: "Seyed Farzad Mohammadi, MD", time: "11:20-11:30" },
+                    { subject: "Dysfunctional Lens Syndrome Debate & Case Presentation", speaker: "Panelists", time: "11:30-12:00" }
+                ]
+            },
+            {
+                id: "fri-post-2",
+                date: "2026-10-30",
+                dayName: "Friday",
+                time: "10:30-12:00",
+                hall: "Hall 3",
+                specialty: "POSTERIOR SEGMENT",
+                type: "Workshop",
+                title: "Workshop: Posterior Segment Emergencies",
+                moderators: ["Ali Tabatabaei, MD", "Mohammad Hossein Dehghan, MD", "Farzan Kianersi, MD", "Hosseinali Shahriari, MD", "Hassan Behboudi, MD", "Amir Eftekhari Milani, MD"],
+                talks: [
+                    { subject: "Predisposing lesions for retinal detachment", speaker: "Mohammadreza Fazel, MD", time: "10:30-10:38" },
+                    { subject: "Retinal arterial occlusion", speaker: "Masoud Bagheri, MD", time: "10:38-10:46" },
+                    { subject: "Commotio retina, choroidal rupture and traumatic macular hole", speaker: "Mohammadreza Akhlaghi, MD", time: "10:46-10:57" },
+                    { subject: "Management of traumatic vitreous hemorrhage", speaker: "Mahya Soleimanzadeh, MD", time: "10:57-11:05" },
+                    { subject: "Postoperative endophthalmitis", speaker: "Farideh Mousavi, MD", time: "11:05-11:15" },
+                    { subject: "Management of open globe injuries", speaker: "Nader Mohammadi, MD", time: "11:15-11:23" },
+                    { subject: "Sympathetic ophthalmia", speaker: "Morteza Karimi, MD", time: "11:23-11:31" },
+                    { subject: "Discussion", speaker: "Panelists", time: "11:31-12:00" }
+                ]
+            },
+            {
+                id: "fri-post-3",
+                date: "2026-10-30",
+                dayName: "Friday",
+                time: "10:30-12:00",
+                hall: "Hall 4",
+                specialty: "POSTERIOR SEGMENT",
+                type: "Workshop",
+                title: "Workshop: Intravitreal Injections; Shoulds and Shouldn’ts",
+                moderators: ["Ramin Nourinia, MD", "Mohammad Hossein Nowroozzadeh, MD", "Alireza Maleki, MD", "Mohammad Zarei, MD", "Pasha Anvari, MD", "Kaveh Fadakar, MD", "Hamid Ahmadieh, MD"],
+                talks: [
+                    { subject: "When is intravitreal injection truly indicated?", speaker: "Mohammad Sadegh Dehghani Firouzabadi, MD", time: "10:30-10:40" },
+                    { subject: "When should intravitreal injection be postponed or avoided?", speaker: "Mohammadreza Badie, MD", time: "10:40-10:50" },
+                    { subject: "Panel discussion on pre-injection, intraoperative and post-injection considerations", speaker: "Panelists", time: "10:50-11:40" },
+                    { subject: "Case presentation", speaker: "Ramin Nourinia, MD", time: "11:40-12:00" }
+                ]
+            }
+        ];
+
+        const specialtyConfig = {
+            "ALL": { label: "All Tracks", color: "slate", icon: "ph-squares-four" },
+            "ANTERIOR SEGMENT": { label: "Anterior Segment", badgeClass: "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20", dotClass: "bg-blue-500" },
+            "POSTERIOR SEGMENT": { label: "Posterior Segment", badgeClass: "bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20", dotClass: "bg-purple-500" },
+            "GLAUCOMA": { label: "Glaucoma", badgeClass: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20", dotClass: "bg-emerald-500" },
+            "STRABISMUS": { label: "Strabismus", badgeClass: "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20", dotClass: "bg-amber-500" },
+            "OPHTHALMIC PLASTIC": { label: "Ophthalmic Plastic", badgeClass: "bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20", dotClass: "bg-rose-500" },
+            "UVEITIS": { label: "Uveitis", badgeClass: "bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/20", dotClass: "bg-indigo-500" },
+            "YOUNG OPHTHALMOLOGIST": { label: "Young Ophthalmologist", badgeClass: "bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border-cyan-500/20", dotClass: "bg-cyan-500" },
+            "NURSING PROGRAM": { label: "Nursing Program", badgeClass: "bg-teal-500/10 text-teal-600 dark:text-teal-400 border-teal-500/20", dotClass: "bg-teal-500" },
+            "AI WORKSHOP": { label: "AI Workshop", badgeClass: "bg-fuchsia-500/10 text-fuchsia-600 dark:text-fuchsia-400 border-fuchsia-500/20", dotClass: "bg-fuchsia-500" },
+            "CLINICAL REASONING": { label: "Clinical Reasoning", badgeClass: "bg-orange-500/10 text-orange-600 dark:text-orange-400 border-orange-500/20", dotClass: "bg-orange-500" },
+            "GENERAL": { label: "General / Plenary", badgeClass: "bg-slate-500/10 text-slate-600 dark:text-slate-300 border-slate-500/20", dotClass: "bg-slate-500" }
+        };
+
+        // localStorage can throw (private mode / blocked storage) - never let it break rendering
+        function safeGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+        function safeSet(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+        function safeParse(v) { try { const a = JSON.parse(v || "[]"); return Array.isArray(a) ? a : []; } catch (e) { return []; } }
+
+        // Application State
+        let currentDay = "2026-10-27";
+        let currentSpecialty = "ALL";
+        let currentHall = "ALL";
+        let searchQuery = "";
+        let showOnlySaved = false;
+        let allExpanded = true;
+        let savedSessions = new Set(safeParse(safeGet("ophtho2026_saved")));
+        let collapsedSessions = new Set();
+
+        function initTheme() {
+            const savedTheme = safeGet("ophtho2026_theme") || "light";
+            const htmlEl = document.documentElement;
+            if (savedTheme === "dark") {
+                htmlEl.classList.add("dark");
+            } else {
+                htmlEl.classList.remove("dark");
+            }
+            updateThemeButtonUI();
+        }
+
+        function toggleTheme() {
+            const htmlEl = document.documentElement;
+            htmlEl.classList.toggle("dark");
+            const isDark = htmlEl.classList.contains("dark");
+            safeSet("ophtho2026_theme", isDark ? "dark" : "light");
+            updateThemeButtonUI();
+        }
+
+        function updateThemeButtonUI() {
+            const isDark = document.documentElement.classList.contains("dark");
+            const icon = document.getElementById("themeIcon");
+            const text = document.getElementById("themeText");
+            if (isDark) {
+                icon.className = "ph-fill ph-sun text-amber-400 text-lg";
+                text.textContent = "Light Mode";
+            } else {
+                icon.className = "ph-fill ph-moon text-indigo-600 text-lg";
+                text.textContent = "Dark Mode";
+            }
+        }
+
+        function highlightText(text, query) {
+            if (!text) return "";
+            if (!query || query.trim() === "") return text;
+            const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            const regex = new RegExp(`(${escaped})`, 'gi');
+            return text.replace(regex, '<mark class="highlight">$1</mark>');
+        }
+
+        function renderSpecialtyPills() {
+            const container = document.getElementById("specialtyPills");
+            const keys = Object.keys(specialtyConfig);
+            container.innerHTML = keys.map(key => {
+                const item = specialtyConfig[key];
+                const isActive = currentSpecialty === key;
+                const activeClasses = isActive 
+                    ? "bg-blue-600 text-white border-blue-600 shadow-sm shadow-blue-500/30" 
+                    : "bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700/80 hover:bg-slate-200/70 dark:hover:bg-slate-800";
+                
+                const dotHtml = key !== "ALL" 
+                    ? `<span class="w-2 h-2 rounded-full ${isActive ? 'bg-white' : item.dotClass}"></span>` 
+                    : `<i class="ph-bold ph-squares-four text-xs"></i>`;
+
+                return `
+                    <button onclick="setSpecialtyFilter('${key}')" class="px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all whitespace-nowrap flex items-center gap-1.5 ${activeClasses}">
+                        ${dotHtml}
+                        <span>${item.label}</span>
+                    </button>
+                `;
+            }).join("");
+        }
+
+        function updateDayTabsUI() {
+            document.querySelectorAll(".day-tab").forEach(btn => {
+                const day = btn.getAttribute("data-day");
+                if (day === currentDay) {
+                    btn.className = "day-tab px-4 py-2.5 rounded-2xl text-xs sm:text-sm font-bold transition-all flex flex-col items-center sm:items-start justify-center border bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-500/20";
+                } else {
+                    btn.className = "day-tab px-4 py-2.5 rounded-2xl text-xs sm:text-sm font-bold transition-all flex flex-col items-center sm:items-start justify-center border bg-slate-50 dark:bg-slate-950/60 text-slate-600 dark:text-slate-400 border-slate-200/80 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800/60";
+                }
+            });
+        }
+
+        function setDayFilter(day) {
+            currentDay = day;
+            updateDayTabsUI();
+            renderSchedule();
+        }
+
+        function setSpecialtyFilter(spec) {
+            currentSpecialty = spec;
+            renderSpecialtyPills();
+            renderSchedule();
+        }
+
+        function setHallFilter(hall) {
+            currentHall = hall;
+            renderSchedule();
+        }
+
+        function handleSearch(val) {
+            searchQuery = val.trim();
+            const clearBtn = document.getElementById("clearSearchBtn");
+            if (searchQuery.length > 0) {
+                clearBtn.classList.remove("hidden");
+                // Automatically switch to ALL days when searching so user finds results across the entire congress
+                if (currentDay !== "ALL") {
+                    currentDay = "ALL";
+                    updateDayTabsUI();
+                }
+            } else {
+                clearBtn.classList.add("hidden");
+            }
+            renderSchedule();
+        }
+
+        function clearSearch() {
+            const input = document.getElementById("searchInput");
+            input.value = "";
+            handleSearch("");
+        }
+
+        function toggleBookmark(sessionId, event) {
+            if (event) event.stopPropagation();
+            if (savedSessions.has(sessionId)) {
+                savedSessions.delete(sessionId);
+            } else {
+                savedSessions.add(sessionId);
+            }
+            safeSet("ophtho2026_saved", JSON.stringify([...savedSessions]));
+            updateBookmarkUI();
+            renderSchedule();
+        }
+
+        function updateBookmarkUI() {
+            const badge = document.getElementById("savedCountBadge");
+            const btn = document.getElementById("myScheduleBtn");
+            const icon = document.getElementById("bookmarkHeaderIcon");
+            badge.textContent = savedSessions.size;
+
+            if (showOnlySaved) {
+                btn.classList.add("ring-2", "ring-amber-500", "bg-amber-500/10");
+                icon.className = "ph-fill ph-bookmark-simple text-lg text-amber-500";
+            } else {
+                btn.classList.remove("ring-2", "ring-amber-500", "bg-amber-500/10");
+                icon.className = savedSessions.size > 0 ? "ph-fill ph-bookmark-simple text-lg text-amber-500" : "ph ph-bookmark-simple text-lg text-amber-500";
+            }
+        }
+
+        function toggleMySchedule() {
+            showOnlySaved = !showOnlySaved;
+            if (showOnlySaved && currentDay !== "ALL") {
+                currentDay = "ALL";
+                updateDayTabsUI();
+            }
+            updateBookmarkUI();
+            renderSchedule();
+        }
+
+        function toggleSessionAccordion(sessionId) {
+            if (collapsedSessions.has(sessionId)) {
+                collapsedSessions.delete(sessionId);
+            } else {
+                collapsedSessions.add(sessionId);
+            }
+            renderSchedule();
+        }
+
+        function toggleAllAccordions() {
+            allExpanded = !allExpanded;
+            const textEl = document.getElementById("expandAllText");
+            if (allExpanded) {
+                collapsedSessions.clear();
+                textEl.textContent = "Collapse All";
+            } else {
+                congressData.forEach(s => collapsedSessions.add(s.id));
+                textEl.textContent = "Expand All";
+            }
+            renderSchedule();
+        }
+
+        function resetAllFilters() {
+            currentDay = "ALL";
+            currentSpecialty = "ALL";
+            currentHall = "ALL";
+            searchQuery = "";
+            showOnlySaved = false;
+            document.getElementById("searchInput").value = "";
+            document.getElementById("hallSelect").value = "ALL";
+            document.getElementById("clearSearchBtn").classList.add("hidden");
+            updateDayTabsUI();
+            renderSpecialtyPills();
+            updateBookmarkUI();
+            renderSchedule();
+        }
+
+        function renderSchedule() {
+            const container = document.getElementById("scheduleContainer");
+            const q = searchQuery.toLowerCase();
+
+            const filtered = congressData.filter(session => {
+                if (currentDay !== "ALL" && session.date !== currentDay) return false;
+                if (currentSpecialty !== "ALL" && session.specialty !== currentSpecialty && session.jointSpecialty !== currentSpecialty) return false;
+                if (currentHall !== "ALL" && session.hall !== currentHall) return false;
+                if (showOnlySaved && !savedSessions.has(session.id)) return false;
+
+                if (q) {
+                    const inTitle = session.title.toLowerCase().includes(q);
+                    const inHall = session.hall.toLowerCase().includes(q);
+                    const inSpec = session.specialty.toLowerCase().includes(q);
+                    const inMods = session.moderators.some(m => m.toLowerCase().includes(q));
+                    const inTalks = session.talks.some(t => 
+                        t.subject.toLowerCase().includes(q) || 
+                        t.speaker.toLowerCase().includes(q) || 
+                        t.time.toLowerCase().includes(q)
+                    );
+                    return inTitle || inHall || inSpec || inMods || inTalks;
+                }
+                return true;
+            });
+
+            // Update Filter Status Bar
+            const statusBar = document.getElementById("filterStatusBar");
+            const statusText = document.getElementById("filterStatusText");
+            const isFiltered = currentSpecialty !== "ALL" || currentHall !== "ALL" || q !== "" || showOnlySaved;
+            if (isFiltered) {
+                statusBar.classList.remove("hidden");
+                statusBar.classList.add("flex");
+                statusText.innerHTML = `Showing <strong>${filtered.length}</strong> matching session(s) ${showOnlySaved ? 'in <strong>My Saved Schedule</strong>' : ''}`;
+            } else {
+                statusBar.classList.add("hidden");
+                statusBar.classList.remove("flex");
+            }
+
+            if (filtered.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-16 px-4 rounded-3xl bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800">
+                        <div class="w-16 h-16 rounded-2xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center mx-auto mb-4 text-slate-400">
+                            <i class="ph-duotone ph-magnifying-glass text-3xl"></i>
+                        </div>
+                        <h3 class="text-lg font-bold text-slate-800 dark:text-slate-200 mb-1">No matching sessions found</h3>
+                        <p class="text-sm text-slate-500 dark:text-slate-400 max-w-md mx-auto mb-6">
+                            We couldn't find any sessions matching your current filters or search query.
+                        </p>
+                        <button onclick="resetAllFilters()" class="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold transition-all shadow-sm">
+                            Reset All Filters
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+
+            // Group by Date
+            const groupedByDate = {};
+            filtered.forEach(item => {
+                if (!groupedByDate[item.date]) {
+                    groupedByDate[item.date] = {
+                        dayName: item.dayName,
+                        date: item.date,
+                        sessions: []
+                    };
+                }
+                groupedByDate[item.date].sessions.push(item);
+            });
+
+            const dateLabels = {
+                "2026-10-27": "27 October 2026",
+                "2026-10-28": "28 October 2026",
+                "2026-10-29": "29 October 2026",
+                "2026-10-30": "30 October 2026"
+            };
+
+            container.innerHTML = Object.keys(groupedByDate).sort().map(dateKey => {
+                const group = groupedByDate[dateKey];
+                
+                const sessionsHtml = group.sessions.map(session => {
+                    const specInfo = specialtyConfig[session.specialty] || specialtyConfig["GENERAL"];
+                    const isSaved = savedSessions.has(session.id);
+                    const isCollapsed = collapsedSessions.has(session.id) && !q;
+
+                    const moderatorsHtml = session.moderators.length > 0 ? `
+                        <div class="mt-3 pt-3 border-t border-slate-100 dark:border-slate-800/70 flex flex-wrap items-center gap-1.5">
+                            <span class="text-[11px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500 mr-1 flex items-center gap-1">
+                                <i class="ph-fill ph-users-three"></i> Moderators / Panel:
+                            </span>
+                            ${session.moderators.map(mod => `
+                                <span class="px-2.5 py-0.5 rounded-lg text-xs font-medium bg-slate-100 dark:bg-slate-800/90 text-slate-700 dark:text-slate-300 border border-slate-200/60 dark:border-slate-700/60">
+                                    ${highlightText(mod, searchQuery)}
+                                </span>
+                            `).join("")}
+                        </div>
+                    ` : "";
+
+                    const talksHtml = session.talks.length > 0 && !isCollapsed ? `
+                        <div class="mt-4 overflow-hidden rounded-2xl border border-slate-200/80 dark:border-slate-800/90 bg-slate-50/50 dark:bg-slate-950/50">
+                            <div class="overflow-x-auto">
+                                <table class="talks-table w-full text-left border-collapse">
+                                    <thead>
+                                        <tr class="border-b border-slate-200/80 dark:border-slate-800/80 text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 bg-slate-100/70 dark:bg-slate-900/70">
+                                            <th class="py-2.5 px-4 sm:w-36">Time</th>
+                                            <th class="py-2.5 px-4">Subject / Topic</th>
+                                            <th class="py-2.5 px-4 sm:w-64">Speaker</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-slate-200/60 dark:divide-slate-800/60 text-xs sm:text-sm">
+                                        ${session.talks.map(talk => {
+                                            const isDiscussion = talk.subject.toLowerCase().includes("discussion") || talk.subject.toLowerCase().includes("questions and answers") || talk.subject.toLowerCase().includes("q&a") || talk.subject.toLowerCase().includes("q &a");
+                                            const rowClass = isDiscussion 
+                                                ? "bg-amber-500/5 dark:bg-amber-500/5 font-medium" 
+                                                : "hover:bg-white dark:hover:bg-slate-900/60 transition-colors";
+                                            return `
+                                                <tr class="${rowClass}">
+                                                    <td class="py-3 px-4 font-mono text-xs font-semibold text-blue-600 dark:text-blue-400 whitespace-nowrap align-top">
+                                                        ${highlightText(talk.time, searchQuery)}
+                                                    </td>
+                                                    <td class="py-3 px-4 font-medium text-slate-800 dark:text-slate-200 align-top">
+                                                        ${isDiscussion ? '<i class="ph-fill ph-chats-circle text-amber-500 mr-1.5"></i>' : ''}
+                                                        ${highlightText(talk.subject, searchQuery)}
+                                                    </td>
+                                                    <td class="py-3 px-4 text-slate-600 dark:text-slate-400 align-top">
+                                                        ${talk.speaker ? `
+                                                            <div class="inline-flex items-center gap-1.5 font-medium text-slate-700 dark:text-slate-300">
+                                                                <i class="ph-duotone ph-user-circle text-base text-slate-400 shrink-0"></i>
+                                                                <span>${highlightText(talk.speaker, searchQuery)}</span>
+                                                            </div>
+                                                        ` : '<span class="text-slate-400 italic text-xs">—</span>'}
+                                                    </td>
+                                                </tr>
+                                            `;
+                                        }).join("")}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    ` : "";
+
+                    return `
+                        <div class="card-enter group rounded-3xl bg-white dark:bg-slate-900/90 border border-slate-200/90 dark:border-slate-800/90 hover:border-blue-500/40 dark:hover:border-blue-500/40 p-4 sm:p-6 shadow-sm hover:shadow-md transition-all">
+                            <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+                                <!-- Left Info -->
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex flex-wrap items-center gap-2 mb-2.5">
+                                        <!-- Time Pill -->
+                                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-bold bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-sm">
+                                            <i class="ph-bold ph-clock"></i>
+                                            ${session.time}
+                                        </span>
+
+                                        <!-- Hall Badge -->
+                                        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+                                            <i class="ph-fill ph-map-pin text-rose-500"></i>
+                                            ${session.hall}
+                                        </span>
+
+                                        <!-- Specialty Badge -->
+                                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-bold border ${specInfo.badgeClass}">
+                                            <span class="w-1.5 h-1.5 rounded-full ${specInfo.dotClass}"></span>
+                                            ${session.specialty}
+                                        </span>
+
+                                        ${session.jointSpecialty ? `
+                                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-bold border ${specialtyConfig[session.jointSpecialty].badgeClass}">
+                                                + ${session.jointSpecialty}
+                                            </span>
+                                        ` : ''}
+
+                                        <!-- Type Tag -->
+                                        <span class="text-[11px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500 px-1.5">
+                                            • ${session.type}
+                                        </span>
+                                    </div>
+
+                                    <!-- Session Title -->
+                                    <h3 onclick="toggleSessionAccordion('${session.id}')" class="text-base sm:text-lg font-bold break-words text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors cursor-pointer">
+                                        ${highlightText(session.title, searchQuery)}
+                                    </h3>
+
+                                    <!-- Moderators -->
+                                    ${moderatorsHtml}
+                                </div>
+
+                                <!-- Right Action Buttons -->
+                                <div class="flex sm:flex-col items-center justify-end gap-2 sm:shrink-0 no-print">
+                                    <button 
+                                        onclick="toggleBookmark('${session.id}', event)" 
+                                        title="${isSaved ? 'Remove from My Schedule' : 'Save to My Schedule'}"
+                                        class="p-2.5 rounded-xl border transition-all ${isSaved ? 'bg-amber-500/15 border-amber-500/40 text-amber-500' : 'bg-slate-50 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700/80 text-slate-400 hover:text-amber-500'}"
+                                    >
+                                        <i class="${isSaved ? 'ph-fill' : 'ph'} ph-bookmark-simple text-lg"></i>
+                                    </button>
+
+                                    ${session.talks.length > 0 ? `
+                                        <button 
+                                            onclick="toggleSessionAccordion('${session.id}')" 
+                                            class="px-2.5 py-1.5 rounded-xl text-xs font-semibold bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all flex items-center gap-1"
+                                        >
+                                            <span>${session.talks.length}</span>
+                                            <i class="ph-bold ${isCollapsed ? 'ph-caret-down' : 'ph-caret-up'}"></i>
+                                        </button>
+                                    ` : ''}
+                                </div>
+                            </div>
+
+                            <!-- Presentations Table -->
+                            ${talksHtml}
+                        </div>
+                    `;
+                }).join("");
+
+                return `
+                    <section class="space-y-4">
+                        <!-- Sticky Day Divider -->
+                        <div class="sticky top-16 sm:top-20 z-10 py-2.5 px-4 rounded-2xl bg-slate-900/95 dark:bg-slate-800/95 text-white backdrop-blur-md shadow-md flex items-center justify-between">
+                            <div class="flex items-center gap-2.5">
+                                <i class="ph-duotone ph-calendar-blank text-blue-400 text-xl"></i>
+                                <h2 class="text-sm sm:text-base font-extrabold tracking-wide uppercase">
+                                    ${group.dayName} — ${dateLabels[group.date]}
+                                </h2>
+                            </div>
+                            <span class="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-white/15 text-slate-200">
+                                ${group.sessions.length} Sessions
+                            </span>
+                        </div>
+
+                        <!-- Break & Prayer Reminder Notice -->
+                        <div class="flex flex-wrap items-center gap-3 px-4 py-2 rounded-2xl bg-slate-100 dark:bg-slate-900/50 border border-slate-200/60 dark:border-slate-800/60 text-xs text-slate-500 dark:text-slate-400">
+                            <span class="inline-flex items-center gap-1 font-medium"><i class="ph-fill ph-coffee text-amber-500"></i> Morning Break: 10:00–10:30</span>
+                            <span>•</span>
+                            <span class="inline-flex items-center gap-1 font-medium"><i class="ph-fill ph-fork-knife text-emerald-500"></i> Prayer & Lunch: 12:30–14:00</span>
+                            <span>•</span>
+                            <span class="inline-flex items-center gap-1 font-medium"><i class="ph-fill ph-coffee text-amber-500"></i> Afternoon Break: 16:00–16:30</span>
+                        </div>
+
+                        <!-- Day Sessions List -->
+                        <div class="space-y-4">
+                            ${sessionsHtml}
+                        </div>
+                    </section>
+                `;
+            }).join("");
+        }
+
+        // Initialize on Window Load
+        document.addEventListener("DOMContentLoaded", function() {
+            initTheme();
+            updateDayTabsUI();
+            renderSpecialtyPills();
+            updateBookmarkUI();
+            renderSchedule();
+
+            // Calculate dynamic counts
+            const totalSessions = congressData.length;
+            const totalTalks = congressData.reduce((acc, s) => acc + s.talks.length, 0);
+            document.getElementById("statSessions").textContent = `${totalSessions} Sessions`;
+            document.getElementById("statTalks").textContent = `${totalTalks} Presentations`;
+        });
+    </script>
+</body>
+</html>
