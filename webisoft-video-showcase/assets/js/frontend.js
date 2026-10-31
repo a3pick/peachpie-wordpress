@@ -46,7 +46,30 @@
 			return;
 		}
 
-		grid.querySelectorAll( '.wvs-tile-img' ).forEach( markLoaded );
+		grid.querySelectorAll( 'img.wvs-tile-img' ).forEach( markLoaded );
+
+		/*
+		 * position:fixed داخل هر والدی که transform/filter/backdrop-filter/contain/overflow داشته باشد
+		 * (کارت‌های گرد المنتور و ...) نسبت به همان والد محاسبه می‌شود نه صفحه — لایت‌باکس نیمه‌کاره
+		 * و بریده نشان داده می‌شد. انتقال به <body> این کلاس باگ را ریشه‌ای حل می‌کند. متغیرهای
+		 * per-instance المنتور روی {{WRAPPER}} نشسته‌اند، پس قبل از انتقال به خودِ لایت‌باکس کپی می‌شوند.
+		 */
+		var rootStyle = window.getComputedStyle( root );
+		[ '--wvs-lightbox-bg', '--wvs-font-family' ].forEach( function ( prop ) {
+			var value = rootStyle.getPropertyValue( prop );
+
+			if ( value && value.trim() ) {
+				lightbox.style.setProperty( prop, value.trim() );
+			}
+		} );
+		// ری‌رندر ویجت در ادیتور المنتور نباید لایت‌باکس تکراری در body باقی بگذارد.
+		var stale = document.getElementById( lightbox.id );
+
+		if ( stale && stale !== lightbox && stale.parentNode === document.body ) {
+			stale.remove();
+		}
+
+		document.body.appendChild( lightbox );
 
 		var mediaBox = lightbox.querySelector( '.wvs-lb-media' );
 		var captionBox = lightbox.querySelector( '.wvs-lb-caption' );

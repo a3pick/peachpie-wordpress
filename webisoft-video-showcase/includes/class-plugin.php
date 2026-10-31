@@ -196,8 +196,8 @@ final class Webisoft_Video_Showcase_Plugin {
 		foreach ( $items as $item ) {
 			$thumb_id = (int) $item['thumbnail_id'];
 
-			if ( ! $thumb_id || ! wp_attachment_is_image( $thumb_id ) ) {
-				continue;
+			if ( $thumb_id && ! wp_attachment_is_image( $thumb_id ) ) {
+				$thumb_id = 0; // کاور حذف‌شده/نامعتبر = مثل بدون کاور.
 			}
 
 			$embed_url = '';
@@ -225,6 +225,20 @@ final class Webisoft_Video_Showcase_Plugin {
 
 			$alt = $item['alt_text'] ? $item['alt_text'] : $item['title'];
 
+			// بدون کاور: یوتیوب → تامبنیل رسمی، آپلودی → اولین فریم خودِ ویدیو، بقیه → placeholder.
+			$thumb_url = $thumb_id ? (string) wp_get_attachment_image_url( $thumb_id, 'large' ) : '';
+			$yt_id     = $embed_url ? wvs_get_youtube_id( $embed_url ) : '';
+
+			if ( ! $thumb_id && $yt_id ) {
+				$thumb_url = 'https://i.ytimg.com/vi/' . rawurlencode( $yt_id ) . '/hqdefault.jpg';
+			}
+
+			$fallback = '';
+
+			if ( ! $thumb_id && ! $thumb_url ) {
+				$fallback = $file_url ? 'video' : 'placeholder';
+			}
+
 			$js_items[] = array(
 				'id'          => $item['id'],
 				'sourceType'  => $item['source_type'],
@@ -235,12 +249,14 @@ final class Webisoft_Video_Showcase_Plugin {
 				'caption'     => $item['caption'],
 				'link'        => $item['link'],
 				'thumbAlt'    => $alt,
-				'thumbUrl'    => (string) wp_get_attachment_image_url( $thumb_id, 'large' ),
+				'thumbUrl'    => $thumb_url,
 			);
 
 			$tiles[] = array(
 				'index'          => count( $js_items ) - 1,
 				'thumb_id'       => $thumb_id,
+				'thumb_url'      => $thumb_url,
+				'fallback'       => $fallback,
 				'alt'            => $alt,
 				'title'          => $item['title'],
 				'caption'        => $item['caption'],

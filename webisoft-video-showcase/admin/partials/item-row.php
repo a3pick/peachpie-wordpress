@@ -29,13 +29,13 @@ $has_thumb   = ! empty( $item['thumbnail_preview'] );
 	<div class="wvs-item-row-body">
 
 		<div class="wvs-field wvs-field-thumb">
-			<label><?php esc_html_e( 'تصویر کاور (الزامی)', 'webisoft-video-showcase' ); ?></label>
+			<label><?php esc_html_e( 'تصویر کاور (اختیاری)', 'webisoft-video-showcase' ); ?></label>
 			<div class="wvs-media-picker">
 				<img class="wvs-thumb-preview" src="<?php echo esc_url( $item['thumbnail_preview'] ?? '' ); ?>" style="<?php echo $has_thumb ? '' : 'display:none;'; ?>" alt="" />
 				<input type="hidden" class="wvs-field-thumb-id" name="<?php echo esc_attr( $name ); ?>[thumbnail_id]" value="<?php echo esc_attr( $item['thumbnail_id'] ?? '' ); ?>" />
 				<button type="button" class="button wvs-pick-thumbnail"><?php esc_html_e( 'انتخاب تصویر', 'webisoft-video-showcase' ); ?></button>
 			</div>
-			<p class="wvs-hint"><?php esc_html_e( 'تولید خودکار تامبنیل از ویدیو پشتیبانی نمی‌شود؛ یک اسکرین‌شات مناسب از ویدیو آپلود کنید.', 'webisoft-video-showcase' ); ?></p>
+			<p class="wvs-hint"><?php esc_html_e( 'بدون کاور: یوتیوب = تامبنیل خودکار، ویدیوی آپلودی = اولین فریم ویدیو، بقیه = placeholder. برای سئوی بهتر (Schema) کاور بگذارید.', 'webisoft-video-showcase' ); ?></p>
 		</div>
 
 		<div class="wvs-field wvs-field-wide">

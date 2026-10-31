@@ -20,22 +20,30 @@ $eager_count = max( 0, absint( $settings['eager_count'] ) );
 				data-index="<?php echo (int) $tile['index']; ?>"
 				aria-label="<?php echo esc_attr( $tile['title'] ? $tile['title'] : __( 'پخش ویدیو', 'webisoft-video-showcase' ) ); ?>"
 			>
-				<?php
-				$img_attr = array(
-					'alt'      => $tile['alt'],
-					'loading'  => $tile['index'] < $eager_count ? 'eager' : 'lazy',
-					'decoding' => 'async',
-					'class'    => 'wvs-tile-img',
-				);
+				<?php if ( $tile['thumb_id'] ) : ?>
+					<?php
+					$img_attr = array(
+						'alt'      => $tile['alt'],
+						'loading'  => $tile['index'] < $eager_count ? 'eager' : 'lazy',
+						'decoding' => 'async',
+						'class'    => 'wvs-tile-img',
+					);
 
-				// اولین تایل معمولاً LCP صفحه است؛ چون رندر خارج از فیلتر the_content انجام می‌شود،
-				// اولویت‌دهی خودکار وردپرس اعمال نمی‌شود و باید صریح تنظیم شود.
-				if ( 0 === $tile['index'] ) {
-					$img_attr['fetchpriority'] = 'high';
-				}
+					// اولین تایل معمولاً LCP صفحه است؛ چون رندر خارج از فیلتر the_content انجام می‌شود،
+					// اولویت‌دهی خودکار وردپرس اعمال نمی‌شود و باید صریح تنظیم شود.
+					if ( 0 === $tile['index'] ) {
+						$img_attr['fetchpriority'] = 'high';
+					}
 
-				echo wp_get_attachment_image( $tile['thumb_id'], 'medium_large', false, $img_attr ); // phpcs:ignore WordPress.Security.EscapeOutput
-				?>
+					echo wp_get_attachment_image( $tile['thumb_id'], 'medium_large', false, $img_attr ); // phpcs:ignore WordPress.Security.EscapeOutput
+					?>
+				<?php elseif ( $tile['thumb_url'] ) : ?>
+					<img class="wvs-tile-img" src="<?php echo esc_url( $tile['thumb_url'] ); ?>" alt="<?php echo esc_attr( $tile['alt'] ); ?>" loading="<?php echo $tile['index'] < $eager_count ? 'eager' : 'lazy'; ?>" decoding="async" />
+				<?php elseif ( 'video' === $tile['fallback'] ) : ?>
+					<video class="wvs-tile-img wvs-loaded" src="<?php echo esc_url( $tile['file_url'] ); ?>#t=0.5" preload="metadata" muted playsinline tabindex="-1" aria-hidden="true"></video>
+				<?php else : ?>
+					<span class="wvs-tile-img wvs-tile-placeholder wvs-loaded" aria-hidden="true"></span>
+				<?php endif; ?>
 
 				<?php if ( $settings['show_play_icon'] ) : ?>
 					<span class="wvs-play-icon" aria-hidden="true">
@@ -83,8 +91,11 @@ $eager_count = max( 0, absint( $settings['eager_count'] ) );
 			$video_object = array(
 				'@type'        => 'VideoObject',
 				'name'         => $tile['title'] ? $tile['title'] : $fallback_name,
-				'thumbnailUrl' => array( wp_get_attachment_image_url( $tile['thumb_id'], 'large' ) ),
 			);
+
+			if ( $tile['thumb_url'] ) {
+				$video_object['thumbnailUrl'] = array( $tile['thumb_url'] );
+			}
 
 			if ( $tile['caption'] ) {
 				$video_object['description'] = $tile['caption'];

@@ -262,11 +262,7 @@ function wvs_sanitize_items( $raw ) {
 			continue;
 		}
 
-		$thumbnail_id = absint( $item['thumbnail_id'] ?? 0 );
-
-		if ( ! $thumbnail_id ) {
-			continue; // بدون تامبنیل، آیتم نامعتبره.
-		}
+		$thumbnail_id = absint( $item['thumbnail_id'] ?? 0 ); // کاور اختیاری است؛ بدون آن placeholder/فریم ویدیو نشان داده می‌شود.
 
 		$source_type = ( 'external' === ( $item['source_type'] ?? '' ) ) ? 'external' : 'upload';
 
@@ -305,4 +301,11 @@ function wvs_sanitize_items( $raw ) {
 	}
 
 	return $clean;
+}
+
+/**
+ * شناسه‌ی ویدیوی یوتیوب از آدرس embed نرمال‌شده (برای تامبنیل خودکار)؛ رشته خالی اگر یوتیوب نبود.
+ */
+function wvs_get_youtube_id( $embed_url ) {
+	return preg_match( '#youtube-nocookie\.com/embed/([A-Za-z0-9_-]+)#', (string) $embed_url, $m ) ? $m[1] : '';
 }
