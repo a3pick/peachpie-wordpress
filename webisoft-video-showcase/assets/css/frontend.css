@@ -1,0 +1,322 @@
+/*
+ * مهم: اینجا هیچ‌وقت مقدار پیش‌فرض واقعی برای --wvs-* روی خودِ .wvs-showcase ست نشه —
+ * فقط باید داخل var() به‌عنوان fallback بیاد. اگه اینجا مستقیم روی .wvs-showcase تعریف بشه،
+ * چون این قانون خودِ همین المنت رو هدف می‌گیره، همیشه روی مقدار ارثی از --root (تنظیمات پنل
+ * ادمین) یا از {{WRAPPER}} المنتور (override هر نمونه) غالب می‌شه و اون‌ها رو کاملاً بی‌اثر
+ * می‌کنه — even though ancestor-declared, وراثت دقیقاً همین‌جا قطع می‌شه. باگ واقعی که پیدا و
+ * رفع شد؛ همیشه از الگوی var(--x, fallback) استفاده کن، نه بازتعریف مستقیم روی .wvs-showcase.
+ */
+/*
+ * باگ واقعی دوم روی همون سایت زنده کاربر (این‌بار خودِ کاربر با DevTools پیداش کرد): تم/المنتور
+ * یه‌جا (احتمالاً یه قانون عمومی روی تگ section، برای هماهنگی با سیستم Container خودشون) داشت
+ * display:flex رو مستقیم روی همین <section class="wvs-showcase"> اعمال می‌کرد — نه چیزی که خودِ
+ * این پلاگین ست کرده باشه. چون این نوع قانون‌های عمومی از سمت تم/پیج‌بیلدر همیشه احتمال داره
+ * (هر سایتی، هر تمی)، هر دو المنت لایه‌بندی‌کننده اصلی (.wvs-showcase/.wvs-grid — تیتر بخش
+ * بعداً کلاً حذف شد، کاربر خودش از یک ویجت Heading جدای المنتور استفاده می‌کنه) رو صریح و با
+ * !important قفل می‌کنیم — تنها راه مطمئن که این کلاس باگ دیگه هیچ‌وقت، روی هیچ سایتی، تکرار نشه. */
+.wvs-showcase {
+	display: block !important;
+	box-sizing: border-box;
+}
+
+/*
+ * باگ واقعی روی سایت زنده کاربر (تایید‌شده با DevTools): وقتی این ویجت داخل یک Elementor
+ * Container با flex-direction:column قرار می‌گیره، خودِ Container گاهی از سطح بالاتر ارتفاع
+ * محدودی می‌گیره (مثلاً یک بخش/ستون هم‌ردیف کوتاه‌تر) و چون flex-shrink پیش‌فرض هر آیتم
+ * flex برابر ۱ه، کل ویجت (که ارتفاع واقعی محتواش پویا و از قبل نامعلومه — بسته به تعداد
+ * ویدیو/ستون فرق می‌کنه) کوچک‌تر از نیاز واقعیش فشرده می‌شه؛ چون overflow پیش‌فرض visible‌ه،
+ * محتوای اضافی به‌جای cut شدن، بصورت بصری روی بخش بعدی صفحه می‌ریزه («زیر فوتر رفتن»).
+ *
+ * باگ واقعی سوم، جدی‌تر از همه (تایید‌شده با تست مستقیم روی DOM زنده کاربر — بدون width صریح،
+ * ویجت به ۸×۰ پیکسل کاملاً ناپدید می‌شد؛ با width:100% دوباره کامل و درست نمایش داده شد):
+ * وقتی این ویجت مستقیم زیرمجموعه یک Elementor Container با flexbox row/column باشه، آیتم
+ * flexِ آن (`flex-basis:auto` پیش‌فرض) هیچ عرض معینی از محتوای خودش نمی‌گیره — چون `.wvs-grid`ی
+ * که داخلشه display:grid با ستون‌های `1fr`ه و تصاویر تایل‌ها position:absolute هستن (پس در
+ * محاسبه‌ی عرض ذاتی/min-content شرکت نمی‌کنن)، به همین خاطر محتوا هیچ عرض ذاتی قابل‌اتکایی
+ * نداره تا فلکس‌باکس ازش عرض استخراج کنه، و کل چیز صفر می‌شه — دقیقاً همون رفتاری که کاربر با
+ * آزمایش دستی (px صریح رو تنظیمات کانتینر = اوکی، بدون px = ناپدید، برداشتن جهت flex = اوکی)
+ * پیدا کرد. `.elementor-widget-webisoft-video-showcase` کلاسیه که المنتور خودش، پایدار و مستقل
+ * از هر سایت، به هر نمونه این ویجت اضافه می‌کنه — پس امن و همیشگیه که همینجا هدف بگیریم، نه یک
+ * ID تصادفی per-instance. */
+.elementor-widget-webisoft-video-showcase {
+	flex-shrink: 0 !important;
+	flex: 1 1 auto !important;
+	width: 100% !important;
+	min-width: 0 !important;
+}
+
+.wvs-showcase * {
+	box-sizing: border-box;
+}
+
+.wvs-showcase,
+.wvs-showcase button,
+.wvs-showcase input {
+	font-family: var(--wvs-font-family, -apple-system, BlinkMacSystemFont, "Segoe UI", Tahoma, Arial, sans-serif) !important;
+}
+
+
+.wvs-grid {
+	display: grid !important;
+	grid-template-columns: repeat(var(--wvs-cols, 3), 1fr);
+	gap: var(--wvs-gap, 4px);
+}
+
+/*
+ * !important روی همه‌ی این‌ها لازمه: المنتور/تم یک قانون سراسری روی هر <button>/[type="button"]
+ * دارن (`border:1px solid ...;border-radius:3px;padding:.5rem 1rem;...`) که specificity‌ش با
+ * .wvs-tile برابره — یعنی همیشه با source-order تعیین می‌شه، نه چیز پایداری؛ آپدیت بعدی تم/
+ * المنتور می‌تونه ترتیب رو عوض کنه و این استایل‌ها رو بی‌خبر بشکنه. با !important دیگه به این
+ * ترتیب وابسته نیست.
+ */
+.wvs-tile {
+	position: relative !important;
+	display: block !important;
+	width: 100% !important;
+	padding: 0 !important;
+	margin: 0 !important;
+	border: 0 !important;
+	background: var(--wvs-skeleton, #e9e9e9);
+	aspect-ratio: var(--wvs-aspect, 1/1);
+	overflow: hidden;
+	border-radius: var(--wvs-radius, 4px) !important;
+	cursor: pointer;
+	appearance: none;
+	-webkit-appearance: none;
+}
+
+/*
+ * !important روی width/height/object-fit/max-width واقعاً لازمه — نه سلیقه‌ای. المنتور خودش
+ * یک قانون سراسری `.elementor img{height:auto;max-width:100%;}` داره (تم Hello Elementor هم
+ * یک `img{height:auto;max-width:100%;}` مشابه) که specificity‌ش (کلاس+تگ = 0,1,1) از
+ * `.wvs-tile-img` تنها (0,1,0) بالاتره و بدون !important همیشه برنده می‌شه — یعنی عکس هیچ‌وقت
+ * کل کادر رو پر نمی‌کنه، به‌جای اون با نسبت‌ابعاد طبیعی خودش رندر می‌شه (باگ واقعی که روی سایت
+ * زنده کاربر با DevTools پیدا شد: تایل‌ها ارتفاع‌های متفاوت و فضای خالی رنگی زیر عکس داشتن).
+ */
+.wvs-tile-img {
+	position: absolute !important;
+	inset: 0 !important;
+	width: 100% !important;
+	height: 100% !important;
+	max-width: none !important;
+	object-fit: cover !important;
+	display: block;
+	opacity: 0;
+	transition: opacity 0.35s ease, transform 0.35s ease;
+}
+
+.wvs-tile-img.wvs-loaded {
+	opacity: 1;
+}
+
+.wvs-showcase[data-hover="zoom"] .wvs-tile:hover .wvs-tile-img,
+.wvs-showcase[data-hover="zoom"] .wvs-tile:focus-visible .wvs-tile-img {
+	transform: scale(1.06);
+}
+
+.wvs-showcase[data-hover="dim"] .wvs-tile::after {
+	content: "";
+	position: absolute;
+	inset: 0;
+	background: rgba(0, 0, 0, 0);
+	transition: background 0.25s ease;
+	pointer-events: none;
+}
+
+.wvs-showcase[data-hover="dim"] .wvs-tile:hover::after,
+.wvs-showcase[data-hover="dim"] .wvs-tile:focus-visible::after {
+	background: rgba(0, 0, 0, 0.18);
+}
+
+.wvs-play-icon {
+	position: absolute;
+	top: 8px;
+	inset-inline-end: 8px;
+	color: var(--wvs-play-color, #fff);
+	filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.6));
+	pointer-events: none;
+	z-index: 1;
+}
+
+.wvs-badge {
+	position: absolute;
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	padding: 2px 7px;
+	border-radius: 20px;
+	background: var(--wvs-badge-bg, rgba(0, 0, 0, 0.55));
+	color: var(--wvs-badge-color, #fff);
+	font-size: 11px;
+	line-height: 1.8;
+	pointer-events: none;
+	z-index: 1;
+}
+
+.wvs-badge-duration {
+	bottom: 8px;
+	inset-inline-end: 8px;
+}
+
+.wvs-badge-views {
+	bottom: 8px;
+	inset-inline-start: 8px;
+}
+
+/* لایت‌باکس
+   دکمه‌های بستن/قبلی/بعدی عمداً فرزند مستقیم .wvs-lightbox‌اند (نه .wvs-lb-inner) و نسبت به
+   همون جعبه‌ی تمام‌صفحه position:fixed می‌شن — نه با آفست منفی بیرون از محتوا. این باعث می‌شه
+   روی هر سایز صفحه (خصوصاً موبایل) همیشه داخل دید بمونن و هیچ‌وقت بریده نشن. */
+.wvs-lightbox {
+	position: fixed;
+	inset: 0;
+	background: var(--wvs-lightbox-bg, rgba(0, 0, 0, 0.92));
+	display: none;
+	z-index: 100000;
+	padding: 60px 16px;
+}
+
+/* grid + place-items:center به‌جای flex align-items:center — روی موبایل سافاری، وقتی نوار
+   آدرس هنگام اسکرول ظاهر/محو می‌شه و ارتفاع واقعی viewport بعد از رندر اول تغییر می‌کنه،
+   centering با grid پایدارتر از flex عمل می‌کنه (باگ واقعی که کاربر گزارش داد: محتوا به بالا
+   می‌چسبید). margin:auto روی خودِ inner هم یک لایه ایمنی اضافه‌ست، مستقل از مکانیزم parent. */
+.wvs-lightbox.is-open {
+	display: grid;
+	place-items: center;
+}
+
+.wvs-lb-inner {
+	position: relative;
+	width: 100%;
+	max-width: min(94vw, 420px);
+	max-height: 100%;
+	margin: auto;
+	display: flex;
+	flex-direction: column;
+	transition: max-width 0.2s ease;
+}
+
+/* پیش‌فرض عمودی/مربعی (ریلز، ۹:۱۶) باریک می‌مونه؛ برای ویدیوی افقی (وبینار، تیزر ۱۶:۹)
+   جعبه به‌طور محسوسی پهن‌تر می‌شه — وگرنه یک ویدیوی افقی توی قاب باریک ریز و با حاشیه سیاه دیده می‌شه. */
+.wvs-lightbox[data-orientation="landscape"] .wvs-lb-inner {
+	max-width: min(94vw, 960px);
+}
+
+.wvs-lb-media {
+	position: relative;
+	width: 100%;
+	background: #000;
+	border-radius: 6px;
+	overflow: hidden;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	min-height: 120px;
+}
+
+.wvs-lb-media video {
+	width: 100%;
+	max-height: calc(100vh - 160px);
+	display: block;
+}
+
+.wvs-lb-media .wvs-lb-iframe-wrap {
+	position: relative;
+	width: 100%;
+	aspect-ratio: 9/16;
+	max-height: calc(100vh - 160px);
+}
+
+.wvs-lightbox[data-orientation="landscape"] .wvs-lb-iframe-wrap {
+	aspect-ratio: 16/9;
+}
+
+.wvs-lightbox[data-orientation="square"] .wvs-lb-iframe-wrap {
+	aspect-ratio: 1/1;
+}
+
+.wvs-lb-media .wvs-lb-iframe-wrap iframe {
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	border: 0;
+}
+
+.wvs-lb-footer {
+	color: #fff;
+	padding: 10px 4px 0;
+	font-size: 13px;
+}
+
+.wvs-lb-caption {
+	opacity: 0.9;
+	white-space: pre-line;
+}
+
+.wvs-lb-link {
+	display: inline-block;
+	margin-top: 6px;
+	color: #8ab4ff !important;
+	text-decoration: underline !important;
+}
+
+.wvs-lb-link:empty {
+	display: none;
+}
+
+.wvs-lb-close,
+.wvs-lb-nav {
+	position: absolute;
+	background: rgba(255, 255, 255, 0.14);
+	color: #fff;
+	border: 0 !important;
+	border-radius: 50% !important;
+	padding: 0 !important;
+	margin: 0 !important;
+	width: 40px !important;
+	height: 40px !important;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	cursor: pointer;
+	font-size: 16px;
+	line-height: 1;
+	z-index: 2;
+}
+
+.wvs-lb-close:hover,
+.wvs-lb-nav:hover {
+	background: rgba(255, 255, 255, 0.28);
+}
+
+.wvs-lb-close {
+	top: 14px;
+	inset-inline-end: 14px;
+}
+
+.wvs-lb-nav {
+	top: 50%;
+	transform: translateY(-50%);
+}
+
+.wvs-lb-prev {
+	inset-inline-start: 10px;
+}
+
+.wvs-lb-next {
+	inset-inline-end: 10px;
+}
+
+@media (max-width: 480px) {
+	.wvs-lb-close,
+	.wvs-lb-nav {
+		width: 34px !important;
+		height: 34px !important;
+		font-size: 14px;
+	}
+}
+
+body.wvs-scroll-locked {
+	overflow: hidden;
+}
