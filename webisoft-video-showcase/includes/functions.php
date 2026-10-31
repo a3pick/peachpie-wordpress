@@ -172,7 +172,8 @@ function wvs_resolve_items( $source = array() ) {
 	} elseif ( in_array( $mode, array( 'auto', 'current' ), true ) ) {
 		$id = (int) get_the_ID();
 
-		if ( ! $id ) {
+		// داخل قالب‌های تکرارشونده (Theme Builder/جت‌انجین) گاهی ID خودِ قالب برمی‌گردد، نه پستِ در حال نمایش.
+		if ( ! $id || in_array( get_post_type( $id ), array( 'elementor_library', 'jet-engine', 'jet-theme-core' ), true ) ) {
 			$id = (int) get_queried_object_id();
 		}
 	}
