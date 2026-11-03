@@ -49,9 +49,10 @@ td{padding:.85rem .75rem;border-bottom:1px solid var(--border);vertical-align:to
 @media print{body{background:#fff}.page{gap:1.5rem}}
 
 body{background:radial-gradient(900px 500px at 85% -5%,rgba(36,121,228,.35),transparent 60%),radial-gradient(700px 500px at 0% 35%,rgba(120,180,255,.30),transparent 60%),radial-gradient(800px 600px at 100% 80%,rgba(36,121,228,.18),transparent 60%),var(--bg);background-attachment:fixed}
-.masthead,.panel,.pa,.card,.kc,.step,.order li,.note{-webkit-backdrop-filter:blur(18px) saturate(160%);backdrop-filter:blur(18px) saturate(160%)}
-.masthead,.panel,.pa,.card,.kc{border:1px solid rgba(255,255,255,.55);box-shadow:var(--shadow-lift),inset 0 1px 0 rgba(255,255,255,.6)}
-@media (prefers-color-scheme:dark){.masthead,.panel,.pa,.card,.kc{border-color:rgba(255,255,255,.12);box-shadow:var(--shadow-lift),inset 0 1px 0 rgba(255,255,255,.08)}}
+.masthead,.panel,.pa,.card,.kc{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.72);border-radius:18px;box-shadow:0 8px 30px rgba(31,85,130,.08),inset 0 1px 0 rgba(255,255,255,.55);-webkit-backdrop-filter:blur(14px) saturate(135%);backdrop-filter:blur(14px) saturate(135%);overflow:hidden;transition:.3s ease}
+.step,.order li,.note{-webkit-backdrop-filter:blur(14px) saturate(135%);backdrop-filter:blur(14px) saturate(135%)}
+.card:hover,.kc:hover{box-shadow:0 12px 36px rgba(36,121,228,.18),inset 0 1px 0 rgba(255,255,255,.6)}
+@media (prefers-color-scheme:dark){.masthead,.panel,.pa,.card,.kc{background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.16);box-shadow:0 8px 30px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.1)}}
 .pa{border-inline-start:4px solid var(--accent)}.pa.am{border-inline-start-color:var(--amber)}
 .order li:before{background:linear-gradient(135deg,#2479E4,#5AA2F5)}
 .logo-img{height:72px;width:auto;object-fit:contain;filter:drop-shadow(0 6px 14px rgba(36,121,228,.3))}
