@@ -180,6 +180,12 @@ class WSF_Schema {
 			'desc'  => 'کلاس‌های کمکی برای المنتور، جلوه‌ها و CSS اختصاصی.',
 			'fields' => array(
 				self::tg( 'util_classes', 'کلاس‌های کمکی (ws-glass, ws-surface, ws-hover-border, border-hover-1..7, btn-emergency, glow-orb ...)', 1 ),
+				self::tg( 'orbs', 'هاله‌های نوری پس‌زمینه (دو هاله‌ی محو و شناور در گوشه‌ها)', 1, array( 'desc' => 'جایگزین کانتینرهای glow-orb در المنتور؛ بدون نیاز به ساخت المان. اگر قبلاً کانتینر هاله ساخته‌اید، آن‌ها را حذف کنید.' ) ),
+				self::c( 'orb_a', 'هاله ۱ — حالت روشن', '#27408b' ),
+				self::c( 'orb_b', 'هاله ۲ — حالت روشن', '#8fa8e8' ),
+				self::c( 'orb_dark_a', 'هاله ۱ — حالت تاریک', '#33489a' ),
+				self::c( 'orb_dark_b', 'هاله ۲ — حالت تاریک', '#1d2b5c' ),
+				self::n( 'orb_opacity', 'شفافیت هاله‌ها (٪)', 22, array( 'min' => 0, 'max' => 80 ) ),
 				self::tg( 'logo_shimmer', 'انیمیشن درخشش و بزرگ‌شدن لوگوی سایت (ویجت لوگوی المنتور)', 0 ),
 				self::tg( 'load_fa', 'بارگذاری Font Awesome 6 (فقط اگر خودتان از کلاس‌های fa-* استفاده می‌کنید)', 0, array( 'desc' => 'آیکون‌های داخلی افزونه به Font Awesome نیازی ندارند.' ) ),
 				self::ta( 'custom_css', 'CSS اختصاصی (روی همه صفحات)', '', array( 'san' => 'css', 'rows' => 8, 'desc' => 'برای استایل حالت تاریک از سلکتور html[data-wsf-theme="dark"] .your-class استفاده کنید.', 'class' => 'code' ) ),

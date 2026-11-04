@@ -182,6 +182,21 @@ class WSF_Assets {
 			$css .= 'html body[class*="elementor-kit-"]{' . $el . '}';
 		}
 
+		if ( WSF_Options::get( 'utilities', 'orbs', 1 ) ) {
+			$op = max( 0, min( 80, (int) WSF_Options::get( 'utilities', 'orb_opacity', 22 ) ) ) / 100;
+			$c  = function ( $k, $d ) {
+				$v = WSF_Options::get( 'utilities', $k, '' );
+				return $v ? $v : $d;
+			};
+			$css .= 'body.wsf-site::before,body.wsf-site::after{content:"";position:fixed;z-index:-1;pointer-events:none;border-radius:50%;width:46vw;height:46vw;max-width:640px;max-height:640px;filter:blur(100px);opacity:' . $op . ';animation:wsf-orbfloat 16s infinite alternate ease-in-out}'
+				. 'body.wsf-site::before{top:-12%;inset-inline-start:-10%;background:' . $c( 'orb_a', '#27408b' ) . '}'
+				. 'body.wsf-site::after{bottom:-14%;inset-inline-end:-10%;background:' . $c( 'orb_b', '#8fa8e8' ) . ';animation-delay:-8s}'
+				. 'html[data-wsf-theme="dark"] body.wsf-site::before{background:' . $c( 'orb_dark_a', '#33489a' ) . '}'
+				. 'html[data-wsf-theme="dark"] body.wsf-site::after{background:' . $c( 'orb_dark_b', '#1d2b5c' ) . '}'
+				. '@keyframes wsf-orbfloat{0%{transform:scale(1) translate(0,0)}100%{transform:scale(1.15) translate(30px,-30px)}}'
+				. '@media (prefers-reduced-motion:reduce){body.wsf-site::before,body.wsf-site::after{animation:none}}';
+		}
+
 		if ( WSF_Options::get( 'utilities', 'logo_shimmer', 0 ) ) {
 			$css .= '.elementor-widget-theme-site-logo{display:inline-block;-webkit-mask:linear-gradient(-60deg,#000 30%,#0005,#000 50%) right/300% 100%;mask:linear-gradient(-60deg,#000 30%,#0005,#000 50%) right/300% 100%;background-repeat:no-repeat;animation:wsf-shimmer 3s infinite;transition:transform .3s}.elementor-widget-theme-site-logo:hover{transform:scale(1.08)}@keyframes wsf-shimmer{0%{-webkit-mask-position:140% 140%;mask-position:140% 140%}100%{-webkit-mask-position:-20% -20%;mask-position:-20% -20%}}@media (prefers-reduced-motion:reduce){.elementor-widget-theme-site-logo{animation:none}}';
 		}
