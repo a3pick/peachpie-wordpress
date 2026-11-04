@@ -129,7 +129,6 @@
 .wsf .wsf-dcard:hover{transform:translateY(-8px);border-color:color-mix(in srgb,var(--wsf-primary) 35%,transparent)}
 .wsf-dcard:hover::before{width:80px;height:80px;background:color-mix(in srgb,var(--wsf-accent) 16%,transparent)}
 .wsf-dcard .wsf-iconbox{margin-bottom:1rem;position:relative}
-.wsf-dcard:nth-child(even) .wsf-iconbox{color:var(--wsf-accent-text);background:color-mix(in srgb,var(--wsf-accent) 18%,transparent)}
 .wsf-dcard:hover .wsf-iconbox{transform:scale(1.1) rotate(-5deg)}
 .wsf.wsf .wsf-dcard h3{font-size:1.08rem;font-weight:800;margin:0 0 .4rem;position:relative}
 .wsf-dcard p{font-size:.8rem;color:var(--wsf-text);line-height:1.7;position:relative}
