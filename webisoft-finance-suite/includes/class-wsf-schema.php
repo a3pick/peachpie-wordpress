@@ -127,9 +127,9 @@ class WSF_Schema {
 					self::s( 'direction', 'جهت متن ماژول‌ها', array( 'auto' => 'مطابق جهت سایت', 'rtl' => 'همیشه راست‌به‌چپ', 'ltr' => 'همیشه چپ‌به‌راست' ), 'auto' ),
 				),
 				self::color_fields( array(
-					'primary' => '#2a6e6d', 'btn_a' => '#2a6e6d', 'btn_b' => '#1f5352', 'on_btn' => '#ffffff', 'accent' => '#cb9833',
-					'accent_text' => '#94691a', 'ink' => '#0f172a', 'text' => '#475569', 'muted' => '#94a3b8',
-					'surface' => '#ffffff', 'surface_alt' => '#f8fafc', 'border' => '#e2e8f0', 'page_bg' => '',
+					'primary' => '#1d4ed8', 'btn_a' => '#1e3a8a', 'btn_b' => '#0f2557', 'on_btn' => '#ffffff', 'accent' => '#cb9833',
+					'accent_text' => '#94691a', 'ink' => '#0b1b3a', 'text' => '#475569', 'muted' => '#94a3b8',
+					'surface' => '#ffffff', 'surface_alt' => '#f5f8ff', 'border' => '#dbe3f3', 'page_bg' => '',
 				) )
 			),
 		);
@@ -153,9 +153,9 @@ class WSF_Schema {
 					self::ta( 'surface_alt_selectors', 'سلکتورهایی که «پس‌زمینه ثانویه» بگیرند (هر خط یک سلکتور)', '', array( 'san' => 'selectors', 'rows' => 3 ) ),
 				),
 				self::color_fields( array(
-					'primary' => '#5ec2bf', 'btn_a' => '#2f7f7e', 'btn_b' => '#1f5352', 'on_btn' => '#ffffff', 'accent' => '#e0b04d',
+					'primary' => '#7aa7ff', 'btn_a' => '#2f55c9', 'btn_b' => '#1e3a8a', 'on_btn' => '#ffffff', 'accent' => '#e0b04d',
 					'accent_text' => '#e5b95c', 'ink' => '#f1f5f9', 'text' => '#cbd5e1', 'muted' => '#94a3b8',
-					'surface' => '#1e293b', 'surface_alt' => '#172033', 'border' => '#334155', 'page_bg' => '#0b1220',
+					'surface' => '#16223f', 'surface_alt' => '#101a33', 'border' => '#2a3b63', 'page_bg' => '#0a1020',
 				) )
 			),
 		);

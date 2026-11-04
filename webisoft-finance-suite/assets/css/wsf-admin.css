@@ -1,5 +1,5 @@
 /* Webisoft Finance Suite — پنل مدیریت */
-.wsf-admin{--wsf-a:#2a6e6d;--wsf-b:#1f5352;max-width:1280px}
+.wsf-admin{--wsf-a:#1e3a8a;--wsf-b:#0f2557;max-width:1280px}
 .wsf-admin__h1{display:flex;align-items:center;gap:8px;margin-bottom:18px!important}
 .wsf-admin__h1 small{font-size:12px;font-weight:400;color:#646970;font-family:monospace}
 .wsf-admin__h1 .dashicons{font-size:28px;width:28px;height:28px;color:var(--wsf-a)}
