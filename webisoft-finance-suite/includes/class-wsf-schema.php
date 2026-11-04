@@ -92,8 +92,8 @@ class WSF_Schema {
 				self::t( 'firm_name', 'نام برند / دفتر', 'آلیس‌یار' ),
 				self::t( 'firm_title', 'عنوان حرفه‌ای', 'مشاوره مالی و حسابداری کسب‌وکارهای خرد' ),
 				self::n( 'consult_minutes', 'مدت مشاوره رایگان (دقیقه) — جایگزین {minutes} در همه متن‌ها', 30, array( 'min' => 5, 'max' => 240 ) ),
-				self::img( 'logo', 'لوگو — حالت روشن (اختیاری؛ در غیر این صورت لوگوی سایت)' ),
-				self::img( 'logo_dark', 'لوگو — حالت تاریک', '', array( 'desc' => 'مثلاً نسخه‌ی سفید یا روشن‌تر لوگو (ترجیحاً PNG شفاف / SVG / WebP).' ) ),
+				self::img( 'logo', 'لوگو — حالت روشن (اختیاری؛ در غیر این صورت لوگوی سایت)', WSF_URL . 'assets/img/logo.png' ),
+				self::img( 'logo_dark', 'لوگو — حالت تاریک', WSF_URL . 'assets/img/logo-dark.png', array( 'desc' => 'پیش‌فرض: لوگوی آلیس‌یار (نسخه‌ی روشن). برای تغییر، تصویر دیگری انتخاب کنید.' ) ),
 				self::tg( 'logo_swap', 'جایگزینی خودکار لوگوی قالب/ویجت لوگوی المنتور در حالت تاریک', 1, array( 'desc' => 'در حالت تاریک تصویر ویجت «Site Logo» المنتور و لوگوی قالب با لوگوی تاریک عوض می‌شود. شورت‌کد: [ws_logo height=\"48\" link=\"1\"]' ) ),
 				self::t( 'phone', 'شماره تماس (مثلاً 09120000000)', '' ),
 				self::t( 'email', 'ایمیل عمومی', '' ),
@@ -127,8 +127,8 @@ class WSF_Schema {
 					self::s( 'direction', 'جهت متن ماژول‌ها', array( 'auto' => 'مطابق جهت سایت', 'rtl' => 'همیشه راست‌به‌چپ', 'ltr' => 'همیشه چپ‌به‌راست' ), 'auto' ),
 				),
 				self::color_fields( array(
-					'primary' => '#2347b8', 'btn_a' => '#2347b8', 'btn_b' => '#1a3590', 'on_btn' => '#ffffff', 'accent' => '#f59e0b',
-					'accent_text' => '#b45309', 'ink' => '#14213d', 'text' => '#4b5568', 'muted' => '#8d97b0',
+					'primary' => '#2a47a8', 'btn_a' => '#2a47a8', 'btn_b' => '#14224a', 'on_btn' => '#ffffff', 'accent' => '#f47920',
+					'accent_text' => '#c2570c', 'ink' => '#14224a', 'text' => '#4b5568', 'muted' => '#8d97b0',
 					'surface' => '#ffffff', 'surface_alt' => '#f6f8fe', 'border' => '#e3e8f5', 'page_bg' => '',
 				) )
 			),
@@ -153,8 +153,8 @@ class WSF_Schema {
 					self::ta( 'surface_alt_selectors', 'سلکتورهایی که «پس‌زمینه ثانویه» بگیرند (هر خط یک سلکتور)', '', array( 'san' => 'selectors', 'rows' => 3 ) ),
 				),
 				self::color_fields( array(
-					'primary' => '#7c9bff', 'btn_a' => '#3a5ccf', 'btn_b' => '#243f9e', 'on_btn' => '#ffffff', 'accent' => '#fbbf24',
-					'accent_text' => '#fbbf24', 'ink' => '#eef2ff', 'text' => '#c5cde4', 'muted' => '#8a94b4',
+					'primary' => '#8aa4f5', 'btn_a' => '#3a55b8', 'btn_b' => '#243b8f', 'on_btn' => '#ffffff', 'accent' => '#ff944d',
+					'accent_text' => '#ff944d', 'ink' => '#eef2ff', 'text' => '#c5cde4', 'muted' => '#8a94b4',
 					'surface' => '#141b30', 'surface_alt' => '#0e1424', 'border' => '#28325a', 'page_bg' => '#0a0f1f',
 				) )
 			),
