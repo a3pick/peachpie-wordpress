@@ -384,6 +384,53 @@
 	}
 	doc.addEventListener('wsf:themechange', swapLogos);
 
+	/* ---------- هم‌ترازی پنل منوی موبایل المنتور با کارت هدر ---------- */
+	function menuContainer(nav) {
+		var widget = nav.closest('.elementor-widget') || nav.parentElement, best = null, n = widget;
+		for (var i = 0; i < 8 && n && n.parentElement && n !== doc.body; i++) {
+			n = n.parentElement;
+			var cs = getComputedStyle(n), w = n.getBoundingClientRect().width;
+			if (w < 200) { continue; }
+			var rounded = parseFloat(cs.borderTopLeftRadius) > 0;
+			var bg = parseColor(cs.backgroundColor), hasBg = bg && bg.a > 0.05;
+			if (rounded && (hasBg || cs.boxShadow !== 'none' || parseFloat(cs.borderTopWidth) > 0)) { return n; }
+			if (!best && n.classList.contains('e-con')) { best = n; }
+		}
+		return best;
+	}
+	var fitBusy = false;
+	function fitMenus() {
+		if (!W.menu || fitBusy || window.innerWidth > 1024) { return; }
+		fitBusy = true;
+		qsa('.elementor-nav-menu--dropdown').forEach(function (nav) {
+			if (!nav.offsetParent && getComputedStyle(nav).position !== 'fixed') { return; }
+			var box = menuContainer(nav);
+			if (!box) { return; }
+			var c = box.getBoundingClientRect(), op = nav.offsetParent || doc.body, o = op.getBoundingClientRect();
+			var set = function (k, v) { nav.style.setProperty(k, v, 'important'); };
+			set('margin', '0');
+			set('width', c.width + 'px');
+			set('min-width', '0');
+			set('max-width', c.width + 'px');
+			set('right', 'auto');
+			set('left', (c.left - o.left - (parseFloat(getComputedStyle(op).borderLeftWidth) || 0)) + 'px');
+			set('top', (c.bottom - o.top - (parseFloat(getComputedStyle(op).borderTopWidth) || 0) + 8) + 'px');
+		});
+		setTimeout(function () { fitBusy = false; }, 0);
+	}
+	function fitSoon() { [0, 60, 250, 600].forEach(function (d) { setTimeout(fitMenus, d); }); }
+	if (W.menu) {
+		doc.addEventListener('click', function (e) { if (e.target.closest && e.target.closest('.elementor-menu-toggle')) { fitSoon(); } });
+		window.addEventListener('resize', fitSoon);
+		window.addEventListener('orientationchange', fitSoon);
+		if ('MutationObserver' in window) {
+			doc.addEventListener('DOMContentLoaded', function () {
+				var mo = new MutationObserver(function () { if (!fitBusy) { fitMenus(); } });
+				qsa('.elementor-nav-menu--dropdown').forEach(function (n) { mo.observe(n, { attributes: true, attributeFilter: ['style', 'class', 'aria-hidden'] }); });
+			});
+		}
+	}
+
 	/* ---------- راه‌اندازی ---------- */
 	function init(ctx) {
 		ctx = ctx || doc;

@@ -70,6 +70,7 @@ class WSF_Assets {
 				'lead'  => esc_url_raw( rest_url( 'wsf/v1/lead' ) ),
 				'like'  => esc_url_raw( rest_url( 'wsf/v1/like' ) ),
 				'dark'  => self::dark_enabled(),
+				'menu'  => (bool) WSF_Options::get( 'utilities', 'mobile_menu', 1 ),
 				'logo'  => ( self::dark_enabled() && WSF_Options::get( 'general', 'logo_swap', 1 ) && WSF_Render::logo_dark_url() ) ? array( 'dark' => WSF_Render::logo_dark_url() ) : false,
 				'adapt' => self::dark_enabled() && (bool) WSF_Options::get( 'darkmode', 'auto_adapt', 1 ) && (bool) WSF_Options::get( 'darkmode', 'global', 1 ),
 				'toc'   => array(
