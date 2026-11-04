@@ -1,0 +1,50 @@
+/*!
+ * Webisoft Finance Suite — کلاس‌های کمکی (CSS Classes در المنتور)
+ * شامل جایگزین‌های اسنیپت‌های قدیمی: glass-panel, glow-orb, animate-float, btn-emergency, border-hover-1..7, shadow-md, blur-mode
+ */
+:root{--wsf-hover-1:#1e3a8a;--wsf-hover-2:#b91c1c;--wsf-hover-3:#b91c1c;--wsf-hover-4:#2563eb;--wsf-hover-5:#f59e0b;--wsf-hover-6:#16a34a;--wsf-hover-7:#9333ea}
+
+/* سطوح و متن‌ها (با حالت تاریک هماهنگ می‌شوند) */
+.ws-surface{background-color:var(--wsf-surface)!important;color:var(--wsf-text)}
+.ws-surface-alt{background-color:var(--wsf-surface-alt)!important;color:var(--wsf-text)}
+.ws-text{color:var(--wsf-text)!important}
+.ws-ink{color:var(--wsf-ink)!important}
+.ws-muted{color:var(--wsf-muted)!important}
+.ws-primary{color:var(--wsf-primary)!important}
+.ws-border{border-color:var(--wsf-border)!important}
+
+/* شیشه‌ای */
+.ws-glass,.glass-panel{background:var(--wsf-surface);background:color-mix(in srgb,var(--wsf-surface) 72%,transparent);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);border:1px solid var(--wsf-border);box-shadow:0 10px 40px -10px color-mix(in srgb,var(--wsf-primary) 18%,transparent)}
+
+/* هاور کارت */
+.ws-hover-border{border:1px solid transparent;transition:border-color .3s ease-in-out,transform .3s ease-in-out}
+.ws-hover-border:hover{border-color:var(--wsf-primary)}
+.ws-hover-lift{transition:transform .3s ease,box-shadow .3s ease}
+.ws-hover-lift:hover{transform:translateY(-6px);box-shadow:0 18px 36px -14px color-mix(in srgb,var(--wsf-primary) 35%,transparent)}
+
+/* دکمه ضربان‌دار (مثلاً تماس اضطراری) */
+.ws-pulse .elementor-button,.btn-emergency .elementor-button{animation:wsf-pulse 2s infinite}
+@keyframes wsf-pulse{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--wsf-primary) 70%,transparent)}70%{box-shadow:0 0 0 15px transparent}100%{box-shadow:0 0 0 0 transparent}}
+
+/* هاله‌های نوری و شناور */
+.glow-orb{position:fixed;border-radius:50%;filter:blur(90px);opacity:.4;z-index:-1;pointer-events:none;animation:wsf-glow 10s infinite alternate ease-in-out}
+@keyframes wsf-glow{0%{transform:scale(1) translate(0,0);opacity:.3}100%{transform:scale(1.2) translate(30px,-30px);opacity:.6}}
+.animate-float{animation:wsf-float 6s ease-in-out infinite}
+@keyframes wsf-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+
+/* سازگاری با اسنیپت‌های قدیمی */
+:is(.border-hover-1,.border-hover-2,.border-hover-3){border:1px solid transparent;transition:border-color .3s ease-in-out,transform .3s ease-in-out!important}
+.border-hover-1:hover{border-color:var(--wsf-hover-1)!important}
+.border-hover-2:hover,.border-hover-3:hover{border-color:var(--wsf-hover-2)!important}
+.border-hover-1:hover :where(.kmc-hover svg,.kmc-hover h3){color:var(--wsf-hover-1)!important;fill:var(--wsf-hover-1)!important}
+.border-hover-2:hover :where(.mvm-hover svg circle,.mvm-hover svg path){stroke:var(--wsf-hover-2)!important;fill:transparent!important}
+.border-hover-2:hover .mvm-hover h3,.border-hover-3:hover .kia-hover h3{color:var(--wsf-hover-2)!important}
+.border-hover-3:hover :where(.kia-hover svg ellipse){fill:transparent!important;stroke:var(--wsf-hover-2)!important}
+.border-hover-3:hover :where(.kia-hover svg text){fill:var(--wsf-hover-2)!important}
+.border-hover-4:hover :where(.bh04 .elementor-icon){fill:#fff!important;background:var(--wsf-hover-4)!important;transform:scale(1.1)}
+.border-hover-5:hover :where(.bh05 .elementor-icon){fill:#fff!important;background:var(--wsf-hover-5)!important;transform:scale(1.1)}
+.border-hover-6:hover :where(.bh06 .elementor-icon){fill:#fff!important;background:var(--wsf-hover-6)!important;transform:scale(1.1)}
+.border-hover-7:hover :where(.bh07 .elementor-icon){fill:#fff!important;background:var(--wsf-hover-7)!important;transform:scale(1.1)}
+.shadow-md{box-shadow:0 4px 6px -1px rgb(0 0 0/.1),0 2px 4px -2px rgb(0 0 0/.1)}
+.blur-mode{filter:blur(40px)}
+@media (prefers-reduced-motion:reduce){.ws-pulse .elementor-button,.btn-emergency .elementor-button,.glow-orb,.animate-float{animation:none}}

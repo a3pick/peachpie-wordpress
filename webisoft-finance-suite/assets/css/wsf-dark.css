@@ -1,0 +1,43 @@
+/*!
+ * Webisoft Finance Suite — تاریک‌سازی سراسری (Hello Elementor / Elementor)
+ * فقط وقتی «اعمال تاریک‌سازی روی کل سایت» فعال است بارگذاری می‌شود.
+ * سلکتورها با :where / :not(.wsf *) کم‌ویژگی نگه داشته شده‌اند تا رنگ‌های دستی المنتور و ماژول‌های افزونه خراب نشوند.
+ */
+html[data-wsf-theme="dark"] body.wsf-global{background-color:var(--wsf-page-bg,#0b1220);color:var(--wsf-text)}
+html[data-wsf-theme="dark"] body.wsf-global :where(h1,h2,h3,h4,h5,h6):not(.wsf *){color:var(--wsf-ink)}
+html[data-wsf-theme="dark"] body.wsf-global :where(p,li,dd,dt,label,figcaption,small,cite,td,th,legend,summary):not(.wsf *){color:var(--wsf-text)}
+html[data-wsf-theme="dark"] body.wsf-global :where(a):not(.elementor-button):not(.wsf *):not([class*="button"]){color:var(--wsf-primary)}
+html[data-wsf-theme="dark"] body.wsf-global :where(a):not(.elementor-button):not(.wsf *):not([class*="button"]):hover{color:var(--wsf-accent)}
+html[data-wsf-theme="dark"] body.wsf-global :where(hr){border-color:var(--wsf-border);background-color:var(--wsf-border)}
+
+/* هدر و فوتر Hello Elementor */
+html[data-wsf-theme="dark"] body.wsf-global :where(.site-header,#site-header,.site-footer,#site-footer){color:var(--wsf-text);border-color:var(--wsf-border)}
+html[data-wsf-theme="dark"] body.wsf-global :where(.site-header,#site-header,.site-footer,#site-footer) :where(a,.site-title,.site-description){color:var(--wsf-ink)}
+html[data-wsf-theme="dark"] body.wsf-global :where(.site-navigation a,.site-navigation-toggle-holder){color:var(--wsf-ink)}
+html[data-wsf-theme="dark"] body.wsf-global :where(.site-navigation ul.menu ul){background-color:var(--wsf-surface)}
+html[data-wsf-theme="dark"] body.wsf-global :where(.site-navigation-dropdown){background-color:var(--wsf-surface)}
+
+/* فرم‌های استاندارد */
+html[data-wsf-theme="dark"] body.wsf-global :where(input:not([type=checkbox]):not([type=radio]):not([type=submit]):not([type=button]):not([type=range]),textarea,select):not(.wsf *){background-color:var(--wsf-surface-alt);color:var(--wsf-ink);border-color:var(--wsf-border)}
+html[data-wsf-theme="dark"] body.wsf-global :where(input,textarea)::placeholder{color:var(--wsf-muted);opacity:1}
+
+/* جدول، نقل‌قول و کد */
+html[data-wsf-theme="dark"] body.wsf-global :where(table):not(.wsf *){border-color:var(--wsf-border)}
+html[data-wsf-theme="dark"] body.wsf-global :where(td,th):not(.wsf *){border-color:var(--wsf-border)}
+html[data-wsf-theme="dark"] body.wsf-global :where(pre,code,kbd){background-color:var(--wsf-surface-alt);color:var(--wsf-ink)}
+html[data-wsf-theme="dark"] body.wsf-global :where(blockquote):not(.wsf *){border-color:var(--wsf-border)}
+
+/* ویجت‌های رایج المنتور (در صورتی که رنگ دستی نگرفته باشند) */
+html[data-wsf-theme="dark"] body.wsf-global :where(.elementor-widget-text-editor,.elementor-widget-theme-post-content,.elementor-widget-theme-post-excerpt,.elementor-icon-list-text,.elementor-post__excerpt){color:var(--wsf-text)}
+html[data-wsf-theme="dark"] body.wsf-global :where(.elementor-heading-title){color:var(--wsf-ink)}
+html[data-wsf-theme="dark"] body.wsf-global :where(.elementor-toc__header-title,.elementor-toc__list-item-text){color:var(--wsf-ink)}
+html[data-wsf-theme="dark"] body.wsf-global :where(.elementor-widget-table-of-contents .elementor-toc__body,.elementor-toc__wrapper){background-color:transparent}
+
+/* تصاویر کمی ملایم‌تر در حالت تاریک */
+html[data-wsf-theme="dark"] body.wsf-global :where(img:not([src$=".svg"])):not(.wsf *){filter:brightness(.92)}
+
+/* تطبیق هوشمند (کلاس‌ها را wsf-frontend.js می‌گذارد) */
+html[data-wsf-theme="dark"] .wsf-ad-bg:not(.ws-keep-light){background-color:var(--wsf-surface)!important}
+html[data-wsf-theme="dark"] .wsf-ad-tx:not(.ws-keep-light){color:var(--wsf-ink)!important}
+html[data-wsf-theme="dark"] .wsf-ad-fill:not(.ws-keep-light){fill:var(--wsf-ink)!important}
+html[data-wsf-theme="dark"] .wsf-ad-bd:not(.ws-keep-light){border-color:var(--wsf-border)!important}
