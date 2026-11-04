@@ -183,19 +183,17 @@ class WSF_Assets {
 		}
 
 		if ( WSF_Options::get( 'utilities', 'orbs', 1 ) ) {
-			$op = max( 0, min( 80, (int) WSF_Options::get( 'utilities', 'orb_opacity', 22 ) ) ) / 100;
-			$c  = function ( $k, $d ) {
-				$v = WSF_Options::get( 'utilities', $k, '' );
-				return $v ? $v : $d;
-			};
+			$op  = max( 0, min( 80, (int) WSF_Options::get( 'utilities', 'orb_opacity', 22 ) ) ) / 100;
 			$css .= 'body.wsf-site .glow-orb{display:none!important}'; // هاله‌های قدیمی (HTML ویجت‌ها) با هاله‌های داخلی جایگزین می‌شوند.
-			$css .= 'body.wsf-site::before,body.wsf-site::after{content:"";position:fixed;z-index:-1;pointer-events:none;border-radius:50%;width:46vw;height:46vw;max-width:640px;max-height:640px;filter:blur(100px);opacity:' . $op . ';animation:wsf-orbfloat 16s infinite alternate ease-in-out}'
-				. 'body.wsf-site::before{top:-12%;inset-inline-start:-10%;background:' . $c( 'orb_a', '#27408b' ) . '}'
-				. 'body.wsf-site::after{bottom:-14%;inset-inline-end:-10%;background:' . $c( 'orb_b', '#8fa8e8' ) . ';animation-delay:-8s}'
-				. 'html[data-wsf-theme="dark"] body.wsf-site::before{background:' . $c( 'orb_dark_a', '#33489a' ) . '}'
-				. 'html[data-wsf-theme="dark"] body.wsf-site::after{background:' . $c( 'orb_dark_b', '#1d2b5c' ) . '}'
-				. '@keyframes wsf-orbfloat{0%{transform:scale(1) translate(0,0)}100%{transform:scale(1.15) translate(30px,-30px)}}'
-				. '@media (prefers-reduced-motion:reduce){body.wsf-site::before,body.wsf-site::after{animation:none}}';
+			$css .= '.wsf-orbs{position:fixed;inset:0;z-index:-1;pointer-events:none;overflow:hidden}.wsf-orbs span{position:absolute;border-radius:50%;filter:blur(90px);opacity:' . $op . ';animation:wsf-orbfloat 14s infinite alternate ease-in-out}'
+				. '.wsf-orbs .o1{top:-10%;inset-inline-start:-10%;width:50vw;height:50vw}.wsf-orbs .o2{top:40%;inset-inline-end:-20%;width:60vw;height:60vw;animation-delay:-4s}.wsf-orbs .o3{bottom:-10%;inset-inline-start:30%;width:45vw;height:45vw;animation-delay:-7s}'
+				. '@keyframes wsf-orbfloat{0%{transform:scale(1) translate(0,0)}100%{transform:scale(1.2) translate(30px,-30px)}}@media (prefers-reduced-motion:reduce){.wsf-orbs span{animation:none}}';
+			$toks = array_keys( WSF_Schema::orb_tokens() );
+			foreach ( array( 1 => 'primary', 2 => 'btn-a', 3 => 'primary' ) as $i => $def ) {
+				$t    = WSF_Options::get( 'utilities', 'orb_c' . $i, $def );
+				$t    = in_array( $t, $toks, true ) ? $t : $def;
+				$css .= '.wsf-orbs .o' . $i . '{background:var(--wsf-' . $t . ')}';
+			}
 		}
 
 		if ( WSF_Options::get( 'utilities', 'logo_shimmer', 0 ) ) {

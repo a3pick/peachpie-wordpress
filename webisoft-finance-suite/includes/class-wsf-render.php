@@ -11,6 +11,7 @@ class WSF_Render {
 	public static function init() {
 		add_action( 'init', array( __CLASS__, 'register' ), 11 );
 		add_action( 'wp_footer', array( __CLASS__, 'dock' ), 20 );
+		add_action( 'wp_footer', array( __CLASS__, 'orbs' ), 5 );
 		add_action( 'wp_head', array( __CLASS__, 'schema_org' ), 8 );
 		add_filter( 'wp_robots', array( __CLASS__, 'robots' ) );
 		add_action( 'pre_get_posts', array( __CLASS__, 'hashtag_search' ) );
@@ -849,6 +850,13 @@ class WSF_Render {
 			return '';
 		}
 		return '<span class="wsf wsf-inline" dir="' . esc_attr( self::dir() ) . '">' . self::toggle_button( 'wsf-toggle--inline' ) . '</span>';
+	}
+
+	/** هاله‌های نوری پس‌زمینه (سه المان محو، رنگ از پالت). */
+	public static function orbs() {
+		if ( WSF_Options::get( 'utilities', 'orbs', 1 ) ) {
+			echo '<div class="wsf-orbs" aria-hidden="true"><span class="o1"></span><span class="o2"></span><span class="o3"></span></div>';
+		}
 	}
 
 	public static function dock() {

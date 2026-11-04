@@ -180,11 +180,10 @@ class WSF_Schema {
 			'desc'  => 'کلاس‌های کمکی برای المنتور، جلوه‌ها و CSS اختصاصی.',
 			'fields' => array(
 				self::tg( 'util_classes', 'کلاس‌های کمکی (ws-glass, ws-surface, ws-hover-border, border-hover-1..7, btn-emergency, glow-orb ...)', 1 ),
-				self::tg( 'orbs', 'هاله‌های نوری پس‌زمینه (دو هاله‌ی محو و شناور در گوشه‌ها)', 1, array( 'desc' => 'جایگزین کانتینرهای glow-orb در المنتور؛ بدون نیاز به ساخت المان. اگر قبلاً کانتینر هاله ساخته‌اید، آن‌ها را حذف کنید.' ) ),
-				self::c( 'orb_a', 'هاله ۱ — حالت روشن', '#27408b' ),
-				self::c( 'orb_b', 'هاله ۲ — حالت روشن', '#8fa8e8' ),
-				self::c( 'orb_dark_a', 'هاله ۱ — حالت تاریک', '#33489a' ),
-				self::c( 'orb_dark_b', 'هاله ۲ — حالت تاریک', '#1d2b5c' ),
+				self::tg( 'orbs', 'هاله‌های نوری پس‌زمینه (سه هاله‌ی محو و شناور)', 1, array( 'desc' => 'جایگزین کانتینرهای glow-orb در المنتور؛ بدون نیاز به ساخت المان. اگر قبلاً کانتینر هاله ساخته‌اید، آن‌ها را حذف کنید.' ) ),
+				self::s( 'orb_c1', 'هاله ۱ (بالا-ابتدا) — رنگ از پالت', self::orb_tokens(), 'primary' ),
+				self::s( 'orb_c2', 'هاله ۲ (وسط-انتها) — رنگ از پالت', self::orb_tokens(), 'btn-a' ),
+				self::s( 'orb_c3', 'هاله ۳ (پایین) — رنگ از پالت', self::orb_tokens(), 'primary' ),
 				self::n( 'orb_opacity', 'شفافیت هاله‌ها (٪)', 22, array( 'min' => 0, 'max' => 80 ) ),
 				self::tg( 'logo_shimmer', 'انیمیشن درخشش و بزرگ‌شدن لوگوی سایت (ویجت لوگوی المنتور)', 0 ),
 				self::tg( 'load_fa', 'بارگذاری Font Awesome 6 (فقط اگر خودتان از کلاس‌های fa-* استفاده می‌کنید)', 0, array( 'desc' => 'آیکون‌های داخلی افزونه به Font Awesome نیازی ندارند.' ) ),
@@ -638,6 +637,10 @@ class WSF_Schema {
 
 		self::$sections = $s;
 		return $s;
+	}
+
+	public static function orb_tokens() {
+		return array( 'primary' => 'رنگ اصلی', 'btn-a' => 'رنگ دکمه', 'accent' => 'رنگ تأکیدی (طلایی)', 'muted' => 'رنگ کم‌رنگ' );
 	}
 
 	public static function token_options() {
