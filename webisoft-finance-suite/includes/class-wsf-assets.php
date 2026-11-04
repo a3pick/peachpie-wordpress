@@ -188,6 +188,7 @@ class WSF_Assets {
 				$v = WSF_Options::get( 'utilities', $k, '' );
 				return $v ? $v : $d;
 			};
+			$css .= 'body.wsf-site .glow-orb{display:none!important}'; // هاله‌های قدیمی (HTML ویجت‌ها) با هاله‌های داخلی جایگزین می‌شوند.
 			$css .= 'body.wsf-site::before,body.wsf-site::after{content:"";position:fixed;z-index:-1;pointer-events:none;border-radius:50%;width:46vw;height:46vw;max-width:640px;max-height:640px;filter:blur(100px);opacity:' . $op . ';animation:wsf-orbfloat 16s infinite alternate ease-in-out}'
 				. 'body.wsf-site::before{top:-12%;inset-inline-start:-10%;background:' . $c( 'orb_a', '#27408b' ) . '}'
 				. 'body.wsf-site::after{bottom:-14%;inset-inline-end:-10%;background:' . $c( 'orb_b', '#8fa8e8' ) . ';animation-delay:-8s}'
