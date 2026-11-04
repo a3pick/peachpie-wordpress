@@ -321,6 +321,27 @@
 		doc.addEventListener('DOMContentLoaded', function () { mo.observe(doc.body, { childList: true, subtree: true }); });
 	}
 
+	/* ---------- جایگزینی لوگوی قالب/المنتور در حالت تاریک ---------- */
+	function swapLogos() {
+		if (!W.logo || !W.logo.dark) { return; }
+		var dark = currentTheme() === 'dark';
+		qsa('.elementor-widget-theme-site-logo img, .custom-logo, .site-logo img, .site-branding img').forEach(function (img) {
+			if (img.closest('.wsl-logo')) { return; }
+			if (!img.hasAttribute('data-wsl-src')) {
+				img.setAttribute('data-wsl-src', img.currentSrc || img.src);
+				if (img.srcset) { img.setAttribute('data-wsl-srcset', img.srcset); }
+				if (img.sizes) { img.setAttribute('data-wsl-sizes', img.sizes); }
+			}
+			if (dark) { img.removeAttribute('srcset'); img.removeAttribute('sizes'); img.src = W.logo.dark; }
+			else {
+				img.src = img.getAttribute('data-wsl-src');
+				if (img.hasAttribute('data-wsl-srcset')) { img.setAttribute('srcset', img.getAttribute('data-wsl-srcset')); }
+				if (img.hasAttribute('data-wsl-sizes')) { img.setAttribute('sizes', img.getAttribute('data-wsl-sizes')); }
+			}
+		});
+	}
+	doc.addEventListener('wsl:themechange', swapLogos);
+
 	/* ---------- راه‌اندازی ---------- */
 	function init(ctx) {
 		ctx = ctx || doc;
@@ -344,6 +365,7 @@
 	function boot() {
 		init(doc);
 		scheduleAdapt(100);
+		swapLogos();
 		initToc();
 		setTimeout(initToc, 800);
 		setTimeout(initToc, 2500);

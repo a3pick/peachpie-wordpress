@@ -386,3 +386,11 @@ html[data-wsl-theme=dark] .wsl-toggle__moon{display:none}
   .wsl *,.wsl *::before,.wsl *::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
   .wsl-marquee{animation:none!important}.wsl-marquee-wrap{overflow-x:auto}
 }
+
+/* لوگوی روشن/تاریک */
+.wsl-logo{display:inline-block;line-height:0;vertical-align:middle}
+.wsl-logo img{display:block;max-width:100%}
+.wsl-logo__dark{display:none!important}
+html[data-wsl-theme=dark] .wsl-logo--has-dark .wsl-logo__light{display:none!important}
+html[data-wsl-theme=dark] .wsl-logo--has-dark .wsl-logo__dark{display:block!important}
+.wsl-logo-text{font-weight:900;color:var(--wsl-ink)}

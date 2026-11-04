@@ -48,6 +48,7 @@ class WSL_Render {
 			);
 		}
 		add_shortcode( 'ws_theme_toggle', array( __CLASS__, 'sc_toggle' ) );
+		add_shortcode( 'ws_logo', array( __CLASS__, 'sc_logo' ) );
 	}
 
 	private static function run( $module, $atts ) {
@@ -139,6 +140,35 @@ class WSL_Render {
 			return '<img class="' . esc_attr( $class ) . '" src="' . esc_url( $val ) . '" alt="' . esc_attr( $alt ) . '" loading="lazy" decoding="async">';
 		}
 		return '';
+	}
+
+	/** آدرس لوگوی حالت تاریک (خالی اگر تعریف نشده). */
+	public static function logo_dark_url() {
+		$d = WSL_Options::get( 'general', 'logo_dark', '' );
+		if ( is_numeric( $d ) && (int) $d > 0 ) {
+			$u = wp_get_attachment_image_url( (int) $d, 'full' );
+			return $u ? $u : '';
+		}
+		return $d ? (string) $d : '';
+	}
+
+	/** [ws_logo height="48" link="1"] — لوگوی روشن/تاریک. */
+	public static function sc_logo( $atts = array() ) {
+		$a     = shortcode_atts( array( 'height' => 48, 'link' => 1, 'class' => '' ), $atts, 'ws_logo' );
+		$light = self::logo_url();
+		$dark  = self::logo_dark_url();
+		$name  = WSL_Options::firm( 'firm_name' ) ? WSL_Options::firm( 'firm_name' ) : get_bloginfo( 'name' );
+		if ( ! $light && ! $dark ) {
+			return '<span class="wsl wsl-inline wsl-logo-text">' . esc_html( $name ) . '</span>';
+		}
+		$h    = max( 16, min( 300, (int) $a['height'] ) );
+		$img  = '<img class="wsl-logo__light" src="' . esc_url( $light ? $light : $dark ) . '" alt="' . esc_attr( $name ) . '" style="height:' . $h . 'px;width:auto" decoding="async">';
+		if ( $dark ) {
+			$img .= '<img class="wsl-logo__dark" src="' . esc_url( $dark ) . '" alt="" aria-hidden="true" style="height:' . $h . 'px;width:auto" decoding="async">';
+		}
+		$cls  = 'wsl wsl-inline wsl-logo' . ( $dark ? ' wsl-logo--has-dark' : '' ) . ( $a['class'] ? ' ' . sanitize_html_class( $a['class'] ) : '' );
+		$html = '<span class="' . esc_attr( $cls ) . '">' . $img . '</span>';
+		return $a['link'] ? '<a class="wsl-logo-link" href="' . esc_url( home_url( '/' ) ) . '" aria-label="' . esc_attr( $name ) . '">' . $html . '</a>' : $html;
 	}
 
 	public static function logo_url() {

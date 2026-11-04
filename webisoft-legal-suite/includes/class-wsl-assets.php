@@ -67,6 +67,7 @@ class WSL_Assets {
 				'lead'  => esc_url_raw( rest_url( 'wsl/v1/lead' ) ),
 				'like'  => esc_url_raw( rest_url( 'wsl/v1/like' ) ),
 				'dark'  => self::dark_enabled(),
+				'logo'  => ( self::dark_enabled() && WSL_Options::get( 'general', 'logo_swap', 1 ) && WSL_Render::logo_dark_url() ) ? array( 'dark' => WSL_Render::logo_dark_url() ) : false,
 				'adapt' => self::dark_enabled() && (bool) WSL_Options::get( 'darkmode', 'auto_adapt', 1 ) && (bool) WSL_Options::get( 'darkmode', 'global', 1 ),
 				'toc'   => array(
 					'enabled' => (bool) WSL_Options::get( 'article', 'toc_expand', 1 ),
