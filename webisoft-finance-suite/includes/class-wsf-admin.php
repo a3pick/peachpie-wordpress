@@ -24,7 +24,7 @@ class WSF_Admin {
 	}
 
 	public static function menu() {
-		add_menu_page( 'وبی‌سافت حقوقی', 'وبی‌سافت حقوقی', 'manage_options', self::SLUG, array( __CLASS__, 'page' ), 'dashicons-bank', 58 );
+		add_menu_page( 'وبی‌سافت مالی', 'وبی‌سافت مالی', 'manage_options', self::SLUG, array( __CLASS__, 'page' ), 'dashicons-bank', 58 );
 		add_submenu_page( self::SLUG, 'تنظیمات', 'تنظیمات', 'manage_options', self::SLUG, array( __CLASS__, 'page' ) );
 	}
 
