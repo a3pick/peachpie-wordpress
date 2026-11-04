@@ -35,3 +35,9 @@ html[data-wsl-theme="dark"] body.wsl-global :where(.elementor-widget-table-of-co
 
 /* تصاویر کمی ملایم‌تر در حالت تاریک */
 html[data-wsl-theme="dark"] body.wsl-global :where(img:not([src$=".svg"])):not(.wsl *){filter:brightness(.92)}
+
+/* تطبیق هوشمند (کلاس‌ها را wsl-frontend.js می‌گذارد) */
+html[data-wsl-theme="dark"] .wsl-ad-bg:not(.ws-keep-light){background-color:var(--wsl-surface)!important}
+html[data-wsl-theme="dark"] .wsl-ad-tx:not(.ws-keep-light){color:var(--wsl-ink)!important}
+html[data-wsl-theme="dark"] .wsl-ad-fill:not(.ws-keep-light){fill:var(--wsl-ink)!important}
+html[data-wsl-theme="dark"] .wsl-ad-bd:not(.ws-keep-light){border-color:var(--wsl-border)!important}

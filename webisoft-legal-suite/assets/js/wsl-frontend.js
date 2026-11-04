@@ -248,6 +248,79 @@
 		});
 	}
 
+	/* ---------- تطبیق هوشمند رنگ‌های المنتور در حالت تاریک ---------- */
+	function parseColor(c) {
+		var m = /rgba?\(([^)]+)\)/.exec(c || '');
+		if (!m) { return null; }
+		var p = m[1].split(/[\s,\/]+/).filter(Boolean).map(parseFloat);
+		return { r: p[0], g: p[1], b: p[2], a: p.length > 3 ? p[3] : 1 };
+	}
+	function lum(c) {
+		function f(v) { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); }
+		return 0.2126 * f(c.r) + 0.7152 * f(c.g) + 0.0722 * f(c.b);
+	}
+	function effBgLum(el) {
+		for (var n = el; n && n.nodeType === 1; n = n.parentElement) {
+			var cs = getComputedStyle(n), c = parseColor(cs.backgroundColor);
+			if (c && c.a > 0.5) { return lum(c); }
+			if (cs.backgroundImage && cs.backgroundImage !== 'none') { return -1; } // پس‌زمینه‌ی تصویر/گرادیان: دست نزن
+		}
+		var pb = parseColor(getComputedStyle(doc.body).backgroundColor);
+		return pb && pb.a > 0.5 ? lum(pb) : 0.02;
+	}
+	var adaptTimer = null, adapting = false;
+	function skip(el) { return el.closest('.wsl, .ws-keep-light, [data-wsl-noadapt], #wpadminbar, .elementor-editor-active'); }
+	function adaptAll() {
+		if (!W.adapt || currentTheme() !== 'dark' || adapting) { return; }
+		adapting = true;
+		var bgNodes = qsa('.elementor-element, .elementor-widget-container, .elementor-column-wrap, .e-con, .elementor-section, .elementor-post, .elementor-post__text, .elementor-tab-content, .elementor-accordion-item, .elementor-toggle-item, .elementor-icon-box-wrapper, .elementor-image-box-wrapper, .site-header, .site-footer, header, footer, article');
+		var txNodes = qsa('.elementor-widget :is(h1,h2,h3,h4,h5,h6,p,span,li,a,label,div.elementor-heading-title,.elementor-icon-list-text,.elementor-button-text,.elementor-post__title,.elementor-post__excerpt,.elementor-tab-title,.elementor-accordion-title,.elementor-toggle-title,.elementor-icon-box-title,.elementor-icon-box-description,.elementor-image-box-title,.elementor-image-box-description,.elementor-counter-number-wrapper,.elementor-counter-title,.elementor-testimonial-content,.elementor-testimonial-name,.elementor-field-label)');
+		var svgNodes = qsa('.elementor-icon svg, .elementor-icon-list-icon svg, .elementor-social-icon svg, .elementor-icon-box-icon svg');
+		var i = 0, phase = 0, all = [bgNodes, txNodes, svgNodes];
+		function chunk() {
+			var list = all[phase], end = Math.min(i + 250, list.length);
+			for (; i < end; i++) {
+				var el = list[i];
+				if (skip(el)) { continue; }
+				var cs = getComputedStyle(el);
+				if (phase === 0) {
+					var bg = parseColor(cs.backgroundColor);
+					if (bg && bg.a > 0.5 && (!cs.backgroundImage || cs.backgroundImage === 'none') && lum(bg) > 0.55) { el.classList.add('wsl-ad-bg'); }
+					var bw = parseFloat(cs.borderTopWidth) + parseFloat(cs.borderLeftWidth) + parseFloat(cs.borderRightWidth) + parseFloat(cs.borderBottomWidth);
+					var bc = parseColor(cs.borderTopColor) || parseColor(cs.borderLeftColor);
+					if (bw > 0 && bc && bc.a > 0.3 && lum(bc) > 0.6) { el.classList.add('wsl-ad-bd'); }
+				} else if (phase === 1) {
+					var tc = parseColor(cs.color);
+					if (tc && tc.a > 0.3 && lum(tc) < 0.35) {
+						var bl = effBgLum(el);
+						if (bl >= 0 && bl < 0.3) { el.classList.add('wsl-ad-tx'); }
+					}
+				} else {
+					var fc = parseColor(cs.fill);
+					if (fc && fc.a > 0.3 && lum(fc) < 0.35) {
+						var b2 = effBgLum(el.parentElement);
+						if (b2 >= 0 && b2 < 0.3) { el.classList.add('wsl-ad-fill'); }
+					}
+				}
+			}
+			if (i >= list.length) { phase++; i = 0; }
+			if (phase < 3) { (window.requestIdleCallback || function (f) { return setTimeout(f, 16); })(chunk); } else { adapting = false; }
+		}
+		chunk();
+	}
+	function scheduleAdapt(delay) {
+		if (!W.adapt) { return; }
+		clearTimeout(adaptTimer);
+		adaptTimer = setTimeout(adaptAll, delay || 150);
+	}
+	doc.addEventListener('wsl:themechange', function () { scheduleAdapt(30); });
+	if (W.adapt && 'MutationObserver' in window) {
+		var mo = new MutationObserver(function (muts) {
+			for (var k = 0; k < muts.length; k++) { if (muts[k].addedNodes && muts[k].addedNodes.length) { scheduleAdapt(500); return; } }
+		});
+		doc.addEventListener('DOMContentLoaded', function () { mo.observe(doc.body, { childList: true, subtree: true }); });
+	}
+
 	/* ---------- راه‌اندازی ---------- */
 	function init(ctx) {
 		ctx = ctx || doc;
@@ -270,13 +343,14 @@
 
 	function boot() {
 		init(doc);
+		scheduleAdapt(100);
 		initToc();
 		setTimeout(initToc, 800);
 		setTimeout(initToc, 2500);
 	}
 
 	if (doc.readyState === 'loading') { doc.addEventListener('DOMContentLoaded', boot); } else { boot(); }
-	window.addEventListener('load', initToc);
+	window.addEventListener('load', function () { initToc(); scheduleAdapt(100); });
 	window.WSLegal = { init: init, setTheme: setTheme, getTheme: currentTheme };
 
 	// المنتور (ویرایشگر / پیش‌نمایش زنده)

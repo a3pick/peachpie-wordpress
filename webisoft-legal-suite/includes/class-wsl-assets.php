@@ -67,6 +67,7 @@ class WSL_Assets {
 				'lead'  => esc_url_raw( rest_url( 'wsl/v1/lead' ) ),
 				'like'  => esc_url_raw( rest_url( 'wsl/v1/like' ) ),
 				'dark'  => self::dark_enabled(),
+				'adapt' => self::dark_enabled() && (bool) WSL_Options::get( 'darkmode', 'auto_adapt', 1 ) && (bool) WSL_Options::get( 'darkmode', 'global', 1 ),
 				'toc'   => array(
 					'enabled' => (bool) WSL_Options::get( 'article', 'toc_expand', 1 ),
 					'open'    => WSL_Options::get( 'article', 'toc_open', 'مشاهده تمام فهرست' ),
