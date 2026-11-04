@@ -175,6 +175,28 @@ class WSF_Schema {
 			),
 		);
 
+		$s['bottom_nav'] = array(
+			'group' => 'base', 'label' => 'نوار ناوبری پایین صفحه', 'icon' => 'dashicons-menu-alt3',
+			'desc' => 'نوار ناوبری شبیه اپ، پایین صفحه (مخصوص موبایل). آدرس‌ها می‌توانند این توکن‌ها باشند: {home} صفحه اصلی، {blog} صفحه مقالات، {account} حساب کاربری (ورود/پنل)، {consult} لنگر فرم مشاوره.',
+			'fields' => array(
+				self::tg( 'enabled', 'نمایش نوار پایین', 1 ),
+				self::s( 'show_on', 'نمایش در', array( 'mobile' => 'موبایل و تبلت (تا ۱۰۲۴ پیکسل)', 'all' => 'همه‌ی دستگاه‌ها' ), 'mobile' ),
+				self::s( 'style', 'سبک', array( 'floating' => 'شناور و گرد (شیشه‌ای)', 'flat' => 'چسبیده به پایین (تخت)' ), 'floating' ),
+				self::tg( 'show_labels', 'نمایش متن زیر آیکون‌ها', 1 ),
+				self::tg( 'hide_checkout', 'مخفی در سبد خرید و تسویه حساب', 1 ),
+				self::lines( 'hide_paths', 'صفحه‌هایی که نوار در آن‌ها نشان داده نشود (بخشی از آدرس؛ هر خط یکی)', '' ),
+				self::rep( 'items', 'آیتم‌ها (۳ تا ۵ مورد بهتر است)', array(
+					self::ic( 'icon', 'آیکون', 'home' ), self::t( 'label', 'برچسب' ), self::t( 'url', 'آدرس یا توکن' ),
+					self::tg( 'highlight', 'دکمه برجسته (وسط، گرد)', 0 ),
+				), array(
+					array( 'icon' => 'home', 'label' => 'خانه', 'url' => '{home}', 'highlight' => 0 ),
+					array( 'icon' => 'book', 'label' => 'مقالات', 'url' => '{blog}', 'highlight' => 0 ),
+					array( 'icon' => 'calendar', 'label' => 'مشاوره', 'url' => '{consult}', 'highlight' => 1 ),
+					array( 'icon' => 'user', 'label' => 'حساب من', 'url' => '{account}', 'highlight' => 0 ),
+				), array( 'title_field' => 'label' ) ),
+			),
+		);
+
 		$s['utilities'] = array(
 			'group' => 'base', 'label' => 'ابزارهای المنتور و CSS', 'icon' => 'dashicons-admin-tools',
 			'desc'  => 'کلاس‌های کمکی برای المنتور، جلوه‌ها و CSS اختصاصی.',

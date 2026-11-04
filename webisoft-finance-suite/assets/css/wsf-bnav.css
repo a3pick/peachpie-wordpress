@@ -1,0 +1,19 @@
+/*! Webisoft Finance Suite — نوار ناوبری پایین (شبیه اپ) */
+.wsf-bnav{position:fixed;z-index:9985;inset-inline:0;bottom:0;width:auto;display:none;padding-bottom:env(safe-area-inset-bottom,0)}
+.wsf-bnav ul{list-style:none;margin:0;padding:0;display:flex;align-items:stretch;justify-content:space-around;gap:4px}
+.wsf-bnav li{flex:1 1 0;min-width:0;margin:0;padding:0;display:flex;justify-content:center}
+.wsf .wsf-bnav a,.wsf-bnav a{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;width:100%;min-height:52px;padding:6px 4px;border-radius:16px;color:var(--wsf-muted);font-size:11px;font-weight:700;line-height:1.3;text-decoration:none;transition:color .2s,background-color .2s}
+.wsf-bnav a:hover,.wsf-bnav a:focus-visible{color:var(--wsf-primary)}
+.wsf-bnav a:focus-visible{outline:3px solid color-mix(in srgb,var(--wsf-primary) 45%,transparent);outline-offset:-3px}
+.wsf-bnav a.is-active{color:var(--wsf-primary);background:color-mix(in srgb,var(--wsf-primary) 12%,transparent)}
+.wsf-bnav__ic{font-size:22px;line-height:1;display:inline-flex}
+.wsf-bnav__t{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.wsf-bnav li.is-hl a{flex:0 0 auto;width:56px;min-height:56px;height:56px;margin-top:-22px;padding:0;border-radius:50%;color:var(--wsf-on-btn);background:linear-gradient(135deg,var(--wsf-btn-a),var(--wsf-btn-b));box-shadow:0 10px 24px -6px color-mix(in srgb,var(--wsf-btn-a) 65%,transparent);border:3px solid var(--wsf-surface)}
+.wsf-bnav li.is-hl a:hover,.wsf-bnav li.is-hl a.is-active{color:var(--wsf-on-btn);background:linear-gradient(135deg,var(--wsf-btn-b),var(--wsf-btn-b))}
+.wsf-bnav li.is-hl .wsf-bnav__t{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}
+.wsf-bnav--floating{inset-inline:12px;bottom:max(12px,env(safe-area-inset-bottom,0px));padding:6px 8px;border-radius:24px;background:var(--wsf-surface);background:color-mix(in srgb,var(--wsf-surface) 86%,transparent);-webkit-backdrop-filter:blur(18px) saturate(1.3);backdrop-filter:blur(18px) saturate(1.3);border:1px solid var(--wsf-border);box-shadow:0 18px 40px -14px color-mix(in srgb,var(--wsf-btn-b) 40%,transparent)}
+.wsf-bnav--flat{padding:6px 8px;border-top:1px solid var(--wsf-border);background:var(--wsf-surface);background:color-mix(in srgb,var(--wsf-surface) 94%,transparent);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
+@media (max-width:1024px){.wsf-bnav{display:block}body.wsf-has-bnav{padding-bottom:calc(88px + env(safe-area-inset-bottom,0px))}body.wsf-has-bnav .wsf-dock{bottom:calc(96px + env(safe-area-inset-bottom,0px))}}
+@media (min-width:1025px){.wsf-bnav--all{display:block;max-width:560px;margin-inline:auto}body.wsf-has-bnav--all{padding-bottom:96px}body.wsf-has-bnav--all .wsf-dock{bottom:104px}}
+@media (prefers-reduced-motion:reduce){.wsf-bnav a{transition:none}}
+.wsf-bnav .wsf-svg{width:1em;height:1em;display:inline-block}

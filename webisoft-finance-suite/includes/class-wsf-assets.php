@@ -31,6 +31,12 @@ class WSF_Assets {
 		if ( self::dark_enabled() && WSF_Options::get( 'darkmode', 'global', 1 ) ) {
 			$classes[] = 'wsf-global';
 		}
+		if ( WSF_Render::bnav_visible() ) {
+			$classes[] = 'wsf-has-bnav';
+			if ( 'all' === WSF_Options::get( 'bottom_nav', 'show_on', 'mobile' ) ) {
+				$classes[] = 'wsf-has-bnav--all';
+			}
+		}
 		return $classes;
 	}
 
@@ -51,6 +57,9 @@ class WSF_Assets {
 
 		if ( self::dark_enabled() && WSF_Options::get( 'darkmode', 'global', 1 ) ) {
 			wp_enqueue_style( 'wsf-dark', WSF_URL . 'assets/css/wsf-dark.css', array( 'wsf-frontend' ), $ver );
+		}
+		if ( WSF_Options::get( 'bottom_nav', 'enabled', 1 ) ) {
+			wp_enqueue_style( 'wsf-bnav', WSF_URL . 'assets/css/wsf-bnav.css', array( 'wsf-frontend' ), $ver );
 		}
 		if ( WSF_Options::get( 'utilities', 'mobile_menu', 1 ) ) {
 			wp_enqueue_style( 'wsf-menu', WSF_URL . 'assets/css/wsf-menu.css', array( 'wsf-frontend' ), $ver );

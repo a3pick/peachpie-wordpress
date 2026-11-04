@@ -12,6 +12,7 @@ class WSF_Render {
 		add_action( 'init', array( __CLASS__, 'register' ), 11 );
 		add_action( 'wp_footer', array( __CLASS__, 'dock' ), 20 );
 		add_action( 'wp_footer', array( __CLASS__, 'orbs' ), 5 );
+		add_action( 'wp_footer', array( __CLASS__, 'bottom_nav' ), 15 );
 		add_action( 'wp_head', array( __CLASS__, 'schema_org' ), 8 );
 		add_filter( 'wp_robots', array( __CLASS__, 'robots' ) );
 		add_action( 'pre_get_posts', array( __CLASS__, 'hashtag_search' ) );
@@ -889,6 +890,81 @@ class WSF_Render {
 			return '';
 		}
 		return '<span class="wsf wsf-inline" dir="' . esc_attr( self::dir() ) . '">' . self::toggle_button( 'wsf-toggle--inline' ) . '</span>';
+	}
+
+	/* ---------- نوار ناوبری پایین ---------- */
+	public static function bnav_visible() {
+		$o = WSF_Options::sec( 'bottom_nav' );
+		if ( empty( $o['enabled'] ) || empty( $o['items'] ) || is_admin() ) {
+			return false;
+		}
+		if ( ! empty( $o['hide_checkout'] ) && ( ( function_exists( 'is_checkout' ) && is_checkout() ) || ( function_exists( 'is_cart' ) && is_cart() ) ) ) {
+			return false;
+		}
+		$uri = isset( $_SERVER['REQUEST_URI'] ) ? wp_unslash( $_SERVER['REQUEST_URI'] ) : ''; // phpcs:ignore WordPress.Security
+		foreach ( self::lines( $o['hide_paths'] ) as $frag ) {
+			if ( false !== strpos( rawurldecode( $uri ), $frag ) ) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	private static function bnav_url( $raw ) {
+		switch ( trim( $raw ) ) {
+			case '{home}':
+				return home_url( '/' );
+			case '{blog}':
+				$id = (int) get_option( 'page_for_posts' );
+				return $id ? get_permalink( $id ) : home_url( '/?post_type=post' );
+			case '{account}':
+				if ( function_exists( 'wc_get_page_permalink' ) ) {
+					return wc_get_page_permalink( 'myaccount' );
+				}
+				return is_user_logged_in() ? admin_url( 'profile.php' ) : wp_login_url();
+			case '{consult}':
+				$a = sanitize_key( WSF_Options::get( 'booking_form', 'anchor', 'consultation' ) );
+				return ( is_front_page() ? '' : home_url( '/' ) ) . '#' . $a;
+		}
+		return $raw;
+	}
+
+	private static function bnav_active( $raw, $url ) {
+		$raw = trim( $raw );
+		if ( '{account}' === $raw ) {
+			return function_exists( 'is_account_page' ) && is_account_page();
+		}
+		if ( '{consult}' === $raw || false !== strpos( $url, '#' ) || false !== strpos( $url, '?' ) ) {
+			return false;
+		}
+		$cur  = untrailingslashit( (string) wp_parse_url( isset( $_SERVER['REQUEST_URI'] ) ? wp_unslash( $_SERVER['REQUEST_URI'] ) : '', PHP_URL_PATH ) ); // phpcs:ignore WordPress.Security
+		$path = untrailingslashit( (string) wp_parse_url( $url, PHP_URL_PATH ) );
+		$home = untrailingslashit( (string) wp_parse_url( home_url( '/' ), PHP_URL_PATH ) );
+		if ( $path === $home ) {
+			return $cur === $home || '' === $cur;
+		}
+		return '' !== $path && ( $cur === $path || 0 === strpos( $cur . '/', $path . '/' ) );
+	}
+
+	public static function bottom_nav() {
+		if ( ! self::bnav_visible() ) {
+			return;
+		}
+		$o  = WSF_Options::sec( 'bottom_nav' );
+		$h  = '<nav class="wsf wsf-bnav wsf-bnav--' . esc_attr( 'flat' === $o['style'] ? 'flat' : 'floating' ) . ( 'all' === $o['show_on'] ? ' wsf-bnav--all' : '' ) . '" dir="' . esc_attr( self::dir() ) . '" aria-label="' . esc_attr( 'ناوبری اصلی' ) . '"><ul>';
+		$n  = 0;
+		foreach ( $o['items'] as $it ) {
+			$url = self::bnav_url( $it['url'] );
+			if ( '' === $url ) {
+				continue;
+			}
+			$n++;
+			$act = self::bnav_active( $it['url'], $url );
+			$h  .= '<li class="' . ( $it['highlight'] ? 'is-hl' : '' ) . '"><a href="' . esc_url( $url ) . '"' . ( $act ? ' class="is-active" aria-current="page"' : '' ) . '><span class="wsf-bnav__ic">' . WSF_Icons::render( $it['icon'] ) . '</span>' . ( ( $o['show_labels'] || $it['highlight'] ) && $it['label'] ? '<span class="wsf-bnav__t">' . esc_html( $it['label'] ) . '</span>' : '<span class="wsf-sr">' . esc_html( $it['label'] ) . '</span>' ) . '</a></li>';
+		}
+		if ( $n ) {
+			echo $h . '</ul></nav>'; // phpcs:ignore WordPress.Security.EscapeOutput
+		}
 	}
 
 	/** هاله‌های نوری پس‌زمینه (سه المان محو، رنگ از پالت). */
