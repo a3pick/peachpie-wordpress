@@ -457,3 +457,5 @@ html[data-wsf-theme=dark] .wsf-logo--has-dark .wsf-logo__dark{display:block!impo
 .wsf button.wsf-pathcard,.wsf button.wsf-pathcard:hover,.wsf button.wsf-pathcard:focus{background:var(--wsf-surface);background:color-mix(in srgb,var(--wsf-surface) 78%,transparent);color:inherit;border:1px solid var(--wsf-border);box-shadow:0 15px 35px -14px color-mix(in srgb,var(--wsf-primary) 24%,transparent)}
 .wsf button.wsf-pathcard:hover,.wsf button.wsf-pathcard:focus-visible{border-color:var(--wsf-primary)}
 .wsf-dlsec,.wsf-plansec,.wsf-workshop{max-width:var(--wsf-max);margin-inline:auto}
+.wsf button.wsf-chip,.wsf button.wsf-chip:focus{border:0;border-radius:999px;padding:.5rem 1rem;color:var(--wsf-primary);background:color-mix(in srgb,var(--wsf-primary) 10%,transparent);font:inherit;font-weight:700;font-size:.88rem}
+.wsf button.wsf-chip:hover{border:0;color:var(--wsf-primary);background:color-mix(in srgb,var(--wsf-primary) 18%,transparent)}
