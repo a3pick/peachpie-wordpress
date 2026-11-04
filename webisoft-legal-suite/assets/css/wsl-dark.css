@@ -1,0 +1,37 @@
+/*!
+ * Webisoft Legal Suite — تاریک‌سازی سراسری (Hello Elementor / Elementor)
+ * فقط وقتی «اعمال تاریک‌سازی روی کل سایت» فعال است بارگذاری می‌شود.
+ * سلکتورها با :where / :not(.wsl *) کم‌ویژگی نگه داشته شده‌اند تا رنگ‌های دستی المنتور و ماژول‌های افزونه خراب نشوند.
+ */
+html[data-wsl-theme="dark"] body.wsl-global{background-color:var(--wsl-page-bg,#0b1220);color:var(--wsl-text)}
+html[data-wsl-theme="dark"] body.wsl-global :where(h1,h2,h3,h4,h5,h6):not(.wsl *){color:var(--wsl-ink)}
+html[data-wsl-theme="dark"] body.wsl-global :where(p,li,dd,dt,label,figcaption,small,cite,td,th,legend,summary):not(.wsl *){color:var(--wsl-text)}
+html[data-wsl-theme="dark"] body.wsl-global :where(a):not(.elementor-button):not(.wsl *):not([class*="button"]){color:var(--wsl-primary)}
+html[data-wsl-theme="dark"] body.wsl-global :where(a):not(.elementor-button):not(.wsl *):not([class*="button"]):hover{color:var(--wsl-accent)}
+html[data-wsl-theme="dark"] body.wsl-global :where(hr){border-color:var(--wsl-border);background-color:var(--wsl-border)}
+
+/* هدر و فوتر Hello Elementor */
+html[data-wsl-theme="dark"] body.wsl-global :where(.site-header,#site-header,.site-footer,#site-footer){color:var(--wsl-text);border-color:var(--wsl-border)}
+html[data-wsl-theme="dark"] body.wsl-global :where(.site-header,#site-header,.site-footer,#site-footer) :where(a,.site-title,.site-description){color:var(--wsl-ink)}
+html[data-wsl-theme="dark"] body.wsl-global :where(.site-navigation a,.site-navigation-toggle-holder){color:var(--wsl-ink)}
+html[data-wsl-theme="dark"] body.wsl-global :where(.site-navigation ul.menu ul){background-color:var(--wsl-surface)}
+html[data-wsl-theme="dark"] body.wsl-global :where(.site-navigation-dropdown){background-color:var(--wsl-surface)}
+
+/* فرم‌های استاندارد */
+html[data-wsl-theme="dark"] body.wsl-global :where(input:not([type=checkbox]):not([type=radio]):not([type=submit]):not([type=button]):not([type=range]),textarea,select):not(.wsl *){background-color:var(--wsl-surface-alt);color:var(--wsl-ink);border-color:var(--wsl-border)}
+html[data-wsl-theme="dark"] body.wsl-global :where(input,textarea)::placeholder{color:var(--wsl-muted);opacity:1}
+
+/* جدول، نقل‌قول و کد */
+html[data-wsl-theme="dark"] body.wsl-global :where(table):not(.wsl *){border-color:var(--wsl-border)}
+html[data-wsl-theme="dark"] body.wsl-global :where(td,th):not(.wsl *){border-color:var(--wsl-border)}
+html[data-wsl-theme="dark"] body.wsl-global :where(pre,code,kbd){background-color:var(--wsl-surface-alt);color:var(--wsl-ink)}
+html[data-wsl-theme="dark"] body.wsl-global :where(blockquote):not(.wsl *){border-color:var(--wsl-border)}
+
+/* ویجت‌های رایج المنتور (در صورتی که رنگ دستی نگرفته باشند) */
+html[data-wsl-theme="dark"] body.wsl-global :where(.elementor-widget-text-editor,.elementor-widget-theme-post-content,.elementor-widget-theme-post-excerpt,.elementor-icon-list-text,.elementor-post__excerpt){color:var(--wsl-text)}
+html[data-wsl-theme="dark"] body.wsl-global :where(.elementor-heading-title){color:var(--wsl-ink)}
+html[data-wsl-theme="dark"] body.wsl-global :where(.elementor-toc__header-title,.elementor-toc__list-item-text){color:var(--wsl-ink)}
+html[data-wsl-theme="dark"] body.wsl-global :where(.elementor-widget-table-of-contents .elementor-toc__body,.elementor-toc__wrapper){background-color:transparent}
+
+/* تصاویر کمی ملایم‌تر در حالت تاریک */
+html[data-wsl-theme="dark"] body.wsl-global :where(img:not([src$=".svg"])):not(.wsl *){filter:brightness(.92)}
