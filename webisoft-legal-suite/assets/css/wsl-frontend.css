@@ -361,13 +361,13 @@
 .ws-toc-expand-button:hover,.ws-toc-expand-button:focus{background:var(--wsl-btn-a);color:var(--wsl-on-btn);border-color:var(--wsl-btn-a)}
 
 /* ---------- دکمه حالت روشن/تاریک و داک شناور ---------- */
-.wsl-toggle{width:46px;height:46px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;padding:0;font-size:1.3rem;line-height:1;color:var(--wsl-ink);background:var(--wsl-surface);border:1px solid var(--wsl-border);box-shadow:0 10px 25px -8px rgba(15,23,42,.35);transition:transform .25s,background-color .25s,color .25s}
-.wsl .wsl-toggle:hover,.wsl .wsl-toggle:focus{background:var(--wsl-surface);color:var(--wsl-primary);transform:scale(1.08)}
+.wsl .wsl-toggle{min-width:0;min-height:0;width:46px;height:46px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;padding:0;font-size:1.3rem;line-height:1;color:var(--wsl-ink);background:var(--wsl-surface);border:1px solid var(--wsl-border);box-shadow:0 10px 25px -8px rgba(15,23,42,.35);transition:transform .25s,background-color .25s,color .25s}
+.wsl .wsl-toggle:hover,.wsl .wsl-toggle:focus{background:var(--wsl-surface);color:var(--wsl-primary);border-color:var(--wsl-border);transform:scale(1.08)}
 .wsl-toggle__sun{display:none}
 html[data-wsl-theme=dark] .wsl-toggle__sun{display:inline-flex}
 html[data-wsl-theme=dark] .wsl-toggle__moon{display:none}
 .wsl-toggle__moon{display:inline-flex}
-.wsl-toggle--inline{box-shadow:none}
+.wsl .wsl-toggle--inline{box-shadow:none}
 .wsl.wsl-inline{width:auto;display:inline-block;vertical-align:middle}
 .wsl-dock{position:fixed;bottom:18px;z-index:9990;display:flex;flex-direction:column;align-items:center;gap:10px;width:auto}
 .wsl-dock--bottom-start{inset-inline-start:18px}
