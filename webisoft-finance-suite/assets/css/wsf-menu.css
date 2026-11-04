@@ -3,7 +3,6 @@
  * فاصله‌ها بر پایه‌ی شبکه ۴/۸ پیکسل؛ اهداف لمسی حداقل ۴۴ پیکسل.
  */
 .elementor-menu-toggle{
-  display:inline-flex!important;align-items:center!important;justify-content:center!important;
   width:44px!important;height:44px!important;min-width:44px!important;padding:0!important;
   background:var(--wsf-surface)!important;
   background:color-mix(in srgb,var(--wsf-surface) 80%,transparent)!important;
