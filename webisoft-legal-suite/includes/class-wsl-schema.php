@@ -144,6 +144,7 @@ class WSL_Schema {
 					self::s( 'el_secondary', 'رنگ سراسری Secondary المنتور ← ', self::token_options(), '' ),
 					self::s( 'el_text', 'رنگ سراسری Text المنتور ← ', self::token_options(), '' ),
 					self::s( 'el_accent', 'رنگ سراسری Accent المنتور ← ', self::token_options(), '' ),
+					self::tg( 'force_text', 'اجبار رنگ عنوان‌ها و متن ویجت‌های المنتور در حالت تاریک (برای وقتی رنگ دستی دارند)', 1, array( 'desc' => 'عنوان، لیست آیکون‌دار و ویرایشگر متن المنتور (مثلاً در فوتر) را با !important هم‌رنگ حالت تاریک می‌کند. دکمه‌ها و ماژول‌های افزونه تغییر نمی‌کنند.' ) ),
 					self::ta( 'surface_selectors', 'سلکتورهایی که در حالت تاریک «پس‌زمینه کارت» بگیرند (هر خط یک سلکتور)', '', array( 'san' => 'selectors', 'rows' => 3, 'desc' => 'مثال: .my-box یا .elementor-element-abc123 — یا کلاس ws-surface را در فیلد CSS Classes المنتور بدهید.' ) ),
 					self::ta( 'surface_alt_selectors', 'سلکتورهایی که «پس‌زمینه ثانویه» بگیرند (هر خط یک سلکتور)', '', array( 'san' => 'selectors', 'rows' => 3 ) ),
 				),

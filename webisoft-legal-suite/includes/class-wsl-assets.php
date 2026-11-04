@@ -153,6 +153,10 @@ class WSL_Assets {
 				$css .= 'body.wsl-global{background-color:var(--wsl-page-bg);}';
 			}
 
+			if ( WSL_Options::get( 'darkmode', 'force_text', 1 ) ) {
+				$css .= 'html[data-wsl-theme="dark"] :is(.elementor-heading-title,.elementor-widget-heading .elementor-heading-title,.elementor-widget-text-editor,.elementor-widget-text-editor p,.elementor-icon-list-text,.elementor-icon-list-item>a,.elementor-post__title a,.elementor-widget-theme-post-title .elementor-heading-title):not(.wsl *):not(.elementor-button){color:var(--wsl-ink)!important}html[data-wsl-theme="dark"] :is(.elementor-widget-text-editor,.elementor-widget-text-editor p,.elementor-icon-list-text,.elementor-post__excerpt):not(.wsl *){color:var(--wsl-text)!important}';
+			}
+
 			$sel = array( 'surface_selectors' => 'surface', 'surface_alt_selectors' => 'surface-alt' );
 			foreach ( $sel as $id => $tok ) {
 				$list = preg_split( '/\r\n|\r|\n/', (string) WSL_Options::get( 'darkmode', $id, '' ) );
