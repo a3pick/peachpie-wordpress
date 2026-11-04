@@ -2,7 +2,7 @@
 /**
  * Plugin Name:       Webisoft Finance Suite (WS Finance)
  * Description:       مجموعه ماژول‌های آماده برای سایت‌های وکالتی و حقوقی (المنتور / Hello Elementor) با شورت‌کد، حالت روشن/تاریک، فرم دریافت درخواست و پنل تنظیمات کامل در wp-admin.
- * Version:           1.5.0
+ * Version:           1.5.1
  * Requires at least: 6.0
  * Requires PHP:      7.4
  * Author:            Webisoft
@@ -14,7 +14,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'WSF_VERSION', '1.5.0' );
+define( 'WSF_VERSION', '1.5.1' );
 define( 'WSF_FILE', __FILE__ );
 define( 'WSF_DIR', plugin_dir_path( __FILE__ ) );
 define( 'WSF_URL', plugin_dir_url( __FILE__ ) );

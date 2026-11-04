@@ -1,0 +1,54 @@
+/*!
+ * Webisoft Finance Suite — منوی موبایل المنتور (شیشه‌ای، هماهنگ با پالت و حالت تاریک)
+ * فاصله‌ها بر پایه‌ی شبکه ۴/۸ پیکسل؛ اهداف لمسی حداقل ۴۴ پیکسل.
+ */
+.elementor-menu-toggle{
+  display:inline-flex!important;align-items:center!important;justify-content:center!important;
+  width:44px!important;height:44px!important;min-width:44px!important;padding:0!important;
+  background:var(--wsf-surface)!important;
+  background:color-mix(in srgb,var(--wsf-surface) 80%,transparent)!important;
+  -webkit-backdrop-filter:blur(16px)!important;backdrop-filter:blur(16px)!important;
+  border:1px solid var(--wsf-border)!important;border-radius:14px!important;
+  color:var(--wsf-primary)!important;
+  box-shadow:0 8px 24px -8px color-mix(in srgb,var(--wsf-primary) 30%,transparent)!important;
+  transition:background-color .25s ease,color .25s ease,border-color .25s ease!important;
+}
+.elementor-menu-toggle:hover,.elementor-menu-toggle:focus-visible,.elementor-menu-toggle.elementor-active{
+  background:var(--wsf-btn-a)!important;border-color:var(--wsf-btn-a)!important;color:var(--wsf-on-btn)!important;
+}
+.elementor-menu-toggle:focus-visible{outline:3px solid color-mix(in srgb,var(--wsf-primary) 45%,transparent)!important;outline-offset:2px!important}
+.elementor-menu-toggle svg,.elementor-menu-toggle i{width:22px!important;height:22px!important;fill:currentColor!important;color:inherit!important}
+
+@media (max-width:1024px){
+  .elementor-nav-menu--dropdown{
+    background:var(--wsf-surface)!important;
+    background:color-mix(in srgb,var(--wsf-surface) 88%,transparent)!important;
+    -webkit-backdrop-filter:blur(24px) saturate(1.3)!important;backdrop-filter:blur(24px) saturate(1.3)!important;
+    border:1px solid var(--wsf-border)!important;border-radius:20px!important;
+    padding:12px!important;margin-top:8px!important;
+    box-shadow:0 24px 48px -16px color-mix(in srgb,var(--wsf-btn-b) 35%,transparent)!important;
+    min-width:100%!important;z-index:99999!important;
+  }
+  .elementor-nav-menu--dropdown .elementor-nav-menu{display:flex;flex-direction:column;gap:8px}
+  .elementor-nav-menu--dropdown a.elementor-item,
+  .elementor-nav-menu--dropdown a.elementor-sub-item{
+    display:flex!important;align-items:center!important;min-height:44px!important;
+    padding:8px 16px!important;margin:0!important;
+    background:var(--wsf-surface-alt)!important;
+    border:1px solid var(--wsf-border)!important;border-radius:12px!important;
+    color:var(--wsf-ink)!important;text-align:start!important;
+    font-family:var(--wsf-font,inherit)!important;font-size:15px!important;font-weight:600!important;line-height:1.5!important;
+    transition:background-color .25s ease,color .25s ease,border-color .25s ease,transform .25s ease!important;
+  }
+  .elementor-nav-menu--dropdown a.elementor-item:hover,
+  .elementor-nav-menu--dropdown a.elementor-item:focus-visible,
+  .elementor-nav-menu--dropdown a.elementor-item.elementor-item-active,
+  .elementor-nav-menu--dropdown a.elementor-sub-item:hover,
+  .elementor-nav-menu--dropdown a.elementor-sub-item.elementor-item-active{
+    background:var(--wsf-btn-a)!important;border-color:var(--wsf-btn-a)!important;color:var(--wsf-on-btn)!important;
+    transform:translateX(-4px);
+  }
+  [dir=ltr] .elementor-nav-menu--dropdown a.elementor-item:hover{transform:translateX(4px)}
+  .elementor-nav-menu--dropdown .sub-menu{margin-top:8px!important;padding-inline-start:12px!important;background:transparent!important;border:0!important;box-shadow:none!important}
+}
+@media (prefers-reduced-motion:reduce){.elementor-menu-toggle,.elementor-nav-menu--dropdown a.elementor-item{transition:none!important}.elementor-nav-menu--dropdown a.elementor-item:hover{transform:none!important}}

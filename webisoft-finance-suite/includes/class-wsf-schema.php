@@ -180,6 +180,7 @@ class WSF_Schema {
 			'desc'  => 'کلاس‌های کمکی برای المنتور، جلوه‌ها و CSS اختصاصی.',
 			'fields' => array(
 				self::tg( 'util_classes', 'کلاس‌های کمکی (ws-glass, ws-surface, ws-hover-border, border-hover-1..7, btn-emergency, glow-orb ...)', 1 ),
+				self::tg( 'mobile_menu', 'استایل منوی موبایل المنتور (دکمه همبرگری و پنل کشویی شیشه‌ای، هماهنگ با پالت و حالت تاریک)', 1, array( 'desc' => 'جایگزین CSS قدیمی منوی موبایل. اگر آن را در Elementor Custom CSS یا WPCode دارید، حذفش کنید.' ) ),
 				self::tg( 'orbs', 'هاله‌های نوری پس‌زمینه (سه هاله‌ی محو و شناور)', 1, array( 'desc' => 'جایگزین کانتینرهای glow-orb در المنتور؛ بدون نیاز به ساخت المان. اگر قبلاً کانتینر هاله ساخته‌اید، آن‌ها را حذف کنید.' ) ),
 				self::s( 'orb_c1', 'هاله ۱ (بالا-ابتدا) — رنگ از پالت', self::orb_tokens(), 'primary' ),
 				self::s( 'orb_c2', 'هاله ۲ (وسط-انتها) — رنگ از پالت', self::orb_tokens(), 'accent' ),
