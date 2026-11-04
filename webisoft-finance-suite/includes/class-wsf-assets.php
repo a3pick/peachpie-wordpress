@@ -183,13 +183,15 @@ class WSF_Assets {
 		}
 
 		if ( WSF_Options::get( 'utilities', 'orbs', 1 ) ) {
-			$op  = max( 0, min( 80, (int) WSF_Options::get( 'utilities', 'orb_opacity', 22 ) ) ) / 100;
+			$op  = max( 0, min( 80, (int) WSF_Options::get( 'utilities', 'orb_opacity', 9 ) ) ) / 100;
+			$opd = max( 0, min( 80, (int) WSF_Options::get( 'utilities', 'orb_opacity_dark', 20 ) ) ) / 100;
 			$css .= 'body.wsf-site .glow-orb{display:none!important}'; // هاله‌های قدیمی (HTML ویجت‌ها) با هاله‌های داخلی جایگزین می‌شوند.
 			$css .= '.wsf-orbs{position:fixed;inset:0;z-index:-1;pointer-events:none;overflow:hidden}.wsf-orbs span{position:absolute;border-radius:50%;filter:blur(90px);opacity:' . $op . ';animation:wsf-orbfloat 14s infinite alternate ease-in-out}'
 				. '.wsf-orbs .o1{top:-10%;inset-inline-start:-10%;width:50vw;height:50vw}.wsf-orbs .o2{top:40%;inset-inline-end:-20%;width:60vw;height:60vw;animation-delay:-4s}.wsf-orbs .o3{bottom:-10%;inset-inline-start:30%;width:45vw;height:45vw;animation-delay:-7s}'
 				. '@keyframes wsf-orbfloat{0%{transform:scale(1) translate(0,0)}100%{transform:scale(1.2) translate(30px,-30px)}}@media (prefers-reduced-motion:reduce){.wsf-orbs span{animation:none}}';
+			$css .= 'html[data-wsf-theme="dark"] .wsf-orbs span{opacity:' . $opd . '}';
 			$toks = array_keys( WSF_Schema::orb_tokens() );
-			foreach ( array( 1 => 'primary', 2 => 'btn-a', 3 => 'primary' ) as $i => $def ) {
+			foreach ( array( 1 => 'primary', 2 => 'accent', 3 => 'muted' ) as $i => $def ) {
 				$t    = WSF_Options::get( 'utilities', 'orb_c' . $i, $def );
 				$t    = in_array( $t, $toks, true ) ? $t : $def;
 				$css .= '.wsf-orbs .o' . $i . '{background:var(--wsf-' . $t . ')}';
