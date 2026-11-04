@@ -31,6 +31,7 @@ class WSF_Access {
 		if ( self::can( sanitize_key( $a['level'] ) ) ) {
 			return do_shortcode( $content );
 		}
+		$a['plans'] = WSF_Woo::plans_url( $a['plans'] );
 		$btn = $a['plans'] ? ' <a class="wsf-btn wsf-btn--primary" href="' . esc_url( $a['plans'] ) . '">' . esc_html( $a['button'] ) . '</a>' : '';
 		return '<div class="wsf wsf-lockbox" dir="' . esc_attr( WSF_Render::dir() ) . '"><span class="wsf-iconbox">' . WSF_Icons::render( 'lock' ) . '</span><p>' . esc_html( $a['message'] ) . '</p>' . $btn . '</div>';
 	}
@@ -54,7 +55,10 @@ class WSF_Access {
 			wp_die( 'فایل پیدا نشد.', '', array( 'response' => 404 ) );
 		}
 		if ( 'member' === $found['lock'] && ! self::can( 'member' ) ) {
-			$plans = WSF_Options::get( 'downloads', 'plans_url', '' );
+			$plans = WSF_Woo::plans_url( WSF_Options::get( 'downloads', 'plans_url', '' ) );
+			if ( ! is_user_logged_in() && function_exists( 'wc_get_page_permalink' ) && WSF_Woo::available() ) {
+				$plans = wc_get_page_permalink( 'myaccount' );
+			}
 			if ( $plans ) {
 				wp_safe_redirect( $plans );
 				exit;

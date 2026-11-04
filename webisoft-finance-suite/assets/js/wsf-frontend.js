@@ -22,8 +22,25 @@
 		});
 	}
 
-	function setTheme(t) {
+	/* همگام‌سازی با پنل کاربری Webisoft Woo (.wsw-shop / کلید wsw_dark) */
+	function applyWoo(on) {
+		qsa('.wsw-shop').forEach(function (r) { r.classList.toggle('wsw-dark', on); });
+		if (doc.body) { doc.body.classList.toggle('wsw-dark-body', on); }
+		try { localStorage.setItem('wsw_dark', on ? '1' : '0'); } catch (e) { /* noop */ }
+	}
+	function watchWoo() {
+		if (!('MutationObserver' in window) || !doc.body) { return; }
+		var mo = new MutationObserver(function () {
+			var theirs = doc.body.classList.contains('wsw-dark-body');
+			if (qs('.wsw-shop') && theirs !== (currentTheme() === 'dark')) { setTheme(theirs ? 'dark' : 'light', true); }
+		});
+		mo.observe(doc.body, { attributes: true, attributeFilter: ['class'] });
+		qsa('.wsw-shop').forEach(function (r) { mo.observe(r, { attributes: true, attributeFilter: ['class'] }); });
+	}
+
+	function setTheme(t, fromWoo) {
 		root.setAttribute('data-wsf-theme', t);
+		if (!fromWoo) { applyWoo(t === 'dark'); }
 		try { localStorage.setItem('wsf-theme', t); } catch (e) { /* حالت خصوصی مرورگر */ }
 		syncToggles();
 		doc.dispatchEvent(new CustomEvent('wsf:themechange', { detail: { theme: t } }));
@@ -393,6 +410,8 @@
 		init(doc);
 		scheduleAdapt(100);
 		swapLogos();
+		watchWoo();
+		applyWoo(currentTheme() === 'dark');
 		initToc();
 		setTimeout(initToc, 800);
 		setTimeout(initToc, 2500);

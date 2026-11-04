@@ -23,7 +23,7 @@ class WSF_Assets {
 		}
 		$mode = WSF_Options::get( 'darkmode', 'default_mode', 'light' );
 		$mode = in_array( $mode, array( 'light', 'dark', 'auto' ), true ) ? $mode : 'light';
-		echo '<script data-cfasync="false" data-no-optimize="1" data-no-defer="1" data-no-minify="1" data-pagespeed-no-defer nowprocket>(function(){var d=document.documentElement,t="' . esc_js( $mode ) . '";try{var s=localStorage.getItem("wsf-theme");if(s==="light"||s==="dark"){t=s;}else if(t==="auto"){t=(window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches)?"dark":"light";}}catch(e){if(t==="auto"){t="light";}}d.setAttribute("data-wsf-theme",t);})();</script>' . "\n"; // phpcs:ignore WordPress.Security.EscapeOutput
+		echo '<script data-cfasync="false" data-no-optimize="1" data-no-defer="1" data-no-minify="1" data-pagespeed-no-defer nowprocket>(function(){var d=document.documentElement,t="' . esc_js( $mode ) . '";try{var s=localStorage.getItem("wsf-theme");if(s!=="light"&&s!=="dark"){var w=localStorage.getItem("wsw_dark");if(w==="1"){s="dark";}else if(w==="0"){s="light";}}if(s==="light"||s==="dark"){t=s;}else if(t==="auto"){t=(window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches)?"dark":"light";}}catch(e){if(t==="auto"){t="light";}}d.setAttribute("data-wsf-theme",t);try{localStorage.setItem("wsw_dark",t==="dark"?"1":"0");}catch(e){}})();</script>' . "\n"; // phpcs:ignore WordPress.Security.EscapeOutput
 	}
 
 	public static function body_class( $classes ) {

@@ -273,9 +273,10 @@ class WSF_Schema {
 				array( self::enabled() ),
 				self::head_fields( 'Workshop', 'کارگاه آلیس', 'یاد بگیر خودت حساب‌وکتاب کسب‌وکارت را نگه داری.' ),
 				array(
-					self::u( 'plans_url', 'صفحه اشتراک (مقصد کارت‌های قفل)', '' ),
+					self::u( 'plans_url', 'صفحه اشتراک (خالی = تب عضویت Webisoft Woo)', '' ),
 					self::t( 'locked_label', 'برچسب قفل', 'ویژه اعضا' ),
 					self::t( 'locked_btn', 'متن دکمه روی آیتم قفل', 'دریافت اشتراک' ),
+					self::t( 'login_btn', 'متن دکمه برای مهمان (وارد نشده)', 'ورود یا ثبت‌نام' ),
 					self::rep( 'items', 'بخش‌ها', array(
 						self::ic( 'icon', 'آیکون', 'book' ), self::t( 'title', 'عنوان' ), self::ta( 'desc', 'توضیح', '', array( 'rows' => 2 ) ), self::u( 'url', 'لینک' ), self::t( 'badge', 'برچسب (مثلاً به‌زودی)' ),
 						self::s( 'lock', 'دسترسی', array( 'free' => 'رایگان', 'member' => 'ویژه اعضا (قفل)' ), 'free' ),
@@ -291,8 +292,9 @@ class WSF_Schema {
 				array( self::enabled() ),
 				self::head_fields( 'Templates', 'فرم‌ها و قالب‌های آماده', 'فرم‌های آماده تا سریع‌تر کار کنی و چیزی از قلم نیفتد.' ),
 				array(
-					self::u( 'plans_url', 'صفحه اشتراک', '' ),
+					self::u( 'plans_url', 'صفحه اشتراک (خالی = تب عضویت Webisoft Woo)', '' ),
 					self::t( 'locked_btn', 'متن دکمه قفل', 'نیاز به اشتراک' ),
+					self::t( 'login_btn', 'متن دکمه برای مهمان (وارد نشده)', 'ورود یا ثبت‌نام' ),
 					self::t( 'download_btn', 'متن دکمه دانلود', 'دانلود' ),
 					self::rep( 'items', 'فایل‌ها', array(
 						self::ic( 'icon', 'آیکون', 'file' ), self::t( 'title', 'عنوان' ), self::t( 'desc', 'توضیح کوتاه' ),
@@ -310,6 +312,12 @@ class WSF_Schema {
 				array( self::enabled() ),
 				self::head_fields( 'Membership', 'اشتراک آلیس‌یار', 'هر روز تحلیل تازه، قوانین به‌روز، فرم‌های کامل و مشاوره بیشتر.' ),
 				array(
+					self::s( 'source', 'منبع پلن‌ها', array( 'auto' => 'خودکار (اگر Webisoft Woo فعال بود از عضویت ویژه آن، وگرنه دستی)', 'woo' => 'فقط از Webisoft Woo', 'manual' => 'فقط دستی (لیست پایین)' ), 'auto' ),
+					self::lines( 'woo_features', 'ویژگی‌های مشترک پلن‌های Woo (هر خط یک مورد)', "دسترسی به آخرین قوانین مالیات و بیمه\nتحلیل‌های روزانه بازار\nفرم‌ها و قالب‌های کامل" ),
+					self::t( 'woo_btn', 'متن دکمه پلن‌های Woo', 'خرید اشتراک' ),
+					self::t( 'woo_login_btn', 'متن دکمه برای مهمان', 'ورود و خرید اشتراک' ),
+					self::t( 'woo_renew_btn', 'متن دکمه برای عضو فعال', 'تمدید اشتراک' ),
+					self::n( 'woo_featured', 'شماره پلن برجسته در Woo (۰ = هیچ)', 2, array( 'min' => 0, 'max' => 3 ) ),
 					self::rep( 'items', 'پلن‌ها', array(
 						self::t( 'name', 'نام پلن' ), self::t( 'price', 'قیمت (متن آزاد، مثلاً ۲۹۰٬۰۰۰ تومان)' ), self::t( 'period', 'دوره (مثلاً در ماه)' ),
 						self::ta( 'desc', 'توضیح کوتاه', '', array( 'rows' => 2 ) ), self::lines( 'features', 'ویژگی‌ها (هر خط یک مورد)', '' ),

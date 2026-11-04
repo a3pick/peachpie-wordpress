@@ -479,11 +479,12 @@ class WSF_Render {
 		$h = self::root( 'workshop' ) . self::head( $o, 'h2' ) . '<div class="wsf-grid wsf-cols-3">';
 		foreach ( $o['items'] as $it ) {
 			$locked = ( 'member' === $it['lock'] && ! WSF_Access::can( 'member' ) );
-			$href   = $locked ? $o['plans_url'] : $it['url'];
+			$purl   = WSF_Woo::plans_url( $o['plans_url'] );
+			$href   = $locked ? $purl : $it['url'];
 			$badge  = $locked ? WSF_Icons::render( 'lock' ) . esc_html( $o['locked_label'] ) : esc_html( $it['badge'] );
 			$inner  = '<span class="wsf-iconbox">' . WSF_Icons::render( $it['icon'] ) . '</span>' . ( $badge ? '<span class="wsf-lockbadge' . ( $locked ? ' is-locked' : '' ) . '">' . $badge . '</span>' : '' ) . '<h3>' . esc_html( $it['title'] ) . '</h3><p>' . esc_html( $it['desc'] ) . '</p>';
-			if ( $locked && $o['plans_url'] ) {
-				$inner .= '<span class="wsf-link">' . esc_html( $o['locked_btn'] ) . self::arrow() . '</span>';
+			if ( $locked && $purl ) {
+				$inner .= '<span class="wsf-link">' . esc_html( is_user_logged_in() ? $o['locked_btn'] : $o['login_btn'] ) . self::arrow() . '</span>';
 			}
 			$cls = 'wsf-wcard wsf-glass' . ( $locked ? ' is-locked' : '' );
 			$h  .= $href ? '<a class="' . $cls . '" href="' . esc_url( $href ) . '">' . $inner . '</a>' : '<div class="' . $cls . '">' . $inner . '</div>';
@@ -500,7 +501,9 @@ class WSF_Render {
 			$locked = ( 'member' === $it['lock'] && ! WSF_Access::can( 'member' ) );
 			$h     .= '<div class="wsf-dl wsf-glass' . ( $locked ? ' is-locked' : '' ) . '"><span class="wsf-iconbox">' . WSF_Icons::render( $it['icon'] ) . '</span><div class="wsf-dl__t"><h3>' . esc_html( $it['title'] ) . '</h3>' . ( $it['desc'] ? '<p>' . esc_html( $it['desc'] ) . '</p>' : '' ) . '</div>';
 			if ( $locked ) {
-				$h .= $o['plans_url'] ? '<a class="wsf-chip" href="' . esc_url( $o['plans_url'] ) . '">' . WSF_Icons::render( 'lock' ) . esc_html( $o['locked_btn'] ) . '</a>' : '<span class="wsf-chip">' . WSF_Icons::render( 'lock' ) . esc_html( $o['locked_btn'] ) . '</span>';
+				$purl = WSF_Woo::plans_url( $o['plans_url'] );
+				$lbl  = is_user_logged_in() ? $o['locked_btn'] : $o['login_btn'];
+				$h   .= $purl ? '<a class="wsf-chip" href="' . esc_url( $purl ) . '">' . WSF_Icons::render( 'lock' ) . esc_html( $lbl ) . '</a>' : '<span class="wsf-chip">' . WSF_Icons::render( 'lock' ) . esc_html( $lbl ) . '</span>';
 			} elseif ( $it['file'] ) {
 				$h .= '<a class="wsf-chip" href="' . esc_url( WSF_Access::download_url( $it['file'] ) ) . '">' . WSF_Icons::render( 'download' ) . esc_html( $o['download_btn'] ) . '</a>';
 			} else {
@@ -511,7 +514,43 @@ class WSF_Render {
 		return $h . '</div></div>';
 	}
 
+	/** پلن‌ها از عضویت ویژه‌ی Webisoft Woo، به‌شکل همان ساختار ردیف‌های دستی. */
+	private static function woo_plan_items( $o ) {
+		$items  = array();
+		$member = WSF_Woo::member( get_current_user_id() );
+		$cta    = WSF_Woo::cta_url();
+		foreach ( WSF_Woo::plans() as $i => $p ) {
+			$feat = self::lines( $o['woo_features'] );
+			array_unshift( $feat, sprintf( 'مدت اعتبار: %s روز', self::num( $p['days'] ) ) );
+			if ( $p['off'] > 0 ) {
+				$feat[] = sprintf( '%s٪ تخفیف خودکار روی خریدها', self::num( (int) $p['off'] ) );
+			}
+			$mine = $member && (int) $member['plan'] === (int) $i;
+			$btn  = $member ? $o['woo_renew_btn'] : ( is_user_logged_in() ? $o['woo_btn'] : $o['woo_login_btn'] );
+			$items[] = array(
+				'name'     => $p['name'],
+				'price'    => $p['price'] > 0 ? self::num( number_format_i18n( $p['price'] ) ) . ' تومان' : 'رایگان',
+				'period'   => '',
+				'desc'     => $mine ? 'اشتراک فعال تا ' . self::num( WSF_Woo::date( $member['until'] ) ) : '',
+				'features' => implode( "\n", $feat ),
+				'btn_text' => $btn,
+				'btn_url'  => $cta,
+				'badge'    => $mine ? 'اشتراک فعلی شما' : '',
+				'featured' => ( (int) $o['woo_featured'] === (int) $i ) ? 1 : 0,
+			);
+		}
+		return $items;
+	}
+
 	private static function mod_plans( $o, $atts ) {
+		if ( 'manual' !== $o['source'] ) {
+			$woo = self::woo_plan_items( $o );
+			if ( $woo ) {
+				$o['items'] = $woo;
+			} elseif ( 'woo' === $o['source'] ) {
+				$o['items'] = array();
+			}
+		}
 		if ( empty( $o['items'] ) ) {
 			return '';
 		}
