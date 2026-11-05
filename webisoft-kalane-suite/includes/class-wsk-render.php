@@ -215,7 +215,8 @@ class WSK_Render {
 		$mask  = ( 'side_image' === $style ) ? WSK_Options::image_url( $o['mask_image'], 'medium' ) : '';
 		$multi = count( $items ) > 1;
 
-		$h = self::root( 'banners wsk-banners--' . $style );
+		$auto = 'auto' === WSK_Options::get( 'banners', 'ratio', '21/6' ) ? ' wsk-banners--auto' : '';
+		$h    = self::root( 'banners wsk-banners--' . $style . $auto );
 		$h .= $multi ? self::slider_open( $o, 'wsk-slider--banners' ) : '<div class="wsk-banners__one">';
 		$pos = 0;
 		foreach ( $items as $i => $it ) {

@@ -56,14 +56,25 @@ body.wsk-modal-open{overflow:hidden}
 .wsk-banners__one{display:block}
 .wsk-banner{display:block;position:relative;width:100%;min-height:1px;border-radius:var(--wsk-radius,12px);overflow:hidden;isolation:isolate;transition:transform .4s ease,filter .3s}
 .wsk-banner:hover{transform:scale(.99)}
-.wsk-banner__mask{display:block;width:100%;height:100%;border-radius:inherit;overflow:hidden}
-.wsk-banner__img{display:block;width:100%;height:100%;object-fit:cover}
+.wsk-banner__mask{display:block;position:absolute;inset:0;border-radius:inherit;overflow:hidden}
+.wsk .wsk-banner__img{display:block;width:100%;height:100%;object-fit:cover;max-width:none}
+/* نسبت «اصل تصویر» (فقط دسکتاپ): قاب از خود تصویر ارتفاع می‌گیرد */
+@media (min-width:1025px){.wsk-banners--auto .wsk-banner{aspect-ratio:auto;max-height:none}.wsk-banners--auto .wsk-banner__mask{position:relative;inset:auto}.wsk .wsk-banners--auto .wsk-banner__img,.wsk.wsk-banners--auto .wsk-banner__img{height:auto}}
 .wsk-slider--banners .wsk-track{padding:0 0 15px}
 .wsk-slider--banners .wsk-slide{flex:0 0 100%;width:100%;display:block}
-/* سبک هلالی */
-.wsk-banners--crescent .wsk-banner{filter:drop-shadow(0 4px 10px rgba(0,0,0,.08));overflow:visible}
-.wsk-banners--crescent .wsk-banner__mask{-webkit-mask-image:radial-gradient(ellipse 28px 52% at 0% 50%,transparent 99%,#000 100%),radial-gradient(ellipse 28px 52% at 100% 50%,transparent 99%,#000 100%);mask-image:radial-gradient(ellipse 28px 52% at 0% 50%,transparent 99%,#000 100%),radial-gradient(ellipse 28px 52% at 100% 50%,transparent 99%,#000 100%);-webkit-mask-size:50.5% 100%;mask-size:50.5% 100%;-webkit-mask-position:left top,right top;mask-position:left top,right top;-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat}
-@media (max-width:768px){.wsk-banners--crescent .wsk-banner__mask{border-radius:8px;-webkit-mask-image:radial-gradient(ellipse 15px 52% at 0% 50%,transparent 99%,#000 100%),radial-gradient(ellipse 15px 52% at 100% 50%,transparent 99%,#000 100%);mask-image:radial-gradient(ellipse 15px 52% at 0% 50%,transparent 99%,#000 100%),radial-gradient(ellipse 15px 52% at 100% 50%,transparent 99%,#000 100%)}}
+/* سبک بلیطی: حفره‌ی قرصی (دو نیم‌دایره + خط صاف) در وسط هر لبه.
+   سیاه = دیده می‌شود؛ ماسک از ۵ لایه‌ی اجتماعی ساخته شده: ستون مرکزی + چهار گوشه‌ی بریده‌شده با دایره. */
+.wsk-banners--crescent{--wsk-r:28px;--wsk-ry:23%}
+.wsk-banners--crescent .wsk-banner{filter:drop-shadow(0 4px 10px rgba(0,0,0,.08))}
+.wsk-banners--crescent .wsk-banner__mask{border-radius:10px;
+-webkit-mask-image:linear-gradient(#000,#000),radial-gradient(circle var(--wsk-r) at 0 100%,transparent 99%,#000 100%),radial-gradient(circle var(--wsk-r) at 0 0,transparent 99%,#000 100%),radial-gradient(circle var(--wsk-r) at 100% 100%,transparent 99%,#000 100%),radial-gradient(circle var(--wsk-r) at 100% 0,transparent 99%,#000 100%);
+mask-image:linear-gradient(#000,#000),radial-gradient(circle var(--wsk-r) at 0 100%,transparent 99%,#000 100%),radial-gradient(circle var(--wsk-r) at 0 0,transparent 99%,#000 100%),radial-gradient(circle var(--wsk-r) at 100% 100%,transparent 99%,#000 100%),radial-gradient(circle var(--wsk-r) at 100% 0,transparent 99%,#000 100%);
+-webkit-mask-size:calc(100% - 2 * var(--wsk-r)) 100%,var(--wsk-r) var(--wsk-ry),var(--wsk-r) var(--wsk-ry),var(--wsk-r) var(--wsk-ry),var(--wsk-r) var(--wsk-ry);
+mask-size:calc(100% - 2 * var(--wsk-r)) 100%,var(--wsk-r) var(--wsk-ry),var(--wsk-r) var(--wsk-ry),var(--wsk-r) var(--wsk-ry),var(--wsk-r) var(--wsk-ry);
+-webkit-mask-position:var(--wsk-r) 0,0 0,0 100%,100% 0,100% 100%;
+mask-position:var(--wsk-r) 0,0 0,0 100%,100% 0,100% 100%;
+-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat}
+@media (max-width:768px){.wsk-banners--crescent{--wsk-r:11px;--wsk-ry:27%}.wsk-banners--crescent .wsk-banner__mask{border-radius:8px}}
 /* سبک تصویر حاشیه */
 .wsk-side{position:absolute;top:-2px;bottom:-2px;z-index:2;display:flex;pointer-events:none}
 .wsk-side--l{left:-2px}

@@ -164,7 +164,7 @@ class WSK_Schema {
 			'fields' => array_merge(
 				array(
 					self::enabled(),
-					self::s( 'style', 'سبک بنر', array( 'crescent' => 'هلالی (برش گوشه‌های کناری با ماسک CSS)', 'side_image' => 'تصویر حاشیه‌ی دلخواه (ماسک تصویری)', 'plain' => 'ساده' ), 'crescent' ),
+					self::s( 'style', 'سبک بنر', array( 'crescent' => 'بلیطی (برش نیم‌دایره‌ای وسط لبه‌های کناری — پیش‌فرض)', 'side_image' => 'تصویر حاشیه‌ی دلخواه (ماسک تصویری)', 'plain' => 'ساده' ), 'crescent' ),
 					self::img( 'mask_image', 'تصویر حاشیه (فقط در سبک «تصویر حاشیه»)' ),
 					self::s( 'ratio', 'نسبت تصویر بنر', array( '21/6' => '21:6 (عریض)', '16/5' => '16:5', '16/9' => '16:9', 'auto' => 'اصل تصویر' ), '21/6' ),
 					self::n( 'max_height', 'حداکثر ارتفاع در دسکتاپ (px) — ۰ = بدون محدودیت', 320, array( 'min' => 0, 'max' => 900 ) ),
