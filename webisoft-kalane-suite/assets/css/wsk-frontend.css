@@ -188,16 +188,20 @@ body.wsk-modal-open{overflow:hidden}
 }
 
 
-/* ---------- دکمه‌ی روشن/تاریک ---------- */
-.wsk-toggle{display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;padding:0;border-radius:50%;border:1px solid var(--wsk-border,#eaeaea);background:var(--wsk-surface,#fff);color:var(--wsk-ink,#3f4254);cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.12);transition:transform .2s,background .2s}
-.wsk-toggle:hover{transform:scale(1.07)}
-.wsk-toggle:focus-visible{outline:2px solid var(--wsk-primary);outline-offset:3px}
-.wsk-toggle .wsk-ico-moon{display:none}
-html[data-wsk-theme="dark"] .wsk-toggle .wsk-ico-sun{display:none}
-html[data-wsk-theme="dark"] .wsk-toggle .wsk-ico-moon{display:block}
-.wsk-toggle--inline{box-shadow:none;width:38px;height:38px}
+/* ---------- دکمه‌ی روشن/تاریک ----------
+   انتخابگرهای .wsk .wsk-toggle عمداً قوی‌تر از استایل دکمه‌ی قالب (Woodmart/Elementor) هستند. */
+.wsk .wsk-toggle{all:unset;box-sizing:border-box;min-width:0;min-height:0;width:46px;height:46px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;padding:0;margin:0;font-size:1.3rem;line-height:1;text-transform:none;letter-spacing:0;color:var(--wsk-ink,#3f4254);background:var(--wsk-surface,#fff);border:1px solid var(--wsk-border,#eaeaea);box-shadow:0 10px 25px -8px rgba(15,23,42,.35);cursor:pointer;transition:transform .25s,background-color .25s,color .25s}
+.wsk .wsk-toggle:hover,.wsk .wsk-toggle:focus{background:var(--wsk-surface,#fff);color:var(--wsk-primary,#ea7e21);border-color:var(--wsk-border,#eaeaea);transform:scale(1.08)}
+.wsk .wsk-toggle:focus-visible{outline:2px solid var(--wsk-primary,#ea7e21);outline-offset:3px}
+.wsk .wsk-toggle span{align-items:center;justify-content:center;line-height:0}
+.wsk .wsk-toggle svg{display:block;width:22px;height:22px;max-width:none;fill:none;stroke:currentColor}
+.wsk .wsk-toggle__sun{display:none}
+html[data-wsk-theme="dark"] .wsk .wsk-toggle__sun{display:inline-flex}
+html[data-wsk-theme="dark"] .wsk .wsk-toggle__moon{display:none}
+.wsk .wsk-toggle__moon{display:inline-flex}
+.wsk .wsk-toggle--inline{box-shadow:none;width:40px;height:40px}
 .wsk-float{position:fixed;bottom:84px;z-index:9990;width:auto}
 .wsk-float--bottom-end{inset-inline-end:16px}
 .wsk-float--bottom-start{inset-inline-start:16px}
 @media (min-width:1025px){.wsk-float{bottom:24px}}
-@media (prefers-reduced-motion:reduce){.wsk-toggle{transition:none}}
+@media (prefers-reduced-motion:reduce){.wsk .wsk-toggle{transition:none}}
