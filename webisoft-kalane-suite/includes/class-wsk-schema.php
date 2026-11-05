@@ -80,11 +80,11 @@ class WSK_Schema {
 			'fields' => array(
 				self::t( 'brand_name', 'نام فروشگاه (نمایش در استوری)', 'فروشگاه کالانه' ),
 				self::t( 'brand_desc', 'توضیح کوتاه فروشگاه', 'برترین انتخاب برای خرید' ),
-				self::img( 'brand_logo', 'تصویر پروفایل (آواتار استوری)', '' ),
+				self::img( 'brand_logo', 'تصویر پروفایل (آواتار استوری)', WSK_URL . 'assets/demo/avatar.svg' ),
 				self::u( 'instagram', 'لینک اینستاگرام', '' ),
 				self::t( 'currency_label', 'برچسب واحد پول (وقتی آیکون ندارید)', 'تومان' ),
 				self::img( 'currency_icon', 'آیکون واحد پول (SVG/PNG) — اختیاری', '', array( 'desc' => 'اگر تصویر انتخاب شود به‌جای متن نمایش داده می‌شود. SVG را باید در کتابخانه‌ی رسانه مجاز کرده باشید؛ یا آدرس مستقیم فایل را بنویسید.' ) ),
-				self::img( 'placeholder', 'تصویر پیش‌فرض (محصول/مقاله‌ی بدون تصویر)', '' ),
+				self::img( 'placeholder', 'تصویر پیش‌فرض (محصول/مقاله‌ی بدون تصویر)', WSK_URL . 'assets/demo/placeholder.svg' ),
 				self::tg( 'persian_digits', 'نمایش ارقام فارسی در قیمت و زمان مطالعه', 1 ),
 			),
 		);
@@ -179,7 +179,7 @@ class WSK_Schema {
 							self::t( 'alt', 'متن جایگزین تصویر', '' ),
 							self::tg( 'new_tab', 'باز شدن در تب جدید', 0 ),
 						),
-						array(),
+						self::demo_banners(),
 						array( 'title_field' => 'alt' )
 					),
 				)
@@ -204,7 +204,7 @@ class WSK_Schema {
 						self::img( 'image', 'تصویر' ),
 						self::u( 'link', 'لینک مقصد' ),
 					),
-					array(),
+					self::demo_categories(),
 					array( 'title_field' => 'title' )
 				),
 			),
@@ -306,6 +306,24 @@ class WSK_Schema {
 
 		self::$sections = $s;
 		return $s;
+	}
+
+	/** محتوای نمونه (تصویر SVG همراه افزونه) تا ظاهر از همان ابتدا شکل بگیرد؛ از پنل جایگزین می‌شود. */
+	private static function demo_banners() {
+		$out = array();
+		foreach ( array( 1 => 'تخفیف‌های ویژه', 2 => 'جدیدترین محصولات', 3 => 'ارسال سریع' ) as $i => $alt ) {
+			$out[] = array( 'image' => WSK_URL . 'assets/demo/banner-' . $i . '.svg', 'link' => '', 'alt' => $alt, 'new_tab' => 0 );
+		}
+		return $out;
+	}
+
+	private static function demo_categories() {
+		$out = array();
+		$map = array( 'mobile' => 'موبایل', 'laptop' => 'لپ‌تاپ', 'fashion' => 'پوشاک', 'home' => 'خانه و آشپزخانه', 'watch' => 'ساعت', 'book' => 'کتاب', 'gift' => 'هدیه', 'bag' => 'کیف و کفش' );
+		foreach ( $map as $k => $title ) {
+			$out[] = array( 'title' => $title, 'image' => WSK_URL . 'assets/demo/cat-' . $k . '.svg', 'link' => '' );
+		}
+		return $out;
 	}
 
 	private static function default_sort_items() {
