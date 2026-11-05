@@ -1,0 +1,189 @@
+/*! Webisoft Kalane Suite — Frontend */
+.wsk{font-family:var(--wsk-font,inherit);color:var(--wsk-text,#444);width:100%;box-sizing:border-box}
+.wsk *,.wsk *::before,.wsk *::after{box-sizing:border-box}
+.wsk a{text-decoration:none}
+.wsk img{max-width:100%;height:auto}
+
+/* ---------- اسلایدر پایه (scroll-snap) ---------- */
+.wsk-slider{position:relative;width:100%;max-width:var(--wsk-max,1300px);margin:0 auto}
+.wsk-track{display:flex;gap:var(--wsk-gap,15px);overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;-ms-overflow-style:none;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain;padding:15px 0;outline-offset:2px}
+.wsk-track::-webkit-scrollbar{display:none}
+.wsk-slide{flex:0 0 auto;scroll-snap-align:start;min-width:0;display:flex}
+.wsk-slider.is-dragging .wsk-track{scroll-snap-type:none;cursor:grabbing;scroll-behavior:auto}
+.wsk-slider.is-dragging a{pointer-events:none}
+.wsk-slider.has-drag .wsk-track{cursor:grab}
+
+/* ---------- جداکننده ---------- */
+.wsk-divider{display:flex;align-items:center;gap:20px;margin:10px auto;width:100%;max-width:var(--wsk-max,1300px);color:var(--wsk-ink);font-weight:600;font-size:14px}
+.wsk-divider::before,.wsk-divider::after{content:"";flex:1;border-bottom:1px solid var(--wsk-border,#d0d0d0)}
+.wsk-divider__t{white-space:nowrap;color:var(--wsk-ink,#545454);font-weight:500}
+@media (max-width:768px){.wsk-divider{margin:0 auto;font-size:13px;gap:15px}}
+
+/* ---------- استوری ---------- */
+.wsk-stories__row{display:flex;align-items:center;gap:20px;padding:10px 0 0;margin-bottom:25px;overflow-x:auto;scrollbar-width:none;justify-content:safe center}
+.wsk-stories__row::-webkit-scrollbar{display:none}
+.wsk-story{position:relative;flex:0 0 auto;width:80px;height:80px;display:flex;align-items:center;justify-content:center;padding:0;margin:0;border:0;background:none;cursor:pointer;border-radius:50%;transition:transform .2s}
+.wsk-story:hover{transform:scale(1.04)}
+.wsk-story:focus-visible{outline:2px solid var(--wsk-primary);outline-offset:3px}
+.wsk-story__ring{position:absolute;inset:0;border-radius:50%;border:2px solid var(--wsk-primary,#ea7e21);transition:border-color .3s}
+.wsk-story.is-viewed .wsk-story__ring{border-color:#dcdcdc}
+.wsk-story__img{width:72px!important;height:72px!important;border-radius:50%;border:3px solid var(--wsk-surface,#fff);object-fit:cover;position:relative;z-index:1}
+@media (max-width:768px){.wsk-story{width:70px;height:70px}.wsk-story__img{width:64px!important;height:64px!important}}
+
+.wsk-modal{position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.9);display:none;align-items:center;justify-content:center;opacity:0;transition:opacity .3s}
+.wsk-modal.is-open{display:flex;opacity:1}
+.wsk-modal[hidden]{display:none}
+.wsk-modal__box{position:relative;width:100%;max-width:420px;height:95vh;height:95dvh;background:#000;border-radius:15px;overflow:hidden;display:flex;flex-direction:column;color:#fff}
+.wsk-modal__video{width:100%;height:100%;object-fit:cover}
+.wsk-modal__bars{position:absolute;top:15px;inset-inline:15px;display:flex;gap:5px;z-index:20}
+.wsk-modal__bar{flex:1;height:3px;background:rgba(255,255,255,.35);border-radius:3px;overflow:hidden}
+.wsk-modal__bar i{display:block;height:100%;width:0;background:#fff}
+.wsk-modal__user{position:absolute;top:30px;inset-inline-start:15px;display:flex;align-items:center;gap:10px;z-index:20}
+.wsk-modal__avatar{width:40px!important;height:40px!important;border-radius:50%;border:2px solid #fff;object-fit:cover}
+.wsk-modal__txt{display:flex;flex-direction:column;gap:6px;text-shadow:0 1px 3px rgba(0,0,0,.6)}
+.wsk-modal__txt b{font-size:14px;font-weight:600}
+.wsk-modal__txt small{font-size:11px;opacity:.85}
+.wsk-modal__close{position:absolute;top:28px;inset-inline-end:15px;z-index:30;width:36px;height:36px;border:0;background:rgba(0,0,0,.25);color:#fff;border-radius:50%;font-size:26px;line-height:1;cursor:pointer}
+.wsk-modal__nav{position:absolute;top:70px;bottom:90px;width:40%;z-index:10;border:0;background:none;cursor:pointer;padding:0}
+.wsk-modal__nav--prev{inset-inline-start:0}
+.wsk-modal__nav--next{inset-inline-end:0}
+.wsk-modal__ig{position:absolute;bottom:30px;left:50%;transform:translateX(-50%);z-index:20;display:flex;align-items:center;gap:8px;padding:10px 22px;border-radius:25px;color:#fff!important;font-size:14px;white-space:nowrap;background:rgba(193,193,193,.2);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.4)}
+@media (max-width:768px){.wsk-modal__box{border-radius:0;height:100vh;height:100dvh;max-width:none}}
+body.wsk-modal-open{overflow:hidden}
+
+/* ---------- بنر ---------- */
+.wsk-banners{max-width:var(--wsk-max,1300px);margin:0 auto}
+.wsk-banners__one{display:block}
+.wsk-banner{display:block;position:relative;width:100%;min-height:1px;border-radius:var(--wsk-radius,12px);overflow:hidden;isolation:isolate;transition:transform .4s ease,filter .3s}
+.wsk-banner:hover{transform:scale(.99)}
+.wsk-banner__mask{display:block;width:100%;height:100%;border-radius:inherit;overflow:hidden}
+.wsk-banner__img{display:block;width:100%;height:100%;object-fit:cover}
+.wsk-slider--banners .wsk-track{padding:0 0 15px}
+.wsk-slider--banners .wsk-slide{flex:0 0 100%;width:100%;display:block}
+/* سبک هلالی */
+.wsk-banners--crescent .wsk-banner{filter:drop-shadow(0 4px 10px rgba(0,0,0,.08));overflow:visible}
+.wsk-banners--crescent .wsk-banner__mask{-webkit-mask-image:radial-gradient(ellipse 28px 52% at 0% 50%,transparent 99%,#000 100%),radial-gradient(ellipse 28px 52% at 100% 50%,transparent 99%,#000 100%);mask-image:radial-gradient(ellipse 28px 52% at 0% 50%,transparent 99%,#000 100%),radial-gradient(ellipse 28px 52% at 100% 50%,transparent 99%,#000 100%);-webkit-mask-size:50.5% 100%;mask-size:50.5% 100%;-webkit-mask-position:left top,right top;mask-position:left top,right top;-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat}
+@media (max-width:768px){.wsk-banners--crescent .wsk-banner__mask{border-radius:8px;-webkit-mask-image:radial-gradient(ellipse 15px 52% at 0% 50%,transparent 99%,#000 100%),radial-gradient(ellipse 15px 52% at 100% 50%,transparent 99%,#000 100%);mask-image:radial-gradient(ellipse 15px 52% at 0% 50%,transparent 99%,#000 100%),radial-gradient(ellipse 15px 52% at 100% 50%,transparent 99%,#000 100%)}}
+/* سبک تصویر حاشیه */
+.wsk-side{position:absolute;top:-2px;bottom:-2px;z-index:2;display:flex;pointer-events:none}
+.wsk-side--l{left:-2px}
+.wsk-side--r{right:-2px;transform:scaleX(-1)}
+.wsk-side img{height:100%!important;width:auto!important;object-fit:fill;display:block}
+@media (max-width:1024px){.wsk-banner{aspect-ratio:21/7;max-height:250px}}
+@media (max-width:767px){.wsk-banner{aspect-ratio:16/8;max-height:114px;min-height:100px}}
+
+/* ---------- دسته‌بندی ---------- */
+.wsk-slider--cats .wsk-track{--wsk-gap:15px;scroll-snap-type:none;padding:15px 12px}
+.wsk-slider--cats .wsk-track::before{content:"";margin-inline-end:auto}
+.wsk-slider--cats .wsk-track::after{content:"";margin-inline-start:auto}
+.wsk-cat{flex:0 0 auto;width:135px;height:145px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--wsk-surface,#fff);border:1px solid var(--wsk-border,#eee);border-radius:14px;transition:transform .3s cubic-bezier(.25,.8,.25,1),box-shadow .3s,border-color .3s}
+.wsk-cat:hover{transform:translateY(-4px);border-color:color-mix(in srgb,var(--wsk-primary) 35%,transparent);box-shadow:0 4px 15px rgba(0,0,0,.05)}
+.wsk-cat__img{width:85px;height:85px;display:flex;align-items:center;justify-content:center;margin-bottom:12px}
+.wsk-cat__img img{max-width:100%;max-height:100%;object-fit:contain}
+.wsk-cat__t{font-size:13px;color:var(--wsk-ink,#333);font-weight:500;text-align:center;line-height:1.3;padding:0 6px}
+@media (max-width:768px){.wsk-cat{width:110px;height:125px;border-radius:12px}.wsk-cat__img{width:65px;height:65px;margin-bottom:8px}.wsk-cat__t{font-size:11px}}
+
+/* ---------- کارت محصول / مقاله ---------- */
+.wsk-slider--cards{--n:2.1;--wsk-gap:10px}
+.wsk-slider--cards .wsk-track{padding:15px 15px}
+.wsk-slider--cards .wsk-slide{flex:0 0 calc((100% - 30px - (var(--n) - 1) * var(--wsk-gap)) / var(--n))}
+@media (min-width:480px){.wsk-slider--cards{--n:2.3;--wsk-gap:12px}}
+@media (min-width:768px){.wsk-slider--cards{--n:3.3;--wsk-gap:15px}}
+@media (min-width:1024px){.wsk-slider--cards{--n:4.3;--wsk-gap:20px}}
+@media (min-width:1280px){.wsk-slider--cards{--n:5.3}}
+.wsk-slider--blog{--n:1.2;--wsk-gap:15px}
+@media (min-width:480px){.wsk-slider--blog{--n:2.2}}
+@media (min-width:768px){.wsk-slider--blog{--n:3.2;--wsk-gap:20px}}
+@media (min-width:1024px){.wsk-slider--blog{--n:4.2;--wsk-gap:25px}}
+@media (min-width:1280px){.wsk-slider--blog{--n:5;--wsk-gap:30px}}
+
+.wsk-card{position:relative;display:flex;flex-direction:column;width:100%;background:var(--wsk-surface,#fff);border:1px solid var(--wsk-border,#e9ecef);border-radius:var(--wsk-radius,12px);padding:15px;color:inherit;transition:all .3s ease}
+.wsk-card:hover{transform:translateY(-3px);border-color:color-mix(in srgb,var(--wsk-primary) 35%,transparent);box-shadow:0 4px 15px rgba(0,0,0,.05)}
+.wsk-card__img{display:flex;align-items:center;justify-content:center;width:100%;aspect-ratio:1/1;margin-bottom:15px}
+.wsk-card__img img{max-width:80%;max-height:80%;width:auto;height:auto;object-fit:contain}
+.wsk-card__img--cover{aspect-ratio:16/10;overflow:hidden;border-radius:calc(var(--wsk-radius,12px) - 2px)}
+.wsk-card__img--cover img{max-width:none;max-height:none;width:100%;height:100%;object-fit:cover}
+.wsk-card__t{margin:0 0 15px;font-size:13px;font-weight:500;color:var(--wsk-ink,#3f4254);line-height:1.8;text-align:start;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.wsk-card__t--line{font-size:14px;font-weight:600;margin:0 0 10px;padding-bottom:12px;border-bottom:1px solid var(--wsk-primary,#ea7e21)}
+.wsk-card__price{margin-top:auto;display:flex;align-items:center;justify-content:flex-end;gap:6px;flex-wrap:wrap}
+.wsk-price{font-size:15px;font-weight:700;color:var(--wsk-price,#111)}
+.wsk-old{font-size:12px;color:var(--wsk-muted,#888);text-decoration:line-through}
+.wsk-cur{font-size:12px;color:var(--wsk-muted,#888)}
+.wsk-cur-icon{width:14px;height:auto}
+.wsk-oos{font-size:14px;font-weight:600;color:var(--wsk-danger,#dc3545);width:100%;text-align:start}
+.wsk-badge{position:absolute;top:10px;inset-inline-start:10px;z-index:2;background:var(--wsk-accent,#ef4056);color:#fff;border-radius:20px;padding:2px 9px;font-size:12px;font-weight:700;line-height:1.7}
+.wsk-meta{margin-top:auto;display:flex;justify-content:space-between;gap:8px}
+.wsk-meta span{font-size:11px;color:var(--wsk-muted,#888)}
+.wsk-empty{text-align:center;color:var(--wsk-muted,#888)}
+
+@media (prefers-reduced-motion:reduce){.wsk *,.wsk-modal{transition:none!important;animation:none!important;scroll-behavior:auto!important}}
+
+/* ---------- نوار مرتب‌سازی فروشگاه ---------- */
+/* Digikala Style Sort Wrapper */
+.wsk-sort {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+.wsk-sort__flex {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: #fafafa;
+    border: 1px solid #f3f4f6;
+    padding: 8px 14px;
+    border-radius: 12px;
+}
+
+.wsk-sort__label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: #374151;
+    font-weight: 700;
+    font-size: 13px;
+}
+
+.wsk-sort__title {
+    color: #374151;
+}
+
+.wsk-sort__list {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.wsk-sort__item {
+    color: #4b5563;
+    font-size: 13px;
+    padding: 6px 12px;
+    border-radius: 8px;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    font-weight: 600;
+}
+
+.wsk-sort__item:hover {
+    color: var(--wsk-accent);
+    background: color-mix(in srgb,var(--wsk-accent) 6%,#fff);
+}
+
+.wsk-sort__item.is-active {
+    background: color-mix(in srgb,var(--wsk-accent) 10%,#fff);
+    color: var(--wsk-accent);
+    font-weight: 700;
+}
+
+.wsk-sort__count {
+    font-size: 13px;
+    color: #6b7280;
+    background: #f3f4f6;
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-weight: 600;
+}
+

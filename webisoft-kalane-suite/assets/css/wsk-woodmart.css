@@ -1,0 +1,626 @@
+/* Webisoft Kalane Suite — اصلاحات Woodmart/WooCommerce (مهاجرت‌شده از Code Snippets) */
+/* =================================================================
+   Optimized CSS for WooCommerce Archive, Blog, Sidebar, Tables & Footer
+   Brand Red: #EF4056
+   ================================================================= */
+
+/* 1. WooCommerce Descriptions & Tabs Styling */
+.term-description,
+.woocommerce-product-details__full-description,
+#tab-description {
+    direction: rtl;
+    text-align: right;
+    line-height: 1.9;
+    color: #374151;
+    padding: 25px;
+    background: #ffffff;
+    border: 1px solid #f0f0f0;
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02) !important;
+    font-family: inherit;
+}
+
+/* Headings Styling & Accent Bar */
+.term-description h1, .term-description h2, .term-description h3,
+.woocommerce-product-details__full-description h1, .woocommerce-product-details__full-description h2, .woocommerce-product-details__full-description h3,
+#tab-description h1, #tab-description h2, #tab-description h3,
+.wd-entry-content > h1, .wd-entry-content > h2, .wd-entry-content > h3, .wd-entry-content > h4 {
+    position: relative;
+    background: transparent !important;
+    color: #1f2937 !important;
+    padding: 5px 15px 5px 0 !important;
+    margin: 35px 0 20px 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    font-weight: 800;
+    display: block;
+    border: none !important;
+}
+
+.term-description h1::before, .term-description h2::before, .term-description h3::before,
+.woocommerce-product-details__full-description h1::before, .woocommerce-product-details__full-description h2::before, .woocommerce-product-details__full-description h3::before,
+#tab-description h1::before, #tab-description h2::before, #tab-description h3::before,
+.wd-entry-content > h1::before, .wd-entry-content > h2::before, .wd-entry-content > h3::before, .wd-entry-content > h4::before {
+    content: "";
+    position: absolute;
+    right: 0;
+    top: 15%;
+    height: 70%;
+    width: 6px;
+    background: linear-gradient(to bottom, #EF4056, #E6123D);
+    border-radius: 8px;
+}
+
+/* Unordered List (ul) styling */
+.term-description ul,
+.woocommerce-product-details__full-description ul,
+#tab-description ul,
+.wd-entry-content > ul {
+    list-style: none !important;
+    padding: 0 !important;
+    margin: 20px 0 !important;
+}
+
+.term-description ul li,
+.woocommerce-product-details__full-description ul li,
+#tab-description ul li,
+.wd-entry-content > ul > li {
+    position: relative;
+    list-style-type: none !important;
+    background: #fff8f8;
+    border: 1px solid #fde8e9;
+    border-radius: 12px;
+    padding: 15px 45px 15px 15px !important;
+    margin-bottom: 12px;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.01);
+}
+
+.term-description ul li:hover,
+.woocommerce-product-details__full-description ul li:hover,
+#tab-description ul li:hover,
+.wd-entry-content > ul > li:hover {
+    border-color: #fca5a9;
+    background: #fff2f3;
+}
+
+.term-description ul li::before,
+.woocommerce-product-details__full-description ul li::before,
+#tab-description ul li::before,
+.wd-entry-content > ul > li::before {
+    content: "✓";
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #EF4056;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+/* Ordered List (ol) styling */
+.term-description ol,
+.woocommerce-product-details__full-description ol,
+#tab-description ol,
+.wd-entry-content > ol {
+    list-style: none !important;
+    padding: 0 !important;
+    margin: 20px 0 !important;
+    counter-reset: item-counter;
+}
+
+.term-description ol li,
+.woocommerce-product-details__full-description ol li,
+#tab-description ol li,
+.wd-entry-content > ol > li {
+    position: relative;
+    list-style-type: none !important;
+    background: #fff8f8;
+    border: 1px solid #fde8e9;
+    border-radius: 12px;
+    padding: 15px 45px 15px 15px !important;
+    margin-bottom: 12px;
+    counter-increment: item-counter;
+    transition: all 0.3s ease;
+}
+
+.term-description ol li::before,
+.woocommerce-product-details__full-description ol li::before,
+#tab-description ol li::before,
+.wd-entry-content > ol > li::before {
+    content: counter(item-counter);
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: linear-gradient(to bottom, #EF4056, #E6123D);
+    color: white;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+/* 2. Blog Container Styling */
+.wd-entry-content {
+    direction: rtl;
+    text-align: right;
+    line-height: 1.9;
+    color: #374151;
+    font-family: inherit;
+    background: #ffffff;
+    padding: 30px;
+    border-radius: 16px;
+    border: 1px solid #f1f3f5;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04), 0 1px 3px rgba(0, 0, 0, 0.02);
+    margin-top: 20px;
+}
+
+/* Exclude Footer from Blog Wrapper General Styling */
+footer.wd-footer.wd-entry-content,
+.wd-footer .wd-entry-content {
+    background: transparent !important;
+    padding: 0 !important;
+    border: none !important;
+    box-shadow: none !important;
+    margin-top: 0 !important;
+}
+
+/* 3. Tables Styling (Unified for WooCommerce & Blog) */
+.term-description table,
+.woocommerce-product-details__full-description table,
+#tab-description table,
+.wd-entry-content table {
+    width: 100%;
+    border-radius: 12px;
+    border: 1px solid #e5e7eb;
+    overflow: hidden;
+    box-shadow: none !important;
+    margin: 25px 0;
+    border-collapse: collapse;
+    background: #ffffff;
+}
+
+.term-description table th,
+.woocommerce-product-details__full-description table th,
+#tab-description table th,
+.wd-entry-content table th {
+    background: #f3f4f6 !important;
+    color: #374151 !important;
+    padding: 14px 16px;
+    border: none;
+    font-weight: 700;
+    text-align: right;
+    border-bottom: 2px solid #e5e7eb;
+}
+
+.term-description table td,
+.woocommerce-product-details__full-description table td,
+#tab-description table td,
+.wd-entry-content table td {
+    padding: 12px 16px;
+    border-top: 1px solid #f3f4f6;
+    font-size: 14px;
+    color: #4b5563;
+    background: #ffffff;
+}
+
+.wd-entry-content table tr:nth-child(even) td {
+    background: #f9fafb;
+}
+
+.wd-entry-content table tr:hover td {
+    background: #f1f5f9;
+}
+
+/* 4. Isolated Sidebar Styling */
+#main-content .wd-sidebar {
+    background: transparent !important;
+    border: none !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+    direction: rtl;
+    text-align: right;
+    font-family: inherit;
+}
+
+#main-content .wd-sidebar .wd-heading {
+    background: #ffffff;
+    border-radius: 16px;
+    padding: 15px 20px;
+    margin-bottom: 20px;
+    border: 1px solid #f1f3f5;
+}
+
+#main-content .wd-sidebar .close-side-widget a {
+    color: #4b5563;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+#main-content .wd-sidebar .wd-widget {
+    background: #ffffff !important;
+    border: 1px solid #f1f3f5 !important;
+    border-radius: 16px !important;
+    padding: 24px !important;
+    margin-bottom: 20px !important;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04), 0 1px 3px rgba(0, 0, 0, 0.02) !important;
+}
+
+#main-content .wd-sidebar .wd-widget:last-child {
+    margin-bottom: 0 !important;
+}
+
+#main-content .wd-sidebar .widget-title {
+    position: relative;
+    font-size: 16px;
+    font-weight: 800;
+    color: #1f2937 !important;
+    padding: 0 12px 0 0 !important;
+    margin: 0 0 22px 0 !important;
+    background: transparent !important;
+    border: none !important;
+}
+
+#main-content .wd-sidebar .wd-widget .widget-title::before {
+    content: "";
+    position: absolute;
+    right: 0;
+    top: 15%;
+    height: 70%;
+    width: 5px;
+    background: linear-gradient(to bottom, #EF4056, #E6123D);
+    border-radius: 6px;
+}
+
+/* Stock Status & Filters in Sidebar */
+#main-content .wd-sidebar .wd-widget-stock-status ul.wd-checkboxes-on {
+    list-style: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+#main-content .wd-sidebar .wd-widget-stock-status ul.wd-checkboxes-on li {
+    list-style-type: none !important;
+    margin-bottom: 12px !important;
+}
+
+#main-content .wd-sidebar .wd-widget-stock-status ul.wd-checkboxes-on li a {
+    display: flex;
+    align-items: center;
+    padding: 14px 18px;
+    background: #fafafa;
+    border: 1px solid #f3f4f6;
+    border-radius: 12px;
+    color: #4b5563;
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+#main-content .wd-sidebar .wd-widget-stock-status ul.wd-checkboxes-on li a::after,
+#main-content .wd-sidebar .wd-widget-stock-status ul.wd-checkboxes-on li a::before {
+    display: none !important;
+}
+
+#main-content .wd-sidebar .wd-widget-stock-status ul.wd-checkboxes-on li a:hover {
+    background: #fff8f8;
+    border-color: #fca5a9;
+    color: #EF4056;
+}
+
+#main-content .wd-sidebar .wd-widget-stock-status ul.wd-checkboxes-on li.chooseed a,
+#main-content .wd-sidebar .wd-widget-stock-status ul.wd-checkboxes-on li.current-cat a,
+#main-content .wd-sidebar .wd-widget-stock-status ul.wd-checkboxes-on li.chosen a,
+#main-content .wd-sidebar .wd-widget-stock-status ul.wd-checkboxes-on li.active a,
+#main-content .wd-sidebar .wd-widget-stock-status ul.wd-checkboxes-on li.wd-active a,
+#main-content .wd-sidebar .wd-widget-stock-status ul.wd-checkboxes-on li a.active {
+    background: #fff2f3 !important;
+    border-color: #EF4056 !important;
+    color: #E6123D !important;
+    font-weight: 700 !important;
+    box-shadow: 0 4px 12px rgba(239, 64, 86, 0.1);
+}
+
+/* Price Filter Widget */
+#main-content .wd-sidebar .widget_price_filter .price_slider_wrapper {
+    padding: 15px 14px 5px 14px !important;
+}
+
+#main-content .wd-sidebar .widget_price_filter .price_slider {
+    background-color: #f3f4f6 !important;
+    height: 6px !important;
+    border-radius: 4px;
+    margin-bottom: 25px !important;
+    position: relative;
+}
+
+#main-content .wd-sidebar .widget_price_filter .ui-slider-range {
+    background: linear-gradient(to right, #E6123D, #EF4056) !important;
+    border-radius: 4px;
+}
+
+#main-content .wd-sidebar .widget_price_filter .ui-slider-handle {
+    background: #ffffff !important;
+    border: 2px solid #EF4056 !important;
+    width: 20px !important;
+    height: 20px !important;
+    border-radius: 50% !important;
+    top: -7px !important;
+    outline: none !important;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+}
+
+#main-content .wd-sidebar .widget_price_filter .price_slider_amount {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 15px;
+}
+
+#main-content .wd-sidebar .widget_price_filter .price_label {
+    font-size: 13px;
+    color: #4b5563;
+    width: 100%;
+    order: 1;
+    font-weight: 600;
+    direction: ltr;
+    text-align: right;
+}
+
+#main-content .wd-sidebar .widget_price_filter .button {
+    background: linear-gradient(to bottom, #EF4056, #E6123D) !important;
+    color: #ffffff !important;
+    border: none !important;
+    padding: 10px 22px !important;
+    border-radius: 10px !important;
+    font-size: 14px !important;
+    font-weight: 700 !important;
+    cursor: pointer;
+    transition: all  ساخت 0.3s ease;
+    order: 2;
+    box-shadow: 0 4px 12px rgba(239, 64, 86, 0.25);
+}
+
+/* Brand Filter / Swatches */
+#main-content .wd-sidebar .woodmart-woocommerce-layered-nav .wd-swatch-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #fafafa;
+    border: 1px solid #f1f3f5;
+    border-radius: 12px;
+    padding: 12px 15px;
+    margin-bottom: 8px;
+    transition: all 0.3s ease;
+}
+
+#main-content .wd-sidebar .woodmart-woocommerce-layered-nav .wd-swatch-wrap:hover {
+    background: #fff8f8;
+    border-color: #fca5a9;
+}
+
+#main-content .wd-sidebar .woodmart-woocommerce-layered-nav .wd-swatch-wrap.chooseed,
+#main-content .wd-sidebar .woodmart-woocommerce-layered-nav .wd-swatch-wrap.chosen,
+#main-content .wd-sidebar .woodmart-woocommerce-layered-nav .wd-swatch-wrap.active {
+    background: #fff2f3 !important;
+    border-color: #EF4056 !important;
+}
+
+/* 5. Responsive Adjustments */
+@media (max-width: 768px) {
+    .term-description,
+    .woocommerce-product-details__full-description,
+    #tab-description,
+    .wd-entry-content:not(.wd-footer *) {
+        padding: 15px;
+    }
+    
+    .term-description ul li, .term-description ol li,
+    .woocommerce-product-details__full-description ul li, .woocommerce-product-details__full-description ol li,
+    #tab-description ul li, #tab-description ol li,
+    .wd-entry-content:not(.wd-footer *) ul li, .wd-entry-content:not(.wd-footer *) ol li {
+        padding: 12px 40px 12px 12px !important;
+    }
+
+    .wd-entry-content table,
+    .term-description table,
+    .woocommerce-product-details__full-description table,
+    #tab-description table {
+        display: block;
+        width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        white-space: nowrap;
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* =================================================================
+   Shop Loop Head & Sorting Bar Styling (kalaneshop.ir)
+   ================================================================= */
+
+.shop-loop-head {
+    background: #ffffff;
+    border: 1px solid #f1f3f5;
+    border-radius: 16px;
+    padding: 16px 24px;
+    margin-bottom: 25px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04), 0 1px 3px rgba(0, 0, 0, 0.02);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 15px;
+    direction: rtl;
+    font-family: inherit;
+}
+
+.shop-loop-head .wd-shop-tools {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+/* Result Count Text */
+.shop-loop-head .woocommerce-result-count {
+    margin: 0;
+    color: #4b5563;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+/* Sidebar Toggle Button (مشاهده فیلترها) */
+.shop-loop-head .wd-show-sidebar-btn a {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #fafafa;
+    border: 1px solid #f3f4f6;
+    padding: 10px 16px;
+    border-radius: 12px;
+    color: #374151;
+    font-weight: 700;
+    font-size: 13px;
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+.shop-loop-head .wd-show-sidebar-btn a:hover {
+    background: #fff8f8;
+    border-color: #fca5a9;
+    color: #EF4056;
+}
+
+/* Products Per Page Style */
+.shop-loop-head .wd-products-per-page {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: #4b5563;
+}
+
+.shop-loop-head .per-page-variation {
+    background: #fafafa;
+    border: 1px solid #f3f4f6;
+    padding: 6px 12px;
+    border-radius: 8px;
+    color: #374151;
+    text-decoration: none;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.shop-loop-head .per-page-variation:hover {
+    background: #fff8f8;
+    border-color: #fca5a9;
+    color: #EF4056;
+}
+
+/* WooCommerce Default Ordering Select Box (اگر فعال باشد) */
+.shop-loop-head form.woocommerce-ordering {
+    margin: 0;
+}
+
+.shop-loop-head select.orderby {
+    background: #fafafa;
+    border: 1px solid #f3f4f6;
+    padding: 8px 14px;
+    border-radius: 12px;
+    color: #374151;
+    font-size: 13px;
+    font-weight: 600;
+    outline: none;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.3s ease;
+}
+
+.shop-loop-head select.orderby:hover,
+.shop-loop-head select.orderby:focus {
+    border-color: #EF4056;
+    background: #fff8f8;
+}
+
+/* Responsive adjustments for mobile */
+@media (max-width: 768px) {
+    .shop-loop-head {
+        padding: 12px 15px;
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .shop-loop-head .wd-shop-tools {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+}
+
+.wd-products-per-page, .woocommerce-ordering {
+	display: none !important;
+}
