@@ -191,6 +191,9 @@ class WSK_Options {
 				if ( isset( $f['san'] ) && 'css' === $f['san'] ) {
 					return self::clean_css( $v );
 				}
+				if ( isset( $f['san'] ) && 'selectors' === $f['san'] ) {
+					return self::clean_selectors( $v );
+				}
 				return sanitize_textarea_field( $v );
 
 			case 'text':
@@ -235,6 +238,18 @@ class WSK_Options {
 		$css = wp_check_invalid_utf8( (string) $css );
 		$css = str_replace( array( '<', "\0" ), '', $css );
 		return substr( trim( $css ), 0, 60000 );
+	}
+
+	public static function clean_selectors( $text ) {
+		$lines = preg_split( '/\r\n|\r|\n/', (string) $text );
+		$out   = array();
+		foreach ( $lines as $line ) {
+			$line = trim( preg_replace( '/[{};<>\\\\@]/', '', $line ) );
+			if ( '' !== $line && strlen( $line ) < 300 ) {
+				$out[] = $line;
+			}
+		}
+		return implode( "\n", array_slice( $out, 0, 100 ) );
 	}
 
 	/* ---------- ابزارهای مشترک ---------- */

@@ -9,6 +9,36 @@
 	function qs(sel, ctx) { return (ctx || doc).querySelector(sel); }
 	function qsa(sel, ctx) { return Array.prototype.slice.call((ctx || doc).querySelectorAll(sel)); }
 
+	/* ---------- حالت روشن / تاریک ---------- */
+	var root = doc.documentElement;
+	function currentTheme() { return root.getAttribute('data-wsk-theme') === 'dark' ? 'dark' : 'light'; }
+	function syncToggles() {
+		var dark = currentTheme() === 'dark';
+		qsa('[data-wsk-theme-toggle]').forEach(function (b) {
+			var l = dark ? (W.i18n.toLight || 'Light') : (W.i18n.toDark || 'Dark');
+			b.setAttribute('aria-pressed', dark ? 'true' : 'false');
+			b.setAttribute('aria-label', l);
+			b.title = l;
+		});
+	}
+	function setTheme(t) {
+		root.setAttribute('data-wsk-theme', t);
+		try { localStorage.setItem('wsk-theme', t); } catch (e) { /* حالت خصوصی مرورگر */ }
+		syncToggles();
+		doc.dispatchEvent(new CustomEvent('wsk:themechange', { detail: { theme: t } }));
+	}
+	if (W.dark) {
+		doc.addEventListener('click', function (e) {
+			var b = e.target.closest ? e.target.closest('[data-wsk-theme-toggle]') : null;
+			if (b) { e.preventDefault(); setTheme(currentTheme() === 'dark' ? 'light' : 'dark'); }
+		});
+		// همگام‌سازی بین تب‌ها
+		window.addEventListener('storage', function (e) {
+			if (e.key === 'wsk-theme' && (e.newValue === 'dark' || e.newValue === 'light')) { root.setAttribute('data-wsk-theme', e.newValue); syncToggles(); }
+		});
+		syncToggles();
+	}
+
 	/* ---------- ثبت آمار ---------- */
 	function hit(type, key) {
 		if (!W.track) { return; }
@@ -150,6 +180,7 @@
 	}
 
 	function boot() {
+		syncToggles();
 		qsa('[data-wsk-slider]').forEach(initSlider);
 		qsa('[data-wsk-stories]').forEach(initStories);
 	}

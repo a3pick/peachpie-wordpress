@@ -103,6 +103,7 @@ class WSK_Shop {
 
 	public static function sortbar() {
 		global $wp_query;
+		WSK_Assets::enqueue(); // حالت بارگذاری شرطی هم استایل نوار را داشته باشد.
 		$items   = self::items();
 		$default = (string) apply_filters( 'woocommerce_default_catalog_orderby', get_option( 'woocommerce_default_catalog_orderby', 'menu_order' ) );
 		$current = isset( $_GET['orderby'] ) ? sanitize_key( wp_unslash( $_GET['orderby'] ) ) : ( isset( $items[ $default ] ) ? $default : 'relevance' ); // phpcs:ignore WordPress.Security.NonceVerification

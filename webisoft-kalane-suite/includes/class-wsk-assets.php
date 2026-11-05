@@ -12,11 +12,33 @@ class WSK_Assets {
 	public static function init() {
 		add_action( 'wp_enqueue_scripts', array( __CLASS__, 'register' ), 5 );
 		add_action( 'wp_enqueue_scripts', array( __CLASS__, 'maybe_enqueue_all' ), 20 );
+		add_action( 'wp_head', array( __CLASS__, 'early_theme_script' ), 1 );
 		add_filter( 'body_class', array( __CLASS__, 'body_class' ) );
+	}
+
+	public static function dark_enabled() {
+		return (bool) WSK_Options::get( 'darkmode', 'enabled', 0 );
+	}
+
+	public static function dark_global() {
+		return self::dark_enabled() && WSK_Options::get( 'darkmode', 'global', 0 );
+	}
+
+	/** اسکریپت درون‌خطی بسیار کوچک پیش از رندر صفحه، برای جلوگیری از فلش سفید. */
+	public static function early_theme_script() {
+		if ( ! self::dark_enabled() ) {
+			return;
+		}
+		$mode = WSK_Options::get( 'darkmode', 'default_mode', 'light' );
+		$mode = in_array( $mode, array( 'light', 'dark', 'auto' ), true ) ? $mode : 'light';
+		echo '<script data-cfasync="false" data-no-optimize="1" data-no-defer="1" data-no-minify="1" nowprocket>(function(){var d=document.documentElement,t="' . esc_js( $mode ) . '";try{var s=localStorage.getItem("wsk-theme");if(s==="light"||s==="dark"){t=s;}else if(t==="auto"){t=(window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches)?"dark":"light";}}catch(e){if(t==="auto"){t="light";}}d.setAttribute("data-wsk-theme",t);})();</script>' . "\n"; // phpcs:ignore WordPress.Security.EscapeOutput
 	}
 
 	public static function body_class( $classes ) {
 		$classes[] = 'wsk-site';
+		if ( self::dark_global() ) {
+			$classes[] = 'wsk-global';
+		}
 		return $classes;
 	}
 
@@ -36,8 +58,11 @@ class WSK_Assets {
 			'wsk-frontend',
 			'WSK',
 			array(
+				'dark'  => self::dark_enabled(),
 				'track' => WSK_Options::get( 'system', 'track_stats', 1 ) ? esc_url_raw( rest_url( 'wsk/v1/hit' ) ) : '',
 				'i18n'  => array(
+					'toDark'  => 'تغییر به حالت تاریک',
+					'toLight' => 'تغییر به حالت روشن',
 					'close' => 'بستن',
 					'prev'  => 'قبلی',
 					'next'  => 'بعدی',
@@ -45,6 +70,7 @@ class WSK_Assets {
 			)
 		);
 
+		wp_register_style( 'wsk-dark', WSK_URL . 'assets/css/wsk-dark.css', array( 'wsk-frontend' ), $ver );
 		wp_register_style( 'wsk-woodmart', WSK_URL . 'assets/css/wsk-woodmart.css', array(), $ver );
 		wp_register_script( 'wsk-woodmart', WSK_URL . 'assets/js/wsk-woodmart.js', array(), $ver, true );
 		if ( function_exists( 'wp_script_add_data' ) ) {
@@ -69,6 +95,9 @@ class WSK_Assets {
 		self::register();
 		wp_enqueue_style( 'wsk-frontend' );
 		wp_enqueue_script( 'wsk-frontend' );
+		if ( self::dark_global() ) {
+			wp_enqueue_style( 'wsk-dark' );
+		}
 		if ( ! self::$inline_done ) {
 			self::$inline_done = true;
 			wp_add_inline_style( 'wsk-frontend', self::inline_css() );
@@ -135,7 +164,7 @@ class WSK_Assets {
 	private static function inline_css() {
 		$a    = 'appearance';
 		$vars = array(
-			'primary' => 'primary', 'accent' => 'accent', 'ink' => 'ink', 'text' => 'text', 'muted' => 'muted',
+			'primary' => 'primary', 'surface-alt' => 'surface_alt', 'accent' => 'accent', 'ink' => 'ink', 'text' => 'text', 'muted' => 'muted',
 			'price' => 'price', 'surface' => 'surface', 'border' => 'border', 'danger' => 'danger',
 		);
 		$css  = ':root{--wsk-font:' . self::font_stack() . ';--wsk-radius:' . (int) WSK_Options::get( $a, 'radius', 12 ) . 'px;--wsk-max:' . (int) WSK_Options::get( $a, 'container_max', 1300 ) . 'px;';
@@ -146,6 +175,24 @@ class WSK_Assets {
 			}
 		}
 		$css .= '}';
+
+		if ( self::dark_enabled() ) {
+			$d    = 'darkmode';
+			$css .= 'html[data-wsk-theme="dark"]{color-scheme:dark;';
+			foreach ( array_merge( $vars, array( 'surface-alt' => 'surface_alt' ) ) as $var => $id ) {
+				$val = WSK_Options::color( $d, $id );
+				if ( $val ) {
+					$css .= '--wsk-' . $var . ':' . $val . ';';
+				}
+			}
+			$css .= '--wsk-page-bg:' . WSK_Options::color( $d, 'page_bg' ) . ';}';
+			foreach ( array( 'surface_selectors' => 'surface', 'surface_alt_selectors' => 'surface-alt' ) as $id => $tok ) {
+				$list = array_filter( array_map( 'trim', preg_split( '/\r\n|\r|\n/', (string) WSK_Options::get( $d, $id, '' ) ) ) );
+				if ( $list && self::dark_global() ) {
+					$css .= 'html[data-wsk-theme="dark"] :is(' . implode( ',', $list ) . '){background-color:var(--wsk-' . $tok . ')!important;color:var(--wsk-text);border-color:var(--wsk-border)}';
+				}
+			}
+		}
 
 		$ratio = (string) WSK_Options::get( 'banners', 'ratio', '21/6' );
 		$ratio = in_array( $ratio, array( '21/6', '16/5', '16/9', 'auto' ), true ) ? $ratio : '21/6';

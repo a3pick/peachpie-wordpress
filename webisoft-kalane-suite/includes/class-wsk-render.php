@@ -12,6 +12,7 @@ class WSK_Render {
 	public static function init() {
 		add_action( 'init', array( __CLASS__, 'register' ), 11 );
 		add_action( 'wp_footer', array( __CLASS__, 'product_beacon' ), 20 );
+		add_action( 'wp_footer', array( __CLASS__, 'floating_toggle' ), 20 );
 		add_action( 'save_post_product', array( __CLASS__, 'flush_cache' ) );
 		add_action( 'save_post_post', array( __CLASS__, 'flush_cache' ) );
 		add_action( 'woocommerce_update_product', array( __CLASS__, 'flush_cache' ) );
@@ -31,6 +32,10 @@ class WSK_Render {
 	}
 
 	public static function register() {
+		add_shortcode( 'kalane_theme_toggle', array( __CLASS__, 'sc_toggle' ) );
+		if ( ! shortcode_exists( 'ws_theme_toggle' ) ) { // سازگار با دیگر افزونه‌های Webisoft؛ اگر آن‌ها ثبتش کرده‌اند، تداخل پیش نیاید.
+			add_shortcode( 'ws_theme_toggle', array( __CLASS__, 'sc_toggle' ) );
+		}
 		foreach ( self::tags() as $tag => $module ) {
 			add_shortcode(
 				$tag,
@@ -39,6 +44,29 @@ class WSK_Render {
 				}
 			);
 		}
+	}
+
+	public static function toggle_button( $class = '' ) {
+		$sun  = '<svg class="wsk-ico-sun" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>';
+		$moon = '<svg class="wsk-ico-moon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>';
+		return '<button type="button" class="wsk-toggle ' . esc_attr( $class ) . '" data-wsk-theme-toggle aria-pressed="false" aria-label="تغییر حالت روشن/تاریک">' . $sun . $moon . '</button>';
+	}
+
+	public static function sc_toggle() {
+		if ( ! WSK_Assets::dark_enabled() ) {
+			return '';
+		}
+		WSK_Assets::enqueue();
+		return '<span class="wsk wsk-inline" dir="' . esc_attr( self::dir() ) . '">' . self::toggle_button( 'wsk-toggle--inline' ) . '</span>';
+	}
+
+	public static function floating_toggle() {
+		$pos = WSK_Options::get( 'darkmode', 'toggle_position', 'bottom-end' );
+		if ( ! WSK_Assets::dark_enabled() || ! in_array( $pos, array( 'bottom-start', 'bottom-end' ), true ) || is_admin() ) {
+			return;
+		}
+		WSK_Assets::enqueue();
+		echo '<div class="wsk wsk-float wsk-float--' . esc_attr( $pos ) . '">' . self::toggle_button( 'wsk-toggle--float' ) . '</div>' . "\n"; // phpcs:ignore WordPress.Security.EscapeOutput -- خروجی کاملاً درون‌کلاسی Escape شده.
 	}
 
 	private static function run( $module, $atts ) {

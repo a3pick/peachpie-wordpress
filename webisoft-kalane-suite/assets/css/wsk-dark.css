@@ -1,0 +1,38 @@
+/*!
+ * Webisoft Kalane Suite — تاریک‌سازی سراسری (Woodmart / Elementor)
+ * فقط وقتی «تاریک‌سازی سراسری» روشن است بارگذاری می‌شود. ماژول‌های خود افزونه (.wsk) با متغیرها تاریک می‌شوند و اینجا تغییر نمی‌کنند.
+ * سلکتورها کم‌ویژگی (:where) هستند تا رنگ‌های دستی المنتور کمتر خراب شوند.
+ */
+html[data-wsk-theme="dark"] body.wsk-global{background-color:var(--wsk-page-bg,#0f1117);color:var(--wsk-text)}
+html[data-wsk-theme="dark"] body.wsk-global :where(.website-wrapper,.main-page-wrapper,.wd-page-content,#main-content){background-color:var(--wsk-page-bg,#0f1117)}
+html[data-wsk-theme="dark"] body.wsk-global :where(h1,h2,h3,h4,h5,h6,.title,.wd-entities-title,.wd-entities-title a,.elementor-heading-title):not(.wsk *){color:var(--wsk-ink)}
+html[data-wsk-theme="dark"] body.wsk-global :where(p,li,dd,dt,label,figcaption,small,cite,td,th,legend,summary,.elementor-widget-text-editor):not(.wsk *){color:var(--wsk-text)}
+html[data-wsk-theme="dark"] body.wsk-global :where(a):not(.button):not(.btn):not(.elementor-button):not([class*="wd-btn"]):not(.wsk *):hover{color:var(--wsk-primary)}
+html[data-wsk-theme="dark"] body.wsk-global :where(hr){border-color:var(--wsk-border);background-color:var(--wsk-border)}
+
+/* هدر و فوتر وودمارت */
+html[data-wsk-theme="dark"] body.wsk-global :where(.whb-header,.whb-main-header,.whb-row,.whb-sticked .whb-row,.wd-footer,.footer-container,.copyrights-wrapper){background-color:var(--wsk-surface)!important;border-color:var(--wsk-border)!important;color:var(--wsk-text)}
+html[data-wsk-theme="dark"] body.wsk-global :where(.whb-header,.wd-footer) :where(a,.wd-nav>li>a,.menu-item>a,.wd-tools-icon,.wd-tools-text,.widget-title){color:var(--wsk-ink)}
+html[data-wsk-theme="dark"] body.wsk-global :where(.wd-dropdown,.wd-dropdown-menu,.wd-sub-menu,.wd-dropdown-cart,.wd-dropdown-search-full){background-color:var(--wsk-surface)!important;border-color:var(--wsk-border)!important}
+
+/* کارت محصول و محتوای فروشگاه */
+html[data-wsk-theme="dark"] body.wsk-global :where(.wd-product,.product-grid-item,.wd-post,.blog-design-masonry .article-inner){background-color:var(--wsk-surface);border-color:var(--wsk-border)}
+html[data-wsk-theme="dark"] body.wsk-global :where(.price,.amount,.woocommerce-Price-amount):not(.wsk *){color:var(--wsk-price)}
+html[data-wsk-theme="dark"] body.wsk-global :where(.term-description,.woocommerce-product-details__full-description,#tab-description,.wd-entry-content table,.wd-entry-content table td,.wd-entry-content table th){background-color:var(--wsk-surface)!important;border-color:var(--wsk-border)!important;color:var(--wsk-text)!important}
+html[data-wsk-theme="dark"] body.wsk-global :where(.term-description,#tab-description,.wd-entry-content) :where(h1,h2,h3,h4){color:var(--wsk-ink)!important}
+html[data-wsk-theme="dark"] body.wsk-global :where(.term-description ul li,#tab-description ul li,.wd-entry-content>ul>li,.wd-entry-content>ol>li){background-color:var(--wsk-surface-alt)!important;border-color:var(--wsk-border)!important;color:var(--wsk-text)!important}
+
+/* سایدبار فیلتر و نوار ابزار فروشگاه */
+html[data-wsk-theme="dark"] body.wsk-global :where(#main-content .wd-sidebar,#main-content .wd-sidebar .wd-widget,.shop-loop-head,.shop-loop-head .wd-show-sidebar-btn a){background-color:var(--wsk-surface)!important;border-color:var(--wsk-border)!important;color:var(--wsk-text)!important}
+html[data-wsk-theme="dark"] body.wsk-global :where(#main-content .wd-sidebar .widget-title,#main-content .wd-sidebar .wd-heading){color:var(--wsk-ink)!important}
+
+/* فرم‌ها */
+html[data-wsk-theme="dark"] body.wsk-global :where(input:not([type=checkbox]):not([type=radio]):not([type=submit]):not([type=button]):not([type=range]),textarea,select):not(.wsk *){background-color:var(--wsk-surface-alt);border-color:var(--wsk-border);color:var(--wsk-ink)}
+html[data-wsk-theme="dark"] body.wsk-global :where(input,textarea)::placeholder{color:var(--wsk-muted);opacity:1}
+
+/* المنتور */
+html[data-wsk-theme="dark"] body.wsk-global :where(.elementor-icon-list-text,.elementor-post__excerpt,.elementor-widget-theme-post-content):not(.wsk *){color:var(--wsk-text)}
+html[data-wsk-theme="dark"] body.wsk-global :where(.elementor-post,.elementor-post__card,.elementor-post__text):not(.wsk *){background-color:var(--wsk-surface);border-color:var(--wsk-border)}
+
+/* تصاویر کمی ملایم‌تر */
+html[data-wsk-theme="dark"] body.wsk-global :where(img:not([src$=".svg"])):not(.wsk *){filter:brightness(.92)}
