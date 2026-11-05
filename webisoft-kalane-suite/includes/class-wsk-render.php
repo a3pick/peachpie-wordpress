@@ -179,7 +179,7 @@ class WSK_Render {
 		$pos = 0;
 		foreach ( $items as $orig => $it ) {
 			$alt = $it['alt'] ? $it['alt'] : $name . ' — ' . self::num( $pos + 1 );
-			$h  .= '<button type="button" class="wsk-story" data-index="' . (int) $pos++ . '" data-hit="story:' . (int) $orig . '" data-video="' . esc_url( $it['video'] ) . '" aria-label="' . esc_attr( $alt ) . '"><span class="wsk-story__ring"></span>'
+			$h  .= '<button type="button" class="wsk-story is-skeleton" data-index="' . (int) $pos++ . '" data-hit="story:' . (int) $orig . '" data-video="' . esc_url( $it['video'] ) . '" aria-label="' . esc_attr( $alt ) . '"><span class="wsk-story__ring"></span>'
 				. self::img( $it['cover'], $alt, 'thumbnail', array( 'class' => 'wsk-story__img' ) ) . '</button>';
 		}
 		$h .= '</div>';
@@ -284,17 +284,24 @@ class WSK_Render {
 		if ( ! $items ) {
 			return '';
 		}
-		$h = self::root( 'categories' );
+		$marquee = ! empty( $o['marquee'] );
+		$h       = self::root( 'categories' );
 		if ( ! empty( $o['title'] ) ) {
 			$h .= '<div class="wsk-divider"><span class="wsk-divider__t">' . esc_html( $o['title'] ) . '</span></div>';
 		}
-		$h .= self::slider_open( array( 'autoplay' => 0 ), 'wsk-slider--cats' );
-		foreach ( $items as $i => $c ) {
-			$h .= '<a class="wsk-cat" href="' . self::href( isset( $c['link'] ) ? $c['link'] : '' ) . '" data-wsk-hit="category:' . (int) $i . '">'
-				. '<span class="wsk-cat__img">' . self::img( $c['image'], $c['title'], 'thumbnail', array( 'width' => 85, 'height' => 85 ) ) . '</span>'
-				. '<span class="wsk-cat__t">' . esc_html( $c['title'] ) . '</span></a>';
+		$h .= '<div class="wsk-cats' . ( $marquee ? ' wsk-cats--marquee' : '' ) . '" data-wsk-cats' . ( $marquee ? ' data-marquee="1"' : '' ) . '><div class="wsk-cats__track">';
+		// مجموعه‌ی اصلی + دو کپی (فقط در موبایل برای حلقه‌ی بی‌پایان دیده می‌شوند).
+		for ( $set = 0; $set < ( $marquee ? 3 : 1 ); $set++ ) {
+			$clone = $set > 0;
+			$h    .= '<div class="wsk-cats__set' . ( $clone ? ' is-clone' : '' ) . '"' . ( $clone ? ' aria-hidden="true"' : '' ) . '>';
+			foreach ( $items as $i => $c ) {
+				$h .= '<a class="wsk-cat is-skeleton" href="' . self::href( isset( $c['link'] ) ? $c['link'] : '' ) . '"' . ( $clone ? ' tabindex="-1"' : ' data-wsk-hit="category:' . (int) $i . '"' ) . '>'
+					. '<span class="wsk-cat__img">' . self::img( $c['image'], $clone ? '' : $c['title'], 'thumbnail', array_merge( array( 'width' => 85, 'height' => 85 ), $clone ? array( 'loading' => 'eager' ) : array() ) ) . '</span>'
+					. '<span class="wsk-cat__t">' . esc_html( $c['title'] ) . '</span></a>';
+			}
+			$h .= '</div>';
 		}
-		return $h . self::slider_close() . '</div>';
+		return $h . '</div></div></div>';
 	}
 
 	/* =====================================================================

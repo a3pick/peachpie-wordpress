@@ -164,7 +164,29 @@
 		});
 		video.addEventListener('ended', function () { play(cur + 1); });
 
-		items.forEach(function (it, i) { it.addEventListener('click', function () { open(i); }); });
+		// اسکلت لودینگ تا بارگذاری تصویر
+		items.forEach(function (it) {
+			var im = qs('img', it);
+			function done() { it.classList.remove('is-skeleton'); }
+			if (!im || im.complete || im.naturalWidth > 0) { done(); } else { im.addEventListener('load', done); im.addEventListener('error', done); setTimeout(done, 4000); /* شبکه‌ی کند/خطا: اسکلت برای همیشه نماند */ }
+		});
+		// بار اول: حلقه‌ی چرخان ۶۰۰ms قبل از باز شدن (مثل طراحی اصلی)
+		items.forEach(function (it, i) {
+			it.addEventListener('click', function () {
+				if (!it.classList.contains('is-viewed') && !it.classList.contains('is-loading') && !reduce) {
+					it.classList.add('is-loading');
+					setTimeout(function () { it.classList.remove('is-loading'); open(i); }, 600);
+				} else if (!it.classList.contains('is-loading')) { open(i); }
+			});
+		});
+		// سوایپ داخل استوری
+		var tx0 = 0;
+		modal.addEventListener('touchstart', function (e) { tx0 = e.changedTouches[0].screenX; }, { passive: true });
+		modal.addEventListener('touchend', function (e) {
+			var dx = e.changedTouches[0].screenX - tx0;
+			if (dx < -40) { play(cur + (getComputedStyle(root).direction === 'rtl' ? -1 : 1)); }
+			else if (dx > 40) { play(cur + (getComputedStyle(root).direction === 'rtl' ? 1 : -1)); }
+		}, { passive: true });
 		var rtl = getComputedStyle(root).direction === 'rtl';
 		// در RTL «بعدی» سمت چپ است.
 		qs('.wsk-modal__nav--next', modal).addEventListener('click', function () { play(cur + 1); });
@@ -179,8 +201,62 @@
 		});
 	}
 
+	/* ---------- دسته‌بندی: اسکلت لودینگ + حرکت بی‌پایان موبایل ---------- */
+	function initCats(box) {
+		if (box.__wsk) { return; }
+		box.__wsk = true;
+		qsa('.wsk-cat', box).forEach(function (a) {
+			var im = qs('img', a);
+			function done() { a.classList.remove('is-skeleton'); }
+			if (!im || im.complete || im.naturalWidth > 0) { done(); } else { im.addEventListener('load', done); im.addEventListener('error', done); setTimeout(done, 4000); /* شبکه‌ی کند/خطا: اسکلت برای همیشه نماند */ }
+		});
+		if (box.getAttribute('data-marquee') !== '1' || reduce) { return; }
+
+		var track = qs('.wsk-cats__track', box), set = qs('.wsk-cats__set', box);
+		var mq = window.matchMedia('(max-width: 768px)');
+		var setW = 0, x = 0, down = false, sx = 0, px = 0, hover = false, dragged = false, raf = 0;
+		var rtl = getComputedStyle(box).direction === 'rtl';
+		var dir = rtl ? 1 : -1; // RTL: حرکت به راست؛ LTR: به چپ
+
+		function loop() {
+			if (!mq.matches) { return; }
+			if (!down && !hover) { x += 0.5 * dir; }
+			if (dir > 0) { if (x >= setW * 2) { x -= setW; } else if (x <= 0) { x += setW; } }
+			else { if (x <= -setW * 2) { x += setW; } else if (x >= 0) { x -= setW; } }
+			track.style.transform = 'translateX(' + x + 'px)';
+			raf = requestAnimationFrame(loop);
+		}
+		function init() {
+			cancelAnimationFrame(raf);
+			if (mq.matches) {
+				setW = set.offsetWidth;
+				if (x === 0) { x = dir * setW; }
+				loop();
+			} else { track.style.transform = ''; x = 0; }
+		}
+		function gx(e) { return e.touches ? e.touches[0].clientX : e.clientX; }
+		function start(e) { if (!mq.matches) { return; } down = true; dragged = false; sx = gx(e); px = x; }
+		function move(e) { if (!down) { return; } var d = gx(e) - sx; if (Math.abs(d) > 5) { dragged = true; } x = px + d; }
+		function end() { down = false; setTimeout(function () { dragged = false; }, 50); }
+		track.addEventListener('touchstart', start, { passive: true });
+		track.addEventListener('touchmove', move, { passive: true });
+		track.addEventListener('touchend', end);
+		track.addEventListener('mousedown', start);
+		window.addEventListener('mousemove', move);
+		window.addEventListener('mouseup', end);
+		track.addEventListener('mouseenter', function () { hover = true; });
+		track.addEventListener('mouseleave', function () { hover = false; end(); });
+		track.addEventListener('click', function (e) { if (dragged) { e.preventDefault(); } }, true);
+		window.addEventListener('resize', init);
+		// فقط وقتی در دید است حرکت کند (صرفه‌جویی باتری)
+		if ('IntersectionObserver' in window) {
+			new IntersectionObserver(function (en) { if (en[0].isIntersecting) { init(); } else { cancelAnimationFrame(raf); } }, { threshold: 0.01 }).observe(box);
+		} else { setTimeout(init, 100); }
+	}
+
 	function boot() {
 		syncToggles();
+		qsa('[data-wsk-cats]').forEach(initCats);
 		qsa('[data-wsk-slider]').forEach(initSlider);
 		qsa('[data-wsk-stories]').forEach(initStories);
 	}
